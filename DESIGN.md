@@ -16,7 +16,7 @@ Start a run, pick a starting buff, steer the chain around the grid, eat food, re
 ## The chain
 
 - The snake is a chain of anime characters following each other on a grid.
-- Each character gives a **buff**, and some also have an **attack**. A character can have a buff, an attack modifier, or both. Attacks never replace buffs.
+- Each character gives a **buff**, and some also modify the head's attack. A character can have a buff, an attack modifier, or both. Attacks never replace buffs.
 - **Rings:** a hit drops one character. You die when none are left.
 - **Merging:** three **adjacent** identical characters merge into one bigger version with a stronger buff. Chain order becomes a puzzle.
 
@@ -29,10 +29,12 @@ Start a run, pick a starting buff, steer the chain around the grid, eat food, re
 
 - **Only the head attacks** for now. Later, specific characters can help the head attack.
 - Attacks fire in the **facing direction**, automatically, on a timer (Vampire Survivors style). Steering is aiming.
+- **Attacks are their own objects with their own sprite sheets.** They are not part of any character's art. An attack is spawned on the tile it hits, plays its animation in a layer drawn on top of the grid and the snakes, and stays where it was fired even if the head moves on. The character (or later a buff) only decides which attack is used and how it is modified.
 - **Starting weapon: sword.** One-tile melee attack on the tile in front of the head.
 - Attacks hit **enemy snakes only** for now. Bombs or barrels may come later.
 - Hitting an enemy segment breaks it. Hitting its head kills the whole snake. A snake also dies when all segments are broken.
 - **Head-on collision:** both snakes take damage, short stun, then they go their separate ways.
+- Hit, stun and drop feedback on characters is done in code (flash, recoil, fade) rather than drawn per character.
 
 ### Enemy head toughness (sword hits to kill)
 
@@ -79,9 +81,9 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 
 ## Build order
 
-1. Core Snake with colored squares (done).
+1. Core Snake with colored squares (done), now with sprite sheets, smooth movement, pause and an attack layer.
 2. Rings and damage: hits remove a segment, death at zero, one static hazard.
-3. Sword attack, enemy snakes and waves.
+3. Sword attack hitting enemy snakes (the attack layer and swing timer exist; hits are a stub), enemy snakes and waves.
 4. Score and combos.
 5. Coins, revive, high-score tracking, retention systems.
 6. Recruitment, buffs, run-start buff choice (including expand play area).
@@ -94,6 +96,6 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 - Does "10% of score on revive" add to the run score each time (assumed), or does it only apply to the high score?
 - How many characters and buffs ship in the first playable version?
 - How big is the starting grid, and how much does the expand buff add?
-- Sword cooldown and swing timing.
+- Sword cooldown and swing timing (currently a 6-tick cycle).
 - When recruitment items become specific per character, how do they spawn?
-
+- Should attack sheets support frames larger than one tile (wide slashes, area attacks)?

@@ -14,58 +14,66 @@ All sprites follow this. Numbers are starting values and can be tuned, but keep 
 
 Logic runs on a fixed tick. Rendering is separate and smooth, so animations never depend on the display's refresh rate. Speed buffs shorten the tick, and animations speed up with it, so frame data below is measured in **ticks**, not milliseconds.
 
-Pixel rendering: turn off image smoothing on the canvas and use `image-rendering: pixelated` in CSS. Scale only by whole numbers where possible.
+Pixel rendering: turn off image smoothing on the canvas and use `image-rendering: pixelated` in CSS. Draw frames 1:1 (never scale a 32x32 frame down to fit the safe area). Scale the whole canvas by whole numbers where possible.
 
 ## Character sheet layout
 
-One PNG per character: **256x128 px**, 8 columns x 4 rows of 32x32 cells, transparent background.
+One PNG per character: **128x128 px**, 4 columns x 4 rows of 32x32 cells, transparent background.
 
-| Row | Animation | Frames (cols) | Ticks per frame | Notes |
-|-----|-----------|---------------|-----------------|-------|
-| 0 | Idle | 4 (0-3) | 1 | Loops. Cols 4-7 reserved. |
-| 1 | Hit | 2 (0-1) | 1 | Flash / recoil. Cols 2-3: stun loop, 2 frames. |
-| 2 | Attack | 4 (0-3) | 1 | Only characters that can attack as head. Faces right. |
-| 3 | Drop | 4 (0-3) | 1 | Played when the character is knocked off the chain, then removed. |
+| Row | Direction | Frames (cols) | Notes |
+|-----|-----------|---------------|-------|
+| 0 | Down | 4 (0-3) | Loops, 1 tick per frame |
+| 1 | Right | 4 (0-3) | Loops. The code mirrors it horizontally for left. |
+| 2 | Up | 4 (0-3) | Loops |
+| 3 | Reserved | 4 (0-3) | Unused for now (alternate down or a future animation) |
 
-Templates: `assets/character_sheet_blank.png` (transparent) and `assets/character_sheet_guides.png` (checker cells, yellow 28x28 safe area, pink center mark). Delete the guides before export.
+The character sheet is only about movement. Each segment plays the row for the direction it is travelling in.
 
-## Rules for every sprite
+- Frame 0 of the "down" row is the portrait pose, used for icons and previews.
+- Hit, stun and drop effects (flash, recoil, fall-off) are done in code for now, not drawn per character.
 
-- Keep art inside the **28x28 safe area** (2 px margin) so neighboring chain segments don't touch.
-- Idle frame 0 is the "portrait" pose and is used for icons and previews.
-- Characters are drawn upright and are not rotated in the chain. The code mirrors them horizontally if needed.
-- Attack poses are drawn **facing right**. The code mirrors for left. Up and down are handled by rotating the FX, not the character.
-- Hard pixels only: no anti-aliasing, no semi-transparent pixels (except FX glow).
-- 1 px dark outline, light from top-left, limited palette (about 16 colors per character).
-- AI generators rarely output real pixel grids. Generate larger, then snap to a 32x32 grid with nearest-neighbor downscaling or clean it up in a pixel editor.
+File: `assets/images/characters/<name>.png`
 
-## Sword attack frame data
+## Attack sheets
+
+Attacks are **independent of characters**. They have their own sprite sheets, are spawned as separate objects, and are drawn in a layer **on top of the grid and the snake**, centered on the tile they hit. A character only decides which attack the head uses.
+
+Layout: **one row of frames**, each frame the same size (32x32 for the sword, so the sheet is 128x32 for 4 frames). Larger attacks may use bigger frames; the size is set per attack in code. Drawn **facing right**, centered on the target tile. The code mirrors for left and rotates 90 degrees for up and down.
+
+File: `assets/images/attacks/<name>.png`
+
+### Sword attack frame data
 
 The sword hits the tile directly in front of the head.
 
-| Tick | Character frame | Slash FX frame | What happens |
-|------|-----------------|----------------|--------------|
-| 0 | Attack 0 (windup) | none | Nothing hits yet |
-| 1 | Attack 1 (strike) | FX 0 | **Hit resolves** on the tile in front of the head at the start of this tick |
-| 2 | Attack 2 (follow-through) | FX 1 | |
-| 3 | Attack 3 (recover) | FX 2 | |
-| 4-5 | Idle | FX 3 on tick 4 | Cooldown |
+| Tick | Slash frame | What happens |
+|------|-------------|--------------|
+| 0 | 0 (windup) | Nothing hits yet |
+| 1 | 1 (strike) | **Hit resolves** on the target tile at the start of this tick |
+| 2 | 2 (follow-through) | |
+| 3 | 3 (recover) | |
+| 4-5 | none | Cooldown |
 
-Attack cycle: 6 ticks (750 ms at base speed). Tunable.
-
-Slash FX: a separate **128x32 sheet**, 4 frames of 32x32, drawn facing right, centered on the target tile.
+Attack cycle: 6 ticks (750 ms at base speed). Tunable. The attack stays on the tile where it was fired, even if the head moves on.
 
 ## Other sheets
 
 - **Food / recruit items:** 32x32, 2-4 frame idle loop, 1 tick per frame.
-- **Enemy snake:** same sheet layout as characters (rows 0-3). Head and body segments are separate files.
+- **Enemy snake:** same 4x4 layout as characters. Head and body segments are separate files.
 - **Tiles / hazards:** 32x32, optional 2-4 frame loop.
+
+## Rules for every sprite
+
+- Keep art inside the **28x28 safe area** (2 px margin) so neighboring chain segments don't touch.
+- Hard pixels only: no anti-aliasing, no semi-transparent pixels (except FX glow).
+- 1 px dark outline, light from top-left, limited palette (about 16 colors per character).
+- AI generators rarely output real pixel grids. Generate larger, then snap to a 32x32 grid with nearest-neighbor downscaling or clean it up in a pixel editor.
 
 ## File naming
 
 ```
 assets/images/characters/<name>.png
-assets/images/fx/slash_sword.png
+assets/images/attacks/slash_sword.png
 assets/images/enemies/<name>_head.png
 assets/images/enemies/<name>_body.png
 ```
