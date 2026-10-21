@@ -22,8 +22,10 @@ Start a run, pick a starting buff, steer the chain around the grid, eat food, re
 
 ## Recruitment
 
-- Recruitable characters spawn on the grid. You can only recruit one while holding a recruitment object.
-- For now there is one generic recruitment item. Later, each character needs its own specific item.
+- Recruitment replaces food growth. The old food is now a **key**: eating food no longer grows the chain. You grow by recruiting a character, which needs a key plus a character.
+- Characters **walk into the play area from the edges at random**. Touch one while holding a key to recruit it onto the tail of the chain.
+- Enemy snakes can kill recruitable characters. If the character dies before you reach it, the key is wasted and you need another.
+- For now there is one generic key. Later, each character needs its own specific key.
 
 ## Combat
 
@@ -31,7 +33,9 @@ Start a run, pick a starting buff, steer the chain around the grid, eat food, re
 - Attacks fire in the **facing direction**, automatically, on a timer (Vampire Survivors style). Steering is aiming.
 - **Attacks are their own objects with their own sprite sheets.** They are not part of any character's art. An attack is spawned on the tile it hits, plays its animation in a layer drawn on top of the grid and the snakes, and stays where it was fired even if the head moves on. The character (or later a buff) only decides which attack is used and how it is modified.
 - **Starting weapon: sword.** One-tile melee attack on the tile in front of the head.
-- Attacks hit **enemy snakes only** for now. Bombs or barrels may come later.
+- Attacks hit **enemy snakes only** for now.
+- Attack sheets should support variety, but keep it simple for now (the sword is the only attack).
+- **Mines:** static objects that explode when a snake head hits one (player or enemy). Blast size and damage are still to be decided.
 - Hitting an enemy segment breaks it, and everything behind it is cut off. Hitting its head costs it one hit point, and at zero the whole snake dies.
 - **Head-on collision:** both snakes take damage (the player loses a character, the enemy head loses a hit point), short stun, then they go their separate ways. Enemy bodies block the player like walls and cost a hit.
 - **Waves:** the first wave starts after about 3 seconds. A wave is 1 + wave/3 enemy snakes (max 5), spawned along the edges 10 ticks apart. The next wave starts 16 ticks after the last enemy dies.
@@ -53,8 +57,8 @@ Enemies move like the player and have simple AI at first.
 
 - Characters grant buffs while they are in the chain.
 - At the start of a run, the player **chooses a buff**, Slay the Spire style.
-- One of the buff types will **expand the play area**. Start small, grow with buffs.
-- Planned first buffs: 3 simple ones across 3 characters.
+- One of the buff types will **expand the play area**: the starting 20x20 grid gets one extra tile ring on every side, and the whole playfield scales down to fit the screen.
+- The first version ships **3 unique characters and 10 buffs**.
 
 ## Score
 
@@ -66,7 +70,7 @@ Enemies move like the player and have simple AI at first.
 
 - Every run pays **coins**.
 - Coins revive the run on the spot. Cost rises with each revive in a run.
-- Each revive adds **10% of the current score** as a bonus, to encourage using coins.
+- Each revive adds **10% of the current score on top of the current score**, to encourage using coins.
 - Coins also unlock and switch the **starting character**. Each character has a different starting weapon.
 
 ## Retention systems (hook design)
@@ -84,19 +88,19 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 
 1. Core Snake with colored squares (done), now with sprite sheets, smooth movement, pause and an attack layer.
 2. Rings and damage: hits remove a segment, death at zero, one static hazard. (done)
-3. Sword attack hitting enemy snakes, enemy snakes and waves. (done, simple AI; kills give flat placeholder points until step 4)
+3. Sword attack hitting enemy snakes, enemy snakes and waves. (done, simple AI)
+3b. Mines: explode when any snake head hits one. (planned)
 4. Score and combos. (done)
 5. Coins, revive, high-score tracking, retention systems.
-6. Recruitment, buffs, run-start buff choice (including expand play area).
+6. Recruitment (keys and walking-in characters replace food growth), 3 characters and 10 buffs, run-start buff choice (including expand play area).
 7. Merging of three adjacent identical characters.
 8. Character unlocks with different starting weapons.
 9. Assets and polish: sprites, music, sound effects.
 
 ## Open questions
 
-- Does "10% of score on revive" add to the run score each time (assumed), or does it only apply to the high score?
-- How many characters and buffs ship in the first playable version?
-- How big is the starting grid, and how much does the expand buff add?
 - Sword cooldown and swing timing (currently a 6-tick cycle).
-- When recruitment items become specific per character, how do they spawn?
-- Should attack sheets support frames larger than one tile (wide slashes, area attacks)?
+- Of the 10 buffs, how many belong to a specific character and how many are run-start picks?
+- Does picking up a key summon a character right away (assumed), or do characters wander in on their own timer?
+- Mine blast size, damage, and how many spawn.
+- When recruitment keys become specific per character, how do they spawn?
