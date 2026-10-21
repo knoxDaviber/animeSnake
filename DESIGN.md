@@ -32,8 +32,9 @@ Start a run, pick a starting buff, steer the chain around the grid, eat food, re
 - **Attacks are their own objects with their own sprite sheets.** They are not part of any character's art. An attack is spawned on the tile it hits, plays its animation in a layer drawn on top of the grid and the snakes, and stays where it was fired even if the head moves on. The character (or later a buff) only decides which attack is used and how it is modified.
 - **Starting weapon: sword.** One-tile melee attack on the tile in front of the head.
 - Attacks hit **enemy snakes only** for now. Bombs or barrels may come later.
-- Hitting an enemy segment breaks it. Hitting its head kills the whole snake. A snake also dies when all segments are broken.
-- **Head-on collision:** both snakes take damage, short stun, then they go their separate ways.
+- Hitting an enemy segment breaks it, and everything behind it is cut off. Hitting its head costs it one hit point, and at zero the whole snake dies.
+- **Head-on collision:** both snakes take damage (the player loses a character, the enemy head loses a hit point), short stun, then they go their separate ways. Enemy bodies block the player like walls and cost a hit.
+- **Waves:** the first wave starts after about 3 seconds. A wave is 1 + wave/3 enemy snakes (max 5), spawned along the edges 10 ticks apart. The next wave starts 16 ticks after the last enemy dies.
 - Hit, stun and drop feedback on characters is done in code (flash, recoil, fade) rather than drawn per character.
 
 ### Enemy head toughness (sword hits to kill)
@@ -82,8 +83,8 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 ## Build order
 
 1. Core Snake with colored squares (done), now with sprite sheets, smooth movement, pause and an attack layer.
-2. Rings and damage: hits remove a segment, death at zero, one static hazard.
-3. Sword attack hitting enemy snakes (the attack layer and swing timer exist; hits are a stub), enemy snakes and waves.
+2. Rings and damage: hits remove a segment, death at zero, one static hazard. (done)
+3. Sword attack hitting enemy snakes, enemy snakes and waves. (done, simple AI; kills give flat placeholder points until step 4)
 4. Score and combos.
 5. Coins, revive, high-score tracking, retention systems.
 6. Recruitment, buffs, run-start buff choice (including expand play area).

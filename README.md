@@ -34,7 +34,9 @@ Full details, build order and open questions are in [DESIGN.md](DESIGN.md). Spri
 src/                     game code (index.html)
 assets/images/
   characters/            4x4 character sheets (committed)
-  attacks/               attack sheets, one row of frames (committed)
+  enemies/               4x4 enemy head and body sheets (placeholders)
+  attacks/               attack sheets, equal-sized frames (placeholder sword)
+  food.png, hazard.png, recruit.png   item sheets (placeholders)
 assets/audio/            optimized music and sfx (committed)
 assets/_raw/             raw AI outputs (git-ignored)
 ```

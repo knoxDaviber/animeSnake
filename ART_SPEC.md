@@ -58,9 +58,22 @@ Attack cycle: 6 ticks (750 ms at base speed). Tunable. The attack stays on the t
 
 ## Other sheets
 
-- **Food / recruit items:** 32x32, 2-4 frame idle loop, 1 tick per frame.
+- **Items (food, hazard, recruit):** one row of 32x32 frames (128x32 for 4 frames). Idle loop, 1 tick per frame. The frame count is read from the sheet width, so 2-8 frames all work.
 - **Enemy snake:** same 4x4 layout as characters. Head and body segments are separate files.
-- **Tiles / hazards:** 32x32, optional 2-4 frame loop.
+
+### Placeholders
+
+Every object has a placeholder PNG at its final path and size. To swap in real art, overwrite the file and keep the cell size and layout. No code changes are needed (only attack sheets need `w` / `h` set in code if the frame size differs).
+
+| File | Size | Layout |
+|------|------|--------|
+| `characters/<name>.png` | 128x128 | 4x4, directional |
+| `enemies/enemy_head.png` | 128x128 | 4x4, directional |
+| `enemies/enemy_body.png` | 128x128 | 4x4, directional |
+| `attacks/slash_sword.png` | 256x41 | 4 frames of 64x41 |
+| `food.png` | 128x32 | 4 frames |
+| `hazard.png` | 128x32 | 4 frames |
+| `recruit.png` | 128x32 | 4 frames (used from build step 6) |
 
 ## Rules for every sprite
 
@@ -74,8 +87,11 @@ Attack cycle: 6 ticks (750 ms at base speed). Tunable. The attack stays on the t
 ```
 assets/images/characters/<name>.png
 assets/images/attacks/slash_sword.png
-assets/images/enemies/<name>_head.png
-assets/images/enemies/<name>_body.png
+assets/images/enemies/enemy_head.png
+assets/images/enemies/enemy_body.png
+assets/images/food.png
+assets/images/hazard.png
+assets/images/recruit.png
 ```
 
 Raw AI outputs go in `assets/_raw/`. Commit only the cleaned sheets.
