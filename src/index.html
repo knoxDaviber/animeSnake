@@ -8,28 +8,78 @@
   html, body { margin: 0; height: 100%; background: #14101f; color: #f3e9ff; font-family: system-ui, sans-serif; overflow: hidden; touch-action: none; }
   body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
   #hud { display: flex; gap: 24px; font-size: 16px; }
-  canvas { background: #1d1730; border: 2px solid #3a2d5c; max-width: 96vw; max-height: 80vh; }
+  canvas {
+    background: #1d1730; border: 2px solid #3a2d5c;
+    width: min(96vw, 80vh, 640px); height: auto; aspect-ratio: 1 / 1;
+    image-rendering: pixelated; /* keep pixel art crisp when the canvas is scaled */
+  }
   #hint { font-size: 12px; opacity: .6; }
 </style>
 </head>
 <body>
 <div id="hud"><span>Score <b id="score">0</b></span><span>Chain <b id="len">3</b></span><span>Best <b id="best">0</b></span></div>
-<canvas id="c" width="480" height="480"></canvas>
+<canvas id="c" width="640" height="640"></canvas>
 <div id="hint">Arrows / WASD / swipe to steer. Tap to restart after dying.</div>
 <script>
-const COLS = 20, ROWS = 20, CELL = 24, TICK_MS = 130;
+// Numbers from the art spec: 32x32 tiles, 20x20 grid (640x640), 125 ms logic tick.
+const COLS = 20, ROWS = 20, CELL = 32, TICK_MS = 125;
+const SPRITE = 32; // size of one frame in the sprite sheets
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
-const COLORS = ['#ff6b9d', '#6bc5ff', '#ffd36b', '#8dff6b', '#c78bff']; // placeholder "characters"
-let snake, dir, nextDir, food, score, alive, best = 0, last = 0;
+ctx.imageSmoothingEnabled = false;
+
+const COLORS = ['#ff6b9d', '#6bc5ff', '#ffd36b', '#8dff6b', '#c78bff']; // fallback if a sheet is missing
+
+// ---- Sprites ---------------------------------------------------------------
+// Character sheets are 256x128: 8 columns x 4 rows of 32x32 cells.
+// Each row is one animation; frames run left to right. 1 animation frame = 1 logic tick.
+const ANIM = {
+  idle:   { row: 0, frames: 4 },
+  hit:    { row: 1, frames: 2 },
+  attack: { row: 2, frames: 4 },
+  drop:   { row: 3, frames: 4 },
+};
+// Add more names here as you export more sheets (assets/images/characters/<name>.png).
+const CHARACTERS = ['character1'].map(name => {
+  const ch = { name, img: new Image(), ready: false };
+  ch.img.onload = () => { ch.ready = true; };
+  ch.img.onerror = () => console.warn('Missing sprite sheet:', ch.img.src);
+  ch.img.src = `../assets/images/characters/${name}.png`;
+  return ch;
+});
+
+// Draws one frame of an animation into the tile at pixel (px, py). Sprites face right; flipX mirrors them.
+function drawCharacter(ch, r, tick, px, py) {
+  const fw = ch.img.width / 4, fh = ch.img.height / 4; // 4x4 sheet
+  let row = 0, flip = false;
+  if (r.fy < 0) row = 2;               // up
+  else if (r.fy > 0) row = 0;          // down (row 3 is the alternate down)
+  else { row = 1; flip = r.fx < 0; }   // right, mirrored for left
+  const sx = (tick % 4) * fw, sy = row * fh;
+  if (flip) {
+    ctx.save();
+    ctx.translate(px + CELL, py);
+    ctx.scale(-1, 1);
+    ctx.drawImage(ch.img, sx, sy, fw, fh, 2, 2, 28, 28);
+    ctx.restore();
+  } else {
+    ctx.drawImage(ch.img, sx, sy, fw, fh, px + 2, py + 2, 28, 28);
+  }
+}
+
+// ---- Game state ------------------------------------------------------------
+// snake  = tile positions (head first); roster = which character sits in each chain slot.
+// Keeping them separate means characters stay in their chain order as the snake moves.
+let snake, roster, dir, nextDir, food, score, alive, best = 0, last = 0, animTick = 0;
 
 function reset() {
   snake = [
-    { x: 10, y: 10, c: 0 },
-    { x: 9, y: 10, c: 1 },
-    { x: 8, y: 10, c: 2 },
+    { x: 10, y: 10 },
+    { x: 9, y: 10 },
+    { x: 8, y: 10 },
   ];
+  roster = snake.map((_, i) => ({ c: i, fx: 1, fy: 0 }));
   dir = nextDir = { x: 1, y: 0 };
-  score = 0; alive = true;
+  score = 0; alive = true; animTick = 0;
   placeFood(); hud();
 }
 function placeFood() {
@@ -45,6 +95,14 @@ function setDir(x, y) {
   if (x === -dir.x && y === -dir.y) return; // no instant reverse
   nextDir = { x, y };
 }
+// Sprites are drawn facing right and mirrored when a segment moves left.
+// Vertical moves keep the last horizontal facing.
+function faceSegments() {
+  snake.forEach((s, i) => {
+    roster[i].fx = i === 0 ? dir.x : snake[i - 1].x - s.x;
+    roster[i].fy = i === 0 ? dir.y : snake[i - 1].y - s.y;
+  });
+}
 function step() {
   dir = nextDir;
   const h = snake[0];
@@ -53,29 +111,36 @@ function step() {
     alive = false; return;
   }
   const ate = nx === food.x && ny === food.y;
-  const tail = snake[snake.length - 1];
-  snake.unshift({ x: nx, y: ny, c: 0 });
+  snake.unshift({ x: nx, y: ny });
   if (ate) {
-    snake[snake.length - 1].c = Math.floor(Math.random() * COLORS.length);
+    roster.push({ c: Math.floor(Math.random() * COLORS.length), fx: roster[roster.length - 1].fx, fy: roster[roster.length - 1].fy });
     score += 10; placeFood();
   } else snake.pop();
+  faceSegments();
+  animTick++; // animation clock: 1 frame per tick
   if (score > best) best = score;
   hud();
 }
 function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.fillStyle = '#ff4d4d';
-  ctx.fillRect(food.x * CELL + 4, food.y * CELL + 4, CELL - 8, CELL - 8);
+  ctx.fillRect(food.x * CELL + 6, food.y * CELL + 6, CELL - 12, CELL - 12);
   snake.forEach((s, i) => {
-    ctx.fillStyle = COLORS[s.c % COLORS.length];
-    ctx.fillRect(s.x * CELL + 1, s.y * CELL + 1, CELL - 2, CELL - 2);
-    if (i === 0) { ctx.fillStyle = '#fff'; ctx.fillRect(s.x * CELL + 8, s.y * CELL + 8, 8, 8); }
+    const r = roster[i], ch = CHARACTERS[r.c % CHARACTERS.length];
+    const px = s.x * CELL, py = s.y * CELL;
+    if (ch.ready) {
+      drawCharacter(ch, r, animTick, px, py);
+    } else { // fallback: colored squares like before
+      ctx.fillStyle = COLORS[r.c % COLORS.length];
+      ctx.fillRect(px + 2, py + 2, CELL - 4, CELL - 4);
+      if (i === 0) { ctx.fillStyle = '#fff'; ctx.fillRect(px + 11, py + 11, 10, 10); }
+    }
   });
   if (!alive) {
     ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, cv.width, cv.height);
-    ctx.fillStyle = '#fff'; ctx.font = '28px system-ui'; ctx.textAlign = 'center';
-    ctx.fillText('Game over', cv.width / 2, cv.height / 2 - 8);
-    ctx.font = '16px system-ui'; ctx.fillText('Tap or press Space to restart', cv.width / 2, cv.height / 2 + 22);
+    ctx.fillStyle = '#fff'; ctx.font = '36px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('Game over', cv.width / 2, cv.height / 2 - 10);
+    ctx.font = '20px system-ui'; ctx.fillText('Tap or press Space to restart', cv.width / 2, cv.height / 2 + 28);
   }
 }
 function loop(t) {
@@ -102,4 +167,3 @@ reset(); requestAnimationFrame(loop);
 </script>
 </body>
 </html>
-
