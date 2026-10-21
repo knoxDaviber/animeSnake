@@ -32,7 +32,7 @@ function killEnemy(e) {
     const f = faceOf(e, i);
     dropFx(s.x, s.y, (px, py) => drawEnemySeg(i === 0, f.fx, f.fy, px, py));
   });
-  S.score += POINTS.kill;
+  registerKill(e.segs[0].x, e.segs[0].y);
 }
 // Breaks segment i and cuts off everything behind it.
 function cutEnemy(e, i) {
@@ -42,7 +42,7 @@ function cutEnemy(e, i) {
     const f = faces[i + k];
     dropFx(s.x, s.y, (px, py) => drawEnemySeg(false, f.fx, f.fy, px, py));
   });
-  S.score += POINTS.segment * cut.length;
+  addScore(POINTS.segment * cut.length, cut[0].x, cut[0].y);
   e.stun = Math.max(e.stun, 2);
 }
 

@@ -9,8 +9,10 @@
 //   drops          fade-out effects for dropped characters and killed enemies
 //   tick           animation clock: 1 animation frame = 1 logic tick
 //   alpha          0..1 progress through the current tick, for interpolation
-//   best           best score this session; survives newRun()
-const S = { best: 0 };
+//   combo          kills chained inside COMBO_WINDOW; comboTimer counts the window down
+//   popups         floating score text
+//   best / bestCombo   saved across runs (storage.js); survive newRun()
+const S = { best: 0, bestCombo: 0 };
 
 function newRun() {
   const snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
@@ -22,7 +24,8 @@ function newRun() {
     food: null, hazard: null,
     score: 0, alive: true, paused: false, crashed: null,
     tick: 0, alpha: 1, last: performance.now(),
-    invuln: 0,
+    invuln: 0, newBest: false,
+    combo: 0, comboTimer: 0, popups: [],
     attacks: [], lastSwing: 0, drops: [],
     enemies: [], wave: 0, toSpawn: 0, spawnTimer: 0, waveTimer: START_DELAY,
   });

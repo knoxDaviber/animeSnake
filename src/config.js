@@ -21,8 +21,11 @@ function hitsToKill(w) { return w <= 5 ? 1 : w <= 9 ? 2 : w <= 13 ? 3 : w <= 17 
 function waveSize(w) { return Math.min(1 + Math.floor(w / 3), 5); }
 function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 
-// Score (flat placeholder values until build step 4)
-const POINTS = { food: 10, kill: 20, segment: 5 };
+// Score and combos
+const POINTS = { food: 10, kill: 20, segment: 5 };  // base points (a kill is multiplied by the combo)
+const COMBO_WINDOW = 24;      // ticks (3 s) to land the next kill before the combo ends
+const COMBO_MAX_MULT = 5;     // a kill is worth base points x the combo count, up to this
+const POPUP_TICKS = 8;        // how long the floating "+60 x3" text stays
 
 // Shared helpers
 const COLORS = ['#ff6b9d', '#6bc5ff', '#ffd36b', '#8dff6b', '#c78bff']; // fallback when a character sheet is missing

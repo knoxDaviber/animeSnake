@@ -7,7 +7,9 @@ function hud() {
   document.getElementById('score').textContent = S.score;
   document.getElementById('len').textContent = S.snake.length;
   document.getElementById('wave').textContent = S.wave || 1;
+  document.getElementById('combo').textContent = S.combo ? `${S.combo} (x${comboMult()})` : '-';
   document.getElementById('best').textContent = S.best;
+  document.getElementById('bestcombo').textContent = S.bestCombo;
 }
 
 // ---- Sprite helpers ------------------------------------------------------------
@@ -121,13 +123,33 @@ function drawDrops() { // dropped characters and dead enemies fade out and float
     ctx.restore();
   });
 }
+function drawPopups() { // floating "+60 x3" text where points were scored
+  ctx.save();
+  ctx.font = 'bold 16px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = '#14101f';
+  S.popups.forEach(p => {
+    const x = p.x * CELL + CELL / 2, y = p.y * CELL + 10 - p.age * 3;
+    ctx.globalAlpha = 1 - p.age / POPUP_TICKS;
+    ctx.strokeText(p.text, x, y);
+    ctx.fillStyle = '#ffd36b'; ctx.fillText(p.text, x, y);
+  });
+  ctx.restore();
+}
+function drawComboBar() { // thin bar along the top: time left to chain the next kill
+  if (S.combo <= 0) return;
+  ctx.fillStyle = '#ffd36b';
+  ctx.fillRect(0, 0, Math.round(cv.width * S.comboTimer / COMBO_WINDOW), 4);
+}
 function drawOverlay() {
   if (S.alive && !S.paused) return;
   ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.fillStyle = '#fff'; ctx.font = '36px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText(S.alive ? 'Paused' : 'Game over', cv.width / 2, cv.height / 2 - 10);
+  ctx.fillText(S.alive ? 'Paused' : 'Game over', cv.width / 2, cv.height / 2 - 30);
   ctx.font = '20px system-ui';
-  ctx.fillText(S.alive ? 'Tap or press P to resume' : 'Tap or press Space to restart', cv.width / 2, cv.height / 2 + 28);
+  if (!S.alive) {
+    ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cv.width / 2, cv.height / 2 + 5);
+    ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}`, cv.width / 2, cv.height / 2 + 33);
+  }
+  ctx.fillText(S.alive ? 'Tap or press P to resume' : 'Tap or press Space to restart', cv.width / 2, cv.height / 2 + (S.alive ? 20 : 68));
 }
 function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
@@ -137,6 +159,8 @@ function draw() {
   drawPlayer();
   drawDrops();
   S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
+  drawPopups();
+  drawComboBar();
   drawOverlay();
 }
 // Shown instead of a frozen screen if the game code throws. Uses nothing but the canvas.

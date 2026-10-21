@@ -4,14 +4,17 @@
 function step() {
   S.tick++; // animation clock: 1 frame per tick
   ageDrops();
+  agePopups();
   playerMove();
   if (S.alive) {
+    updateCombo();
     updateAttacks();
     stepEnemies();
     updateWaves();
   } else S.alpha = 1;
-  if (S.score > S.best) S.best = S.score;
+  if (S.score > S.best) { S.best = S.score; S.newBest = true; }
   hud();
+  if (!S.alive) saveProgress();
 }
 
 // Runs every display frame. Logic ticks are fixed; drawing is smooth in between.
@@ -34,5 +37,6 @@ function loop(t) {
   requestAnimationFrame(loop);
 }
 
+loadProgress();
 newRun();
 requestAnimationFrame(loop);

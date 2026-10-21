@@ -59,8 +59,8 @@ Enemies move like the player and have simple AI at first.
 ## Score
 
 - No drops for now. Kills, food and combos give points.
-- **Combos:** chain kills within a short window for a multiplier. The best combo is shown on the HUD.
-- High scores and best combos are tracked across runs.
+- **Combos:** chain kills within a short window for a multiplier. The best combo is shown on the HUD. A kill must land within 3 seconds of the last one. Kill points are 20 x the combo count, capped at x5. Food (10) and cut segments (5) are flat, and getting hit does not break a combo. A bar along the top of the board shows the time left.
+- High scores and best combos are tracked across runs, saved in the browser (localStorage).
 
 ## Meta layer
 
@@ -85,7 +85,7 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 1. Core Snake with colored squares (done), now with sprite sheets, smooth movement, pause and an attack layer.
 2. Rings and damage: hits remove a segment, death at zero, one static hazard. (done)
 3. Sword attack hitting enemy snakes, enemy snakes and waves. (done, simple AI; kills give flat placeholder points until step 4)
-4. Score and combos.
+4. Score and combos. (done)
 5. Coins, revive, high-score tracking, retention systems.
 6. Recruitment, buffs, run-start buff choice (including expand play area).
 7. Merging of three adjacent identical characters.

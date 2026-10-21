@@ -50,7 +50,9 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `config.js` | Constants and tuning numbers (grid, tick, invulnerability, wave and enemy settings, points) |
 | `sprites.js` | Loads every sprite sheet |
 | `state.js` | The `S` object holding all mutable game state, and `newRun()` |
+| `storage.js` | Saves best score and best combo in the browser |
 | `world.js` | Food, the hazard, drop effects |
+| `score.js` | Points, combos, floating score text |
 | `player.js` | Steering, moving, eating, rings and damage |
 | `attacks.js` | Attack definitions, the swing timer, hit resolution |
 | `enemies.js` | Enemy snakes, their AI, waves |

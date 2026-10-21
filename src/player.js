@@ -47,7 +47,7 @@ function playerMove() {
   if (ate) {
     const tail = S.roster[S.roster.length - 1];
     S.roster.push({ c: Math.floor(Math.random() * CHARACTERS.length), fx: tail.fx, fy: tail.fy });
-    S.score += POINTS.food; placeFood();
+    addScore(POINTS.food, nx, ny); placeFood();
   } else S.snake.pop();
   faceSegments();
 }
