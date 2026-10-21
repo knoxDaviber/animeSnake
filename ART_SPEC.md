@@ -38,7 +38,7 @@ File: `assets/images/characters/<name>.png`
 
 Attacks are **independent of characters**. They have their own sprite sheets, are spawned as separate objects, and are drawn in a layer **on top of the grid and the snake**, centered on the tile they hit. A character only decides which attack the head uses.
 
-Layout: **one row of frames**, each frame the same size (32x32 for the sword, so the sheet is 128x32 for 4 frames). Larger attacks may use bigger frames; the size is set per attack in code. Drawn **facing right**, centered on the target tile. The code mirrors for left and rotates 90 degrees for up and down.
+Layout: equal-sized frames read left to right, then top to bottom. The frame size is set per attack in code (`w`, `h`), so 32x32 and 64x41 frames both work. If `frames` is omitted, every whole frame in the sheet is used. With `fit: true` each frame is scaled down (keeping its aspect ratio) to fit inside one 32x32 tile, so a 64x41 frame draws at 32x21. Without `fit` it draws at its real size, centered on the tile. Drawn **facing right**, centered on the target tile. The code mirrors for left and rotates 90 degrees for up and down.
 
 File: `assets/images/attacks/<name>.png`
 

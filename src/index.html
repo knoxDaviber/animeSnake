@@ -48,9 +48,11 @@ function loadSheet(src, expectW, expectH) {
 const DIR_ROW = { down: 0, right: 1, up: 2 };
 const FRAMES = 4;
 // Add more names here as you export more sheets (assets/images/characters/<name>.png).
-const CHARACTERS = ['character1'].map(name => ({
-  name, ...loadSheet(`../assets/images/characters/${name}.png`, SPRITE * FRAMES, SPRITE * 4),
-}));
+const CHARACTERS = ['character1'].map(name => {
+  const ch = loadSheet(`../assets/images/characters/${name}.png`, SPRITE * FRAMES, SPRITE * 4);
+  ch.name = name; // keep the same object so onload can set ch.ready
+  return ch;
+});
 
 // Draws one 32x32 frame at 1:1 into the tile at pixel (px, py). Art lives inside the 28x28 safe area.
 function drawCharacter(ch, r, tick, px, py) {
@@ -76,12 +78,20 @@ function drawCharacter(ch, r, tick, px, py) {
 // 1 attack frame = ticksPerFrame logic ticks. The hit resolves when the attack reaches hitFrame.
 const ATTACKS = {
   sword: {
-    sheet: loadSheet('../assets/images/attacks/slash_sword.png', 128, 32),
-    frames: 4, w: 32, h: 32, ticksPerFrame: 1,
+    sheet: loadSheet('../assets/images/attacks/slash_sword.png'),
+    w: 64, h: 41,  // size of ONE frame in the sheet (use 32 x 32 for tile-sized frames)
+    fit: true,     // scale each frame down to fit inside one 32x32 tile (keeps aspect ratio)
+    // frames: 4,  // optional: omit to count every frame in the sheet (left to right, top to bottom)
+    ticksPerFrame: 1,
     hitFrame: 1,   // hit resolves at the start of tick 1
     cooldown: 6,   // ticks between swings (750 ms at base speed)
   },
 };
+function frameCount(d) {
+  if (d.frames) return d.frames;
+  const img = d.sheet.img;
+  return d.sheet.ready ? Math.floor(img.width / d.w) * Math.floor(img.height / d.h) : 4;
+}
 let attacks = [], lastSwing = 0;
 
 function fireAttack(def, tx, ty, d) {
@@ -95,7 +105,7 @@ function updateAttacks() {
     a.age++;
     if (a.age === a.def.hitFrame * a.def.ticksPerFrame) resolveHit(a);
   }
-  attacks = attacks.filter(a => a.age < a.def.frames * a.def.ticksPerFrame);
+  attacks = attacks.filter(a => a.age < frameCount(a.def) * a.def.ticksPerFrame);
   // Head auto-attacks in its facing direction on a timer.
   if (animTick - lastSwing >= ATTACKS.sword.cooldown) {
     const tx = snake[0].x + dir.x, ty = snake[0].y + dir.y;
@@ -109,11 +119,15 @@ function drawAttack(a) {
   const d = a.def;
   if (!d.sheet.ready) return;
   const f = Math.floor(a.age / d.ticksPerFrame);
+  const cols = Math.max(1, Math.floor(d.sheet.img.width / d.w));
+  const sx = (f % cols) * d.w, sy = Math.floor(f / cols) * d.h;
+  const s = d.fit ? Math.min(CELL / d.w, CELL / d.h) : 1; // "contain" inside one tile
+  const dw = Math.round(d.w * s), dh = Math.round(d.h * s);
   ctx.save();
   ctx.translate(a.x * CELL + CELL / 2, a.y * CELL + CELL / 2);
   if (a.dir.x < 0) ctx.scale(-1, 1);                        // left: mirror
   else if (a.dir.y) ctx.rotate(a.dir.y * Math.PI / 2);      // up / down: rotate the FX
-  ctx.drawImage(d.sheet.img, f * d.w, 0, d.w, d.h, -d.w / 2, -d.h / 2, d.w, d.h);
+  ctx.drawImage(d.sheet.img, sx, sy, d.w, d.h, -Math.floor(dw / 2), -Math.floor(dh / 2), dw, dh);
   ctx.restore();
 }
 
@@ -133,13 +147,35 @@ function reset() {
   roster = snake.map((_, i) => ({ c: i % CHARACTERS.length, fx: 1, fy: 0 }));
   dir = nextDir = { x: 1, y: 0 };
   score = 0; alive = true; paused = false; animTick = 0; lastSwing = 0; alpha = 1;
-  attacks = [];
+  attacks = []; drops = []; invuln = 0;
   last = performance.now();
-  placeFood(); hud();
+  placeHazard(); placeFood(); hud();
 }
 function placeFood() {
   do { food = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
-  while (snake.some(s => s.x === food.x && s.y === food.y));
+  while (snake.some(s => s.x === food.x && s.y === food.y) || (food.x === hazard.x && food.y === hazard.y));
+}
+
+// ---- Rings and damage ------------------------------------------------------
+// Walls, the hazard and your own body each cost one character per hit. You die when none are left.
+const INVULN_TICKS = 8;            // ticks of immunity after a hit (the chain blinks)
+const DROP_TICKS = 4;              // length of the drop fade, in ticks
+const SELF_HIT_COSTS_RING = true;  // false = running into your own body is instant death
+let hazard, drops = [], invuln = 0;
+
+function placeHazard() { // one static hazard tile, at least 5 tiles from the head
+  do { hazard = { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
+  while (Math.abs(hazard.x - snake[0].x) + Math.abs(hazard.y - snake[0].y) < 5);
+}
+function takeHit() {
+  invuln = INVULN_TICKS;
+  if (snake.length === 1) { alive = false; return; } // last character lost
+  const t = snake.pop(), r = roster.pop();           // the tail character is the one dropped
+  drops.push({ x: t.x, y: t.y, r, age: 0 });
+}
+function ageDrops() {
+  drops.forEach(d => d.age++);
+  drops = drops.filter(d => d.age < DROP_TICKS);
 }
 function hud() {
   document.getElementById('score').textContent = score;
@@ -161,9 +197,19 @@ function step() {
   dir = nextDir;
   const h = snake[0];
   const nx = h.x + dir.x, ny = h.y + dir.y;
-  if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || snake.some(s => s.x === nx && s.y === ny)) {
-    alive = false; alpha = 1; return;
+  const self = snake.some(s => s.x === nx && s.y === ny);
+  const blocked = nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS || self || (nx === hazard.x && ny === hazard.y);
+  if (blocked) {
+    // Wall, hazard or own body: the snake stays put and loses one character (unless still invulnerable).
+    prev = snake.map(s => ({ ...s }));
+    animTick++;
+    if (invuln > 0) invuln--;
+    else if (self && !SELF_HIT_COSTS_RING) alive = false;
+    else takeHit();
+    ageDrops(); updateAttacks(); hud();
+    return;
   }
+  if (invuln > 0) invuln--;
   prev = snake.map(s => ({ ...s }));
   const ate = nx === food.x && ny === food.y;
   snake.unshift({ x: nx, y: ny });
@@ -174,28 +220,49 @@ function step() {
   } else snake.pop();
   faceSegments();
   animTick++; // animation clock: 1 frame per tick
+  ageDrops();
   updateAttacks();
   if (score > best) best = score;
   hud();
 }
 
 // ---- Rendering ---------------------------------------------------------------
+function drawSegment(r, px, py, isHead) {
+  const ch = CHARACTERS[r.c % CHARACTERS.length];
+  if (ch.ready) {
+    drawCharacter(ch, r, animTick, Math.round(px), Math.round(py));
+  } else { // fallback: colored squares
+    ctx.fillStyle = COLORS[r.c % COLORS.length];
+    ctx.fillRect(Math.round(px) + 2, Math.round(py) + 2, CELL - 4, CELL - 4);
+    if (isHead) { ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(px) + 11, Math.round(py) + 11, 10, 10); }
+  }
+}
+function drawHazard() { // placeholder spikes until there is real art
+  const x = hazard.x * CELL, y = hazard.y * CELL;
+  ctx.fillStyle = '#8a8aa3';
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(x + 2 + i * 10, y + CELL - 4);
+    ctx.lineTo(x + 7 + i * 10, y + 6);
+    ctx.lineTo(x + 12 + i * 10, y + CELL - 4);
+    ctx.fill();
+  }
+}
 function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
+  drawHazard();
   ctx.fillStyle = '#ff4d4d';
   ctx.fillRect(food.x * CELL + 6, food.y * CELL + 6, CELL - 12, CELL - 12);
-  snake.forEach((s, i) => {
-    const r = roster[i], ch = CHARACTERS[r.c % CHARACTERS.length];
+  const blink = invuln > 0 && animTick % 2 === 0; // chain blinks while invulnerable
+  if (!blink) snake.forEach((s, i) => {
     const p = prev[Math.min(i, prev.length - 1)];
-    const px = (p.x + (s.x - p.x) * alpha) * CELL;
-    const py = (p.y + (s.y - p.y) * alpha) * CELL;
-    if (ch.ready) {
-      drawCharacter(ch, r, animTick, Math.round(px), Math.round(py));
-    } else { // fallback: colored squares
-      ctx.fillStyle = COLORS[r.c % COLORS.length];
-      ctx.fillRect(px + 2, py + 2, CELL - 4, CELL - 4);
-      if (i === 0) { ctx.fillStyle = '#fff'; ctx.fillRect(px + 11, py + 11, 10, 10); }
-    }
+    drawSegment(roster[i], (p.x + (s.x - p.x) * alpha) * CELL, (p.y + (s.y - p.y) * alpha) * CELL, i === 0);
+  });
+  drops.forEach(d => { // dropped character fades out and floats up
+    ctx.save();
+    ctx.globalAlpha = 1 - d.age / DROP_TICKS;
+    drawSegment(d.r, d.x * CELL, d.y * CELL - d.age * 3, false);
+    ctx.restore();
   });
   attacks.forEach(drawAttack); // attack layer sits on top of the characters
   if (!alive || paused) {

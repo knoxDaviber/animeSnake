@@ -17,7 +17,7 @@ Start a run, pick a starting buff, steer the chain around the grid, eat food, re
 
 - The snake is a chain of anime characters following each other on a grid.
 - Each character gives a **buff**, and some also modify the head's attack. A character can have a buff, an attack modifier, or both. Attacks never replace buffs.
-- **Rings:** a hit drops one character. You die when none are left.
+- **Rings:** a hit drops one character (the tail). You die when none are left. Walls, hazards and your own body all count as hits. The snake stays put on a blocked move, and after a hit it is invulnerable for 8 ticks (the chain blinks) so one obstacle can't strip the whole chain.
 - **Merging:** three **adjacent** identical characters merge into one bigger version with a stronger buff. Chain order becomes a puzzle.
 
 ## Recruitment
