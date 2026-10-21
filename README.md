@@ -31,7 +31,7 @@ Full details, build order and open questions are in [DESIGN.md](DESIGN.md). Spri
 ## Structure
 
 ```
-src/                     game code (index.html)
+src/                     game code, see "Code layout" below
 assets/images/
   characters/            4x4 character sheets (committed)
   enemies/               4x4 enemy head and body sheets (placeholders)
@@ -40,6 +40,25 @@ assets/images/
 assets/audio/            optimized music and sfx (committed)
 assets/_raw/             raw AI outputs (git-ignored)
 ```
+
+## Code layout
+
+Plain script files, no build step and no server: `src/index.html` loads them in this order.
+
+| File | What lives there |
+|------|------------------|
+| `config.js` | Constants and tuning numbers (grid, tick, invulnerability, wave and enemy settings, points) |
+| `sprites.js` | Loads every sprite sheet |
+| `state.js` | The `S` object holding all mutable game state, and `newRun()` |
+| `world.js` | Food, the hazard, drop effects |
+| `player.js` | Steering, moving, eating, rings and damage |
+| `attacks.js` | Attack definitions, the swing timer, hit resolution |
+| `enemies.js` | Enemy snakes, their AI, waves |
+| `render.js` | All drawing (reads `S`, never changes it) |
+| `input.js` | Keyboard, touch, pause |
+| `main.js` | One logic tick (`step`), the frame loop, start-up |
+
+Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goes in `render.js`. If the game code throws, it shows an error screen (details in the browser console) instead of freezing.
 
 ## Workflow habits
 
