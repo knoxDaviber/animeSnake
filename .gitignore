@@ -1,0 +1,5 @@
+.DS_Store
+node_modules/
+*.log
+# raw asset exports / work-in-progress files
+assets/_raw/
