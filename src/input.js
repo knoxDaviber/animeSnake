@@ -12,9 +12,9 @@ addEventListener('blur', pause);
 // Keys that do not count as "any key" on the revive screen (so shortcuts like Ctrl+R do not revive you).
 const MODIFIER_KEYS = ['shift', 'control', 'alt', 'meta', 'capslock', 'altgraph'];
 
-// True for events aimed at the initials box or its buttons (leaderboard.js). The game must not react to them:
-// typing, Enter and taps there belong to the box, and a tap on Save must not restart the game.
-function inNameBox(e) { return !!(e.target && e.target.closest && e.target.closest('#nameEntry')); }
+// True for events aimed at the initials box (leaderboard.js) or the info bar (panel.js). The game must not react to
+// them: typing, Enter and taps there belong to those, and a tap on Save or the bar must not restart, revive or steer.
+function inNameBox(e) { return !!(e.target && e.target.closest && e.target.closest('#nameEntry, #dock')); }
 
 addEventListener('keydown', e => {
   if (inNameBox(e)) return;
@@ -36,6 +36,7 @@ addEventListener('keydown', e => {
     else if (k === 'enter' || k === ' ') chooseCard(S.pickIndex);
     return;
   }
+  if (k === 'i') return togglePanel();   // show or hide the info bar (works while paused too)
   if (k === 'p' || k === 'escape') return S.paused ? resume() : pause();
   if (S.paused) return;
   if (k === 'arrowup' || k === 'w') setDir(0, -1);
@@ -75,6 +76,7 @@ addEventListener('touchstart', e => {
   resume();
 });
 addEventListener('touchmove', e => {
+  if (inNameBox(e)) return;
   if (S.paused) return;
   const dx = e.touches[0].clientX - touchX, dy = e.touches[0].clientY - touchY;
   if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;

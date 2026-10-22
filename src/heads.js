@@ -8,11 +8,11 @@
 function secs(ticks) { return Math.round(ticks * TICK_MS / 100) / 10; }
 
 const HEAD_DEFS = [
-  { id: 'swordsman', name: 'Swordsman', update: updateSwordsman,
+  { id: 'swordsman', name: 'Swordsman', update: updateSwordsman, weapon: 'Sword', cd: SWORD_COOLDOWN,
     desc: `Sword hits for ${SWORD_DAMAGE} every ${secs(SWORD_COOLDOWN)} s. Blocks the first enemy-head hit, ready again after ${secs(SHIELD_RECHARGE)} s.` },
-  { id: 'magician', name: 'Magician', update: updateMagician,
+  { id: 'magician', name: 'Magician', update: updateMagician, weapon: 'Shockwave', cd: SHOCK_COOLDOWN,
     desc: `Walls open a portal to the other side instead of hurting. A 3x3 shockwave every ${secs(SHOCK_COOLDOWN)} s.` },
-  { id: 'gunman', name: 'Gunman', update: updateGunman,
+  { id: 'gunman', name: 'Gunman', update: updateGunman, weapon: 'Bullets', cd: GUNMAN_COOLDOWN,
     desc: `A bullet flies out to each side every ${secs(GUNMAN_COOLDOWN)} s.` },
 ];
 
@@ -76,4 +76,5 @@ function chooseHead(i) {
   S.headPicking = false;
   S.pickIndex = 0;
   S.pickAfter = performance.now() + PICK_LOCKOUT_MS; // the tap that chose the head must not also choose a buff
+  hud(); // the buff pick screen is drawn by hud() (render.js)
 }

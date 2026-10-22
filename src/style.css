@@ -1,9 +1,35 @@
 html, body { margin: 0; height: 100%; background: #14101f; color: #f3e9ff; font-family: system-ui, sans-serif; overflow: hidden; touch-action: none; }
-body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+body { --chrome: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+body.panel-closed { --chrome: 110px; }   /* space kept for the HUD, info bar and hint: the canvas grows when the bar is hidden */
 #hud { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 20px; font-size: 16px; max-width: 96vw; }
 canvas {
   background: #1d1730; border: 2px solid #3a2d5c;
-  width: min(96vw, 80vh, 640px); height: auto; aspect-ratio: 1 / 1;
+  width: min(96vw, calc(100vh - var(--chrome)), 640px); height: auto; aspect-ratio: 1 / 1;
   image-rendering: pixelated; /* keep pixel art crisp when the canvas is scaled */
 }
-#hint { font-size: 12px; opacity: .6; }
+#hint { font-size: 12px; opacity: .6; text-align: center; max-width: 96vw; }
+@media (max-height: 520px) { #hint { display: none; } }
+
+/* ---- Info bar (panel.js): small portraits with a count and a thin skill bar ---- */
+#dock { width: min(96vw, calc(100vh - var(--chrome)), 640px); display: flex; flex-direction: column; align-items: center; gap: 2px; }
+#panel { display: flex; flex-direction: column; align-items: center; gap: 5px; transition: opacity .2s; }
+#panel.idle { opacity: .35; }                 /* while a pick screen is up */
+body.panel-closed #panel { display: none; }
+.chips { display: flex; gap: 10px; justify-content: center; }
+.chip { display: flex; flex-direction: column; gap: 3px; width: 32px; }
+.chip.none { opacity: .3; }
+.cpic { position: relative; width: 32px; height: 32px; border-radius: 5px; background-size: 400% 400%; background-position: 0 0; image-rendering: pixelated; }
+.chip.shielded .cpic { box-shadow: 0 0 0 2px #6bc5ff; }
+.ccnt { position: absolute; right: -4px; bottom: -4px; min-width: 14px; padding: 0 3px; border-radius: 7px; background: #14101f; color: #ffd36b; font: bold 10px/14px system-ui; text-align: center; }
+.cbar { height: 3px; background: #2a2145; border-radius: 2px; overflow: hidden; }
+.cbar i { display: block; height: 100%; width: 0; transition: width .125s linear; }  /* solid fill, colour set in panel.js */
+.chip.ready .cbar { box-shadow: 0 0 5px 1px rgba(255,255,255,.4); }
+.pline { font-size: 11px; color: #9a8cc4; }
+
+/* The handle: HOLD it to show or hide the bar. A gold line fills while you hold. */
+#panelHandle { position: relative; width: 48px; height: 16px; padding: 0; border: 0; background: transparent; cursor: pointer;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; touch-action: none; }
+#panelHandle::before, #panelHandle::after { content: ''; position: absolute; left: 10px; top: 6px; height: 4px; border-radius: 2px; }
+#panelHandle::before { right: 10px; background: #3a2d5c; }
+#panelHandle::after { width: 0; background: #ffd36b; }
+#panelHandle.holding::after { width: calc(100% - 20px); transition: width var(--hold, 400ms) linear; }

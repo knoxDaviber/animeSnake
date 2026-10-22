@@ -5,6 +5,9 @@ const COLS = 20, ROWS = 20, CELL = 32, TICK_MS = 125;
 const SPRITE = 32;   // size of one frame in a character / enemy / item sheet
 const FRAMES = 4;    // frames per animation row in a directional sheet
 
+// Info bar (panel.js)
+const PANEL_HOLD_MS = 400;   // hold the little handle under the info bar this long to show or hide it
+
 // Rings and damage
 const INVULN_TICKS = 8;            // ticks of immunity after a hit (the chain blinks)
 const DROP_TICKS = 4;              // length of the drop fade, in ticks

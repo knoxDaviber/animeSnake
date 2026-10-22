@@ -12,6 +12,7 @@ function hud() {
   document.getElementById('bestcombo').textContent = S.bestCombo;
   const b = BUFFS.find(x => x.id === S.buff);
   document.getElementById('buff').textContent = b ? b.name : '-';
+  updatePanel();
 }
 
 // Draws one frame of a directional sheet, scaled to fit one 32x32 tile. Sprites face right; left is mirrored.
