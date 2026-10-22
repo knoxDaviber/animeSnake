@@ -137,6 +137,7 @@ function drawEnemies() {
   });
 }
 function drawPlayer() {
+  fit=true;
   if (S.invuln > 0 && S.tick % 2 === 0) return; // chain blinks while invulnerable
   S.snake.forEach((s, i) => {
     const p = lerpPos(S.prev, i, s);
