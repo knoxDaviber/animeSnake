@@ -22,7 +22,7 @@ function step() {
 // Runs every display frame. Logic ticks are fixed; drawing is smooth in between.
 // If anything throws, the game shows an error screen instead of silently freezing.
 function loop(t) {
-  if (S.alive && !S.paused && !S.crashed) {
+  if (S.alive && !S.paused && !S.crashed && !S.picking) {
     try {
       if (t - S.last >= TICK_MS) {
         S.last += TICK_MS;

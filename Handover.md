@@ -6,9 +6,9 @@ For whoever picks this up next (a new chat, a new session, or future you). Read 
 
 Snake, but anime: a fast roguelike where the snake is a chain of anime characters. It is the user's first small game, fully vibecoded (code with AI help, art and audio from other AI tools). Plain HTML, CSS and JavaScript, no build step, no server, no dependencies. Repo: https://github.com/knoxDaviber/animeSnake
 
-What works today: the Snake loop with smooth movement, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, an auto-sword that hits them, followers with active skills (the Miner drops mines), score and combos, best score and best combo saved in the browser, pause, and an error screen.
+What works today: the Snake loop with smooth movement, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, an auto-sword that hits them, followers with active skills (the Miner drops mines), a run-start buff pick screen, score and combos, best score and best combo saved in the browser, pause, and an error screen.
 
-What does not exist yet: recruitment (keys and wandering characters), follower passives (defined as text only), the other followers' active skills, extra heads, run-start buff choice, expand-grid (set aside for now), coins, revives, retention systems, merging, character unlocks, audio.
+What does not exist yet: recruitment (keys and wandering characters), follower passives (defined as text only), the other followers' active skills, extra heads, more than 2 run-start buffs, expand-grid (set aside for now), coins, revives, retention systems, merging, character unlocks, audio.
 
 ## Run it
 
@@ -31,6 +31,7 @@ Plain script files loaded in the order below by `index.html`. Each file may use 
 | `attacks.js` | `ATTACKS` definitions, swing timer, `resolveHit` |
 | `skills.js` | `SKILLS` (followers' active skills, per-slot cooldowns), `dropMine`, `updateSkills` |
 | `mines.js` | `mineAt`, `detonateMine`, blast flash (`ageBlasts`) |
+| `buffs.js` | `BUFFS` (run-start buffs), `pickCardRect()`, `startRun()` |
 | `enemies.js` | Enemy snakes, AI, damage and cutting, waves |
 | `render.js` | All drawing. Reads `S`, never changes it (`hud()` only writes page text) |
 | `input.js` | Keyboard, touch, pause |
@@ -57,6 +58,7 @@ If anything throws, `loop()` shows a "Something broke" screen with the message i
 - **Head-on:** both snakes take damage, the enemy is stunned for 4 ticks.
 - **Waves:** the first wave starts after 24 ticks. Wave size is `1 + wave/3` (max 5). Enemies spawn along the edges, never reverse, avoid obstacles, and chase the player's head 60% of the time.
 - **Score:** food 10, cut segment 5, kill 20 x combo count (capped at x5). A kill must land within 24 ticks of the last one. Getting hit does not break a combo.
+- **Run start:** `newRun()` builds the run but leaves `S.picking = true`. The loop does not tick until the player picks a buff (tap a card, keys 1/2, or arrows + Enter). `startRun(i)` applies the buff and starts the clock. Input is ignored for `PICK_LOCKOUT_MS` after the screen appears so the restart tap cannot also pick. Buffs: **Extra follower** (one more random follower behind the tail) and **+10% score** (`S.scoreMult`; coins too once they exist).
 - **Chain:** slot 0 is the head (`HEADS`), every other slot is a follower (`FOLLOWERS`). A slot is `{ c, fx, fy, cd }` (`cd` = skill cooldown). A run starts as the head plus `START_FOLLOWERS` (Miner, Raiden). Eating food still adds a random follower until recruitment replaces it.
 - **Mines:** each Miner in the chain drops a mine on the tile the tail just left every `MINE_COOLDOWN` ticks (max `MINE_MAX` on the map; skipped if the snake grew or the tile is taken). Any snake head stepping on one sets it off. Blast = that tile plus the 4 around it: enemy heads lose `MINE_DAMAGE`, enemy body segments are cut, and the player loses a ring if the head is inside the blast (not while invulnerable). Enemies do not avoid mines. Kills from mines feed the combo.
 - **Attacks** are independent objects with their own sheets, drawn on top of everything. Frame size is set per attack (`w`, `h`, optional `fit` to scale into one tile, optional `frames`).
@@ -90,7 +92,6 @@ The follower and mine placeholders come from `tools/make_placeholders.py`, which
 
 Waiting on the user:
 - Are the proposed follower passives and skills in `followers.js` right (Raiden lightning, Medusa gaze, Magneto pull, Keysman key rate)?
-- What are the 2 run-start buffs?
 
 Assumed, not confirmed:
 - Picking up a key summons a character right away. If an enemy kills it before you reach it, the key is wasted.
@@ -98,7 +99,7 @@ Assumed, not confirmed:
 
 ## Next steps (proposed order)
 
-1. **Done: foundation and mines** (heads/followers split, `tileFree`, active skills, Miner mines). Playtest and tune them first.
+1. **Done: foundation, mines and the run-start pick screen.** Playtest and tune them first.
 2. **Recruitment:** keys replace food growth, characters walk in from the edges, enemies can kill them.
 3. **Heads, follower skills and buffs:** 3 heads with starting weapons, the other follower passives and skills, run-start pick. Expand-grid is set aside for now.
 4. **Coins, revives and retention systems** (build step 5), including the death-screen hooks.

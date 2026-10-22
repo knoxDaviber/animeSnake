@@ -10,6 +10,9 @@
 //   mines / blasts mines waiting on the map { x, y } / explosion flashes { x, y, age }
 //   attacks        attacks playing right now (drawn on top of everything)
 //   drops          fade-out effects for dropped characters and killed enemies
+//   picking        true while the run-start pick screen is up (the run has not started); pickIndex = highlighted
+//                  card, pickAfter = time (ms) before which picks are ignored, buff = id of the buff chosen
+//   scoreMult      multiplier on all points (the '+10% score' buff sets it)
 //   tick           animation clock: 1 animation frame = 1 logic tick
 //   alpha          0..1 progress through the current tick, for interpolation
 //   combo          kills chained inside COMBO_WINDOW; comboTimer counts the window down
@@ -25,6 +28,7 @@ function newRun() {
     prev: snake.map(s => ({ ...s })),
     roster: [newSlot(0, 1, 0), ...START_FOLLOWERS.map(id => newSlot(followerIndex(id), 1, 0))],
     tailLeft: null,
+    picking: true, pickIndex: 0, pickAfter: performance.now() + PICK_LOCKOUT_MS, buff: null, scoreMult: 1,
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 },
     food: null, hazard: null, mines: [], blasts: [],
     score: 0, alive: true, paused: false, crashed: null,

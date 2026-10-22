@@ -10,6 +10,8 @@ function hud() {
   document.getElementById('combo').textContent = S.combo ? `${S.combo} (x${comboMult()})` : '-';
   document.getElementById('best').textContent = S.best;
   document.getElementById('bestcombo').textContent = S.bestCombo;
+  const b = BUFFS.find(x => x.id === S.buff);
+  document.getElementById('buff').textContent = b ? b.name : '-';
 }
 
 // ---- Sprite helpers ------------------------------------------------------------
@@ -177,6 +179,34 @@ function drawOverlay() {
   }
   ctx.fillText(S.alive ? 'Tap or press P to resume' : 'Tap or press Space to restart', cv.width / 2, cv.height / 2 + (S.alive ? 20 : 68));
 }
+function wrapText(text, maxW) { // split text into lines that fit maxW pixels in the current font
+  const lines = []; let line = '';
+  text.split(' ').forEach(w => {
+    if (line && ctx.measureText(line + ' ' + w).width > maxW) { lines.push(line); line = w; }
+    else line = line ? line + ' ' + w : w;
+  });
+  if (line) lines.push(line);
+  return lines;
+}
+function drawPick() { // run-start pick screen: one card per buff
+  if (!S.picking) return;
+  ctx.save();
+  ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
+  ctx.fillText('Choose your run-start buff', cv.width / 2, 150);
+  BUFFS.forEach((b, i) => {
+    const c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
+    ctx.fillStyle = sel ? '#2c2250' : '#211a3b'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.lineWidth = 3; ctx.strokeStyle = sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(c.x, c.y, c.w, c.h);
+    ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 22px system-ui'; ctx.fillText(b.name, cx, c.y + 50);
+    ctx.fillStyle = '#f3e9ff'; ctx.font = '16px system-ui';
+    wrapText(b.desc, c.w - 30).forEach((line, k) => ctx.fillText(line, cx, c.y + 90 + k * 22));
+    ctx.fillStyle = '#9a8cc4'; ctx.fillText(`[${i + 1}]`, cx, c.y + c.h - 20);
+  });
+  ctx.font = '14px system-ui'; ctx.fillStyle = '#9a8cc4';
+  ctx.fillText('Tap a card, press 1 / 2, or use the arrows and Enter', cv.width / 2, 490);
+  ctx.restore();
+}
 function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
   drawHazard();
@@ -190,6 +220,7 @@ function draw() {
   drawPopups();
   drawComboBar();
   drawOverlay();
+  drawPick();
 }
 // Shown instead of a frozen screen if the game code throws. Uses nothing but the canvas.
 function drawCrash(msg) {

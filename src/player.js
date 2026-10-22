@@ -3,6 +3,7 @@
 // You die when none are left.
 
 function setDir(x, y) {
+  if (S.picking) return; // the run has not started yet
   if (x === -S.dir.x && y === -S.dir.y) return; // no instant reverse
   S.nextDir = { x, y };
 }

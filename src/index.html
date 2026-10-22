@@ -7,9 +7,9 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="hud"><span>Score <b id="score">0</b></span><span>Chain <b id="len">3</b></span><span>Wave <b id="wave">1</b></span><span>Combo <b id="combo">-</b></span><span>Best <b id="best">0</b></span><span>Best combo <b id="bestcombo">0</b></span></div>
+<div id="hud"><span>Score <b id="score">0</b></span><span>Chain <b id="len">3</b></span><span>Wave <b id="wave">1</b></span><span>Combo <b id="combo">-</b></span><span>Best <b id="best">0</b></span><span>Best combo <b id="bestcombo">0</b></span><span>Buff <b id="buff">-</b></span></div>
 <canvas id="c" width="640" height="640"></canvas>
-<div id="hint">Arrows / WASD / swipe to steer. P pauses. Tap to restart after dying.</div>
+<div id="hint">Arrows / WASD / swipe to steer. P pauses. Tap to restart after dying, then pick a buff.</div>
 
 <!-- Plain scripts (no server or build step needed). Order matters: each file may use the ones above it
      when it loads, and every function in any file when the game runs. -->
@@ -24,6 +24,7 @@
 <script src="attacks.js"></script>  <!-- attack definitions, swing timer, hit resolution -->
 <script src="skills.js"></script>   <!-- active skills carried by followers (the Miner's mines) -->
 <script src="mines.js"></script>    <!-- mines on the map and their explosions -->
+<script src="buffs.js"></script>    <!-- run-start buffs, the pick screen layout, startRun() -->
 <script src="enemies.js"></script>  <!-- enemy snakes, their AI, waves -->
 <script src="render.js"></script>   <!-- all drawing; reads S, never changes it -->
 <script src="input.js"></script>    <!-- keyboard, touch, pause -->

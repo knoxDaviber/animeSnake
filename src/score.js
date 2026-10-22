@@ -6,6 +6,7 @@ function comboMult() { return Math.min(Math.max(S.combo, 1), COMBO_MAX_MULT); }
 
 // Adds points. If a tile (x, y) is given, a "+N" popup floats up from it.
 function addScore(points, x, y, suffix = '') {
+  points = Math.round(points * S.scoreMult);
   S.score += points;
   if (x !== undefined) S.popups.push({ x, y, text: '+' + points + suffix, age: 0 });
 }
