@@ -5,9 +5,11 @@ function step() {
   S.tick++; // animation clock: 1 frame per tick
   ageDrops();
   agePopups();
+  ageBlasts();
   playerMove();
   if (S.alive) {
     updateCombo();
+    updateSkills();
     updateAttacks();
     stepEnemies();
     updateWaves();

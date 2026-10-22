@@ -1,5 +1,5 @@
 // player.js: steering, moving, eating, and rings and damage.
-// Walls, the hazard, enemy snakes and your own body each cost one character per hit.
+// Walls, the hazard, enemy snakes, your own body and mine blasts each cost one character per hit.
 // You die when none are left.
 
 function setDir(x, y) {
@@ -23,6 +23,7 @@ function takeHit() {
 
 function playerMove() {
   S.dir = S.nextDir;
+  S.tailLeft = null;
   const h = S.snake[0];
   const nx = h.x + S.dir.x, ny = h.y + S.dir.y;
   S.prev = S.snake.map(s => ({ ...s }));
@@ -46,8 +47,10 @@ function playerMove() {
   S.snake.unshift({ x: nx, y: ny });
   if (ate) {
     const tail = S.roster[S.roster.length - 1];
-    S.roster.push({ c: Math.floor(Math.random() * CHARACTERS.length), fx: tail.fx, fy: tail.fy });
+    S.roster.push(newSlot(randomFollower(), tail.fx, tail.fy));
     addScore(POINTS.food, nx, ny); placeFood();
-  } else S.snake.pop();
+  } else S.tailLeft = S.snake.pop();
   faceSegments();
+  const mine = mineAt(nx, ny);
+  if (mine) detonateMine(mine); // stepped on a mine
 }

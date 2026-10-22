@@ -2,9 +2,12 @@
 // instead of keeping their own globals, so there is a single place to look when something is off.
 //
 //   snake / prev   tile positions, head first / the same one tick ago (for smooth rendering)
-//   roster         which character sits in each chain slot ({ c, fx, fy }: character index, facing)
+//   roster         one slot per chain position: { c, fx, fy, cd }. Slot 0 is the head (c indexes HEADS), every
+//                  other slot is a follower (c indexes FOLLOWERS). fx/fy = facing, cd = skill cooldown (ticks)
+//   tailLeft       the tile the tail left this tick, or null if the snake grew or was blocked (Miners use it)
 //   dir / nextDir  current and queued heading
 //   enemies        enemy snakes: { segs, prev, dir, hp, stun }
+//   mines / blasts mines waiting on the map { x, y } / explosion flashes { x, y, age }
 //   attacks        attacks playing right now (drawn on top of everything)
 //   drops          fade-out effects for dropped characters and killed enemies
 //   tick           animation clock: 1 animation frame = 1 logic tick
@@ -15,13 +18,15 @@
 const S = { best: 0, bestCombo: 0 };
 
 function newRun() {
-  const snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+  // The head plus START_FOLLOWERS, in a line heading right from the middle of the grid.
+  const snake = range(1 + START_FOLLOWERS.length).map(i => ({ x: 10 - i, y: 10 }));
   Object.assign(S, {
     snake,
     prev: snake.map(s => ({ ...s })),
-    roster: snake.map((_, i) => ({ c: i % CHARACTERS.length, fx: 1, fy: 0 })),
+    roster: [newSlot(0, 1, 0), ...START_FOLLOWERS.map(id => newSlot(followerIndex(id), 1, 0))],
+    tailLeft: null,
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 },
-    food: null, hazard: null,
+    food: null, hazard: null, mines: [], blasts: [],
     score: 0, alive: true, paused: false, crashed: null,
     tick: 0, alpha: 1, last: performance.now(),
     invuln: 0, newBest: false,

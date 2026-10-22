@@ -21,6 +21,13 @@ function hitsToKill(w) { return w <= 5 ? 1 : w <= 9 ? 2 : w <= 13 ? 3 : w <= 17 
 function waveSize(w) { return Math.min(1 + Math.floor(w / 3), 5); }
 function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 
+// Followers, skills and mines
+const START_FOLLOWERS = ['miner', 'raiden']; // who follows the head at the start of a run (ids from followers.js)
+const MINE_COOLDOWN = 40;   // ticks (5 s) between mines dropped by each Miner in the chain
+const MINE_MAX = 3;         // most mines allowed on the map at once
+const MINE_DAMAGE = 1;      // hit points a mine blast takes off an enemy head (body segments are cut off)
+const BLAST_TICKS = 4;      // how long the explosion flash stays on screen
+
 // Score and combos
 const POINTS = { food: 10, kill: 20, segment: 5 };  // base points (a kill is multiplied by the combo)
 const COMBO_WINDOW = 24;      // ticks (3 s) to land the next kill before the combo ends

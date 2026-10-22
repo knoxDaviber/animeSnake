@@ -75,6 +75,8 @@ function stepEnemy(e) {
   e.dir = pick.d;
   e.segs.unshift({ x: pick.x, y: pick.y });
   e.segs.pop();
+  const mine = mineAt(pick.x, pick.y);
+  if (mine) detonateMine(mine);               // enemies do not avoid mines: lure them in
 }
 function stepEnemies() {
   [...S.enemies].forEach(e => { if (S.alive && S.enemies.includes(e)) stepEnemy(e); });

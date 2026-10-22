@@ -38,15 +38,22 @@ function drawItem(sh, tick, px, py) {
 
 // ---- Objects -------------------------------------------------------------------
 // Each draws its sprite, or a plain shape if the sheet is missing.
-function drawSegment(r, px, py, isHead) { // a character in the chain
-  const ch = CHARACTERS[r.c % CHARACTERS.length];
+function drawSegment(r, px, py, isHead) { // a character in the chain: the head, or a follower
+  const def = isHead ? null : FOLLOWERS[r.c];
+  const ch = isHead ? HEADS[r.c % HEADS.length] : def.sheet;
   px = Math.round(px); py = Math.round(py);
   if (ch.ready) {
     drawDirectional(ch, r.fx, r.fy, S.tick, px, py);
   } else {
-    ctx.fillStyle = COLORS[r.c % COLORS.length];
+    ctx.fillStyle = isHead ? COLORS[r.c % COLORS.length] : def.color;
     ctx.fillRect(px + 2, py + 2, CELL - 4, CELL - 4);
     if (isHead) { ctx.fillStyle = '#fff'; ctx.fillRect(px + 11, py + 11, 10, 10); }
+    else {
+      ctx.save();
+      ctx.fillStyle = '#14101f'; ctx.font = 'bold 16px system-ui'; ctx.textAlign = 'center';
+      ctx.fillText(def.name[0], px + CELL / 2, py + 22);
+      ctx.restore();
+    }
   }
 }
 function drawEnemySeg(isHead, fx, fy, px, py) {
@@ -76,6 +83,25 @@ function drawFood() {
   if (SPRITES.food.ready) return drawItem(SPRITES.food, S.tick, x, y);
   ctx.fillStyle = '#ff4d4d';
   ctx.fillRect(x + 6, y + 6, CELL - 12, CELL - 12);
+}
+function drawMines() {
+  S.mines.forEach(m => {
+    const x = m.x * CELL, y = m.y * CELL;
+    if (SPRITES.mine.ready) return drawItem(SPRITES.mine, S.tick, x, y);
+    ctx.fillStyle = '#3a3a4a'; // fallback: dark disc with a blinking red light
+    ctx.beginPath(); ctx.arc(x + CELL / 2, y + CELL / 2, 10, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = S.tick % 2 ? '#ff4d4d' : '#7a1f1f';
+    ctx.fillRect(x + 13, y + 13, 6, 6);
+  });
+}
+function drawBlasts() { // explosion flash on every tile of the blast, fading out
+  ctx.save();
+  S.blasts.forEach(b => {
+    ctx.globalAlpha = 0.85 * (1 - b.age / BLAST_TICKS);
+    ctx.fillStyle = '#ff9a3c'; ctx.fillRect(b.x * CELL, b.y * CELL, CELL, CELL);
+    ctx.fillStyle = '#ffe9a8'; ctx.fillRect(b.x * CELL + 8, b.y * CELL + 8, CELL - 16, CELL - 16);
+  });
+  ctx.restore();
 }
 function drawAttack(a) {
   const d = a.def;
@@ -155,10 +181,12 @@ function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
   drawHazard();
   drawFood();
+  drawMines();
   drawEnemies();
   drawPlayer();
   drawDrops();
   S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
+  drawBlasts();
   drawPopups();
   drawComboBar();
   drawOverlay();
