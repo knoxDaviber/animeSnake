@@ -13,6 +13,7 @@ function step() {
     updateSkills();
     updatePassives();   // Magneto pulls the key toward you
     updateAttacks();
+    updateHead();       // the head's weapon (heads.js)
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
     stepEnemies();
     refreshKey();       // puts the next key down unless enough characters are already waiting

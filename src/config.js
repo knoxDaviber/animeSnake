@@ -35,6 +35,17 @@ const GAZE_COOLDOWN = 80;       // ticks (10 s) between gazes, per Medusa in the
 const GAZE_STUN = 4;            // ticks every enemy in the line stays frozen
 const ZAP_TICKS = 3;            // how long the bolt / gaze flash stays on screen
 
+// Heads (heads.js)
+const SWORD_COOLDOWN = 16;      // ticks (2 s) between Swordsman swings
+const SWORD_DAMAGE = 3;         // hit points a sword hit takes off an enemy head
+const SHIELD_RECHARGE = 40;     // ticks (5 s) until the Swordsman's block is ready again after it blocks a hit
+const SHOCK_COOLDOWN = 80;      // ticks (10 s) between Magician shockwaves
+const SHOCK_DAMAGE = 1;         // hit points a shockwave takes off an enemy head
+const SHOCK_REACH = 2;          // the 3x3 area is centred this many tiles ahead of the head (0 = around the head)
+const GUNMAN_COOLDOWN = 48;     // ticks (6 s) between volleys (one bullet each way)
+const BULLET_DAMAGE = 1;
+const BULLET_SPEED = 2;         // tiles per tick
+
 // Follower passives (passives.js)
 const RAIDEN_KILL_BONUS = 5;        // extra base points per kill for each Raiden in the chain (before the combo multiplier)
 const KEYSMAN_DOUBLE_CHANCE = 0.3;  // per Keysman: chance that eating a key summons a second character
@@ -47,7 +58,7 @@ const PICK_CHOICES = 3;        // how many random buffs the pick screen offers
 const FORCE_BUFFS = [];        // for testing: buff ids to always offer, e.g. ['minefield', 'thickSkin']. Leave empty normally
 const BONUS_SCORE_MULT = 1.1;  // the '+10% score' buff
 const THICK_SKIN_TICKS = 4;    // extra immunity ticks after a hit
-const QUICK_BLADE_TICKS = 2;   // ticks taken off the sword cooldown
+const QUICK_HANDS_MULT = 0.8;  // the 'Quick hands' buff: head weapon cooldown is multiplied by this
 const COMBO_KEEPER_TICKS = 12; // ticks added to the combo window
 const SKILL_HASTE_MULT = 0.7;  // follower skill cooldowns are multiplied by this
 const BOUNTY_POINTS = 10;      // extra base points per kill (before the combo multiplier)

@@ -27,13 +27,13 @@ addEventListener('keydown', e => {
     } else if ((k === ' ' || k === 'enter') && !e.repeat) restartRun(); // game over (after its short lockout)
     return;
   }
-  if (S.picking) {                       // run-start pick screen: 1/2 choose, arrows move, Enter/Space confirm
+  if (S.picking) {                       // pick screens: 1/2/3 choose, arrows move, Enter/Space confirm
     if (e.repeat) return;
-    const n = Number(k), count = S.pickChoices.length;
-    if (n >= 1 && n <= count) return startRun(n - 1);
+    const n = Number(k), count = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
+    if (n >= 1 && n <= count) return chooseCard(n - 1);
     if (k === 'arrowleft' || k === 'a') S.pickIndex = (S.pickIndex + count - 1) % count;
     else if (k === 'arrowright' || k === 'd') S.pickIndex = (S.pickIndex + 1) % count;
-    else if (k === 'enter' || k === ' ') startRun(S.pickIndex);
+    else if (k === 'enter' || k === ' ') chooseCard(S.pickIndex);
     return;
   }
   if (k === 'p' || k === 'escape') return S.paused ? resume() : pause();
@@ -49,11 +49,13 @@ function canvasPoint(clientX, clientY) {
   const r = cv.getBoundingClientRect();
   return { x: (clientX - r.left) * cv.width / r.width, y: (clientY - r.top) * cv.height / r.height };
 }
-// Which buff card is under a screen point (-1 if none).
+// Which card is under a screen point (-1 if none): head cards on the first pick screen, buff cards after it.
 function pickAtPoint(clientX, clientY) {
   const p = canvasPoint(clientX, clientY);
-  return S.pickChoices.findIndex((_, i) => { const c = pickCardRect(i); return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h; });
+  const rect = S.headPicking ? headCardRect : pickCardRect, n = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
+  return range(n).findIndex(i => { const c = rect(i); return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h; });
 }
+function chooseCard(i) { return S.headPicking ? chooseHead(i) : startRun(i); }
 // A tap or click while dead: on the revive screen the Give up button gives up and anywhere else revives;
 // on the game-over screen it restarts (after the lockout).
 function tapWhileDead(clientX, clientY) {
@@ -69,7 +71,7 @@ addEventListener('touchstart', e => {
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
-  if (S.picking) return startRun(pickAtPoint(touchX, touchY));
+  if (S.picking) return chooseCard(pickAtPoint(touchX, touchY));
   resume();
 });
 addEventListener('touchmove', e => {
@@ -82,6 +84,6 @@ addEventListener('touchmove', e => {
 addEventListener('mousedown', e => {
   if (S.crashed || inNameBox(e)) return;
   if (!S.alive) tapWhileDead(e.clientX, e.clientY);
-  else if (S.picking) startRun(pickAtPoint(e.clientX, e.clientY));
+  else if (S.picking) chooseCard(pickAtPoint(e.clientX, e.clientY));
   else if (S.paused) resume();
 });

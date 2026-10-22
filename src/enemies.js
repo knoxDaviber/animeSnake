@@ -69,7 +69,7 @@ function stepEnemy(e) {
   } else pick = opts[Math.floor(Math.random() * opts.length)];
   if (pick.headOn) {
     if (S.invuln > 0) return;                 // player is immune: the enemy just waits
-    takeHit();                                // head-on: both snakes take damage, short stun
+        takeHit('enemyHead');                     // head-on: both snakes take damage, short stun                                // head-on: both snakes take damage, short stun
     if (damageEnemyHead(e, 1)) e.stun = 4;
     return;
   }

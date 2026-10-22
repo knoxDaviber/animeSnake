@@ -108,14 +108,21 @@ function drawBlasts() { // explosion flash on every tile of the blast, fading ou
   });
   ctx.restore();
 }
-function drawZaps() { // Raiden's bolt and Medusa's gaze, fading out
+function drawZaps() { // bolt, gaze, shockwave and portal flashes, fading out
   ctx.save();
   S.zaps.forEach(z => {
     ctx.globalAlpha = 1;
     const fade = 1 - z.age / ZAP_TICKS;
-    if (z.kind === 'gaze') {
-      ctx.fillStyle = `rgba(141,255,107,${0.4 * fade})`;
+    if (z.kind === 'gaze' || z.kind === 'wave') {          // a tinted patch on each tile
+      ctx.fillStyle = `rgba(${z.kind === 'wave' ? '199,139,255' : '141,255,107'},${0.45 * fade})`;
       z.tiles.forEach(t => ctx.fillRect(t.x * CELL, t.y * CELL, CELL, CELL));
+      return;
+    }
+    if (z.kind === 'portal') {                             // a ring on the entry and exit tile, growing as it fades
+      ctx.globalAlpha = fade; ctx.strokeStyle = '#c78bff'; ctx.lineWidth = 3;
+      [[z.x1, z.y1], [z.x2, z.y2]].forEach(([tx, ty]) => {
+        ctx.beginPath(); ctx.arc(tx * CELL + CELL / 2, ty * CELL + CELL / 2, 6 + 10 * (1 - fade), 0, Math.PI * 2); ctx.stroke();
+      });
       return;
     }
     const ax = z.x1 * CELL + CELL / 2, ay = z.y1 * CELL + CELL / 2, bx = z.x2 * CELL + CELL / 2, by = z.y2 * CELL + CELL / 2;
@@ -131,6 +138,45 @@ function drawZaps() { // Raiden's bolt and Medusa's gaze, fading out
       ctx.stroke();
     });
   });
+  ctx.restore();
+}
+function drawBullets() { // the Gunman's bullets, interpolated between ticks
+  S.bullets.forEach(b => {
+    const x = Math.round((b.px + (b.x - b.px) * S.alpha) * CELL + CELL / 2);
+    const y = Math.round((b.py + (b.y - b.py) * S.alpha) * CELL + CELL / 2);
+    const w = b.dx ? 12 : 4, h = b.dx ? 4 : 12;
+    ctx.fillStyle = '#ffd36b'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    ctx.fillStyle = '#fff6d0'; ctx.fillRect(x - w / 4, y - h / 4, w / 2, h / 2);
+  });
+}
+function drawShield() { // Swordsman: a ring around the head while the block is ready
+  if (!S.alive || S.picking || headId() !== 'swordsman' || !S.shield) return;
+  const p = lerpPos(S.prev, 0, S.snake[0]);
+  ctx.save();
+  ctx.strokeStyle = '#6bc5ff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
+  ctx.beginPath(); ctx.arc(p.x + CELL / 2, p.y + CELL / 2, CELL / 2 + 1, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
+function drawHeadPick() { // first pick screen: one card per head
+  ctx.save();
+  ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
+  ctx.fillText('Choose your head', cv.width / 2, 100);
+  HEAD_DEFS.forEach((h, i) => {
+    const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
+    ctx.fillStyle = sel ? '#2c2250' : '#211a3b'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    ctx.lineWidth = 3; ctx.strokeStyle = sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(c.x, c.y, c.w, c.h);
+    ctx.save();                                            // portrait: frame 0 of the "down" row, drawn at 2x
+    ctx.translate(Math.round(cx - SPRITE), c.y + 20); ctx.scale(2, 2);
+    drawSegment({ c: i, fx: 0, fy: 1 }, 0, 0, true);
+    ctx.restore();
+    ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 22px system-ui'; ctx.fillText(h.name, cx, c.y + 120);
+    ctx.fillStyle = '#f3e9ff'; ctx.font = '14px system-ui';
+    wrapText(h.desc, c.w - 24).forEach((line, k) => ctx.fillText(line, cx, c.y + 148 + k * 18));
+    ctx.fillStyle = '#9a8cc4'; ctx.fillText(`[${i + 1}]`, cx, c.y + c.h - 14);
+  });
+  ctx.font = '14px system-ui'; ctx.fillStyle = '#9a8cc4';
+  ctx.fillText('Tap a card, press 1 / 2 / 3, or use the arrows and Enter', cv.width / 2, 480);
   ctx.restore();
 }
 function drawAttack(a) {
@@ -153,6 +199,7 @@ function drawAttack(a) {
 // Positions are interpolated between ticks: draw at prev + (now - prev) * alpha.
 function lerpPos(prevList, i, cur) {
   const p = prevList[Math.min(i, prevList.length - 1)];
+  if (Math.abs(cur.x - p.x) > 1 || Math.abs(cur.y - p.y) > 1) return { x: cur.x * CELL, y: cur.y * CELL }; // teleported (portal)
   return { x: (p.x + (cur.x - p.x) * S.alpha) * CELL, y: (p.y + (cur.y - p.y) * S.alpha) * CELL };
 }
 function drawEnemies() {
@@ -301,6 +348,7 @@ function wrapText(text, maxW) { // split text into lines that fit maxW pixels in
 }
 function drawPick() { //'Tap a card, press 1 / 2 / 3, or use the arrows and Enter'
   if (!S.picking) return;
+  if (S.headPicking) return drawHeadPick();
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
@@ -327,8 +375,10 @@ function draw() {
   drawRecruits();
   drawEnemies();
   drawPlayer();
+  drawShield();
   drawDrops();
   S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
+  drawBullets();
   drawBlasts();
   drawZaps();
   drawPopups();

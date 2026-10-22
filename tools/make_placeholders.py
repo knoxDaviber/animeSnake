@@ -1,11 +1,13 @@
-"""Draws placeholder sprite sheets for the followers and the mine. Run from the repo root: python tools/make_placeholders.py
-Never overwrites a file that already exists, so real art is safe. Needs Pillow (pip install pillow)."""
+"""Draws placeholder sprite sheets for the heads, the followers and the mine. Run from the repo root: python tools/make_placeholders.py
+Never overwrites a file that already exists, so real art is safe (character1.png is the Swordsman's real art, so it is not drawn here).
+Needs Pillow (pip install pillow)."""
 import os
 from PIL import Image, ImageDraw
 
 OUT = 'assets/images'
 FOLLOWERS = {'miner': (255, 179, 107), 'raiden': (107, 197, 255), 'keysman': (255, 211, 107),
              'magneto': (199, 139, 255), 'medusa': (141, 255, 107)}
+HEADS = {'magician': (120, 110, 255), 'gunman': (255, 120, 120)}   # the Swordsman is character1.png (real art)
 
 def follower_sheet(name, rgb):
     img = Image.new('RGBA', (128, 128), (0, 0, 0, 0))
@@ -21,6 +23,21 @@ def follower_sheet(name, rgb):
             elif row == 1:                                 # facing right: one eye on the right
                 d.rectangle((ox + 20, oy + 14 - bob, ox + 22, oy + 18 - bob), fill=(20, 16, 31, 255))
             d.text((ox + 13, oy + 5 - bob), name[0].upper(), fill=dark + (255,))
+    return img
+
+def head_sheet(name, rgb):
+    img = follower_sheet(name, rgb)                        # same body and 4x4 layout as a follower
+    d = ImageDraw.Draw(img)
+    dark = tuple(int(c * 0.55) for c in rgb)
+    for row in range(3):
+        for f in range(4):
+            ox, oy = f * 32, row * 32
+            bob = 1 if f % 2 else 0
+            if name == 'magician':                         # pointed hat
+                d.polygon([(ox + 8, oy + 7 - bob), (ox + 24, oy + 7 - bob), (ox + 16, oy + 1 - bob)], fill=dark + (255,), outline=(20, 16, 31, 255))
+            elif name == 'gunman':                         # a gun sticking out to the side
+                if row == 1: d.rectangle((ox + 22, oy + 19 - bob, ox + 31, oy + 22 - bob), fill=(58, 58, 74, 255), outline=(20, 16, 31, 255))
+                else:        d.rectangle((ox + 24, oy + 21 - bob, ox + 29, oy + 24 - bob), fill=(58, 58, 74, 255), outline=(20, 16, 31, 255))
     return img
 
 def mine_sheet():
@@ -39,5 +56,6 @@ def save(img, path):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     img.save(path); print('wrote', path)
 
+for name, rgb in HEADS.items(): save(head_sheet(name, rgb), f'{OUT}/characters/{name}.png')
 for name, rgb in FOLLOWERS.items(): save(follower_sheet(name, rgb), f'{OUT}/followers/{name}.png')
 save(mine_sheet(), f'{OUT}/mine.png')
