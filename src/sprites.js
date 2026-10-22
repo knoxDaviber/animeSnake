@@ -18,7 +18,7 @@ function loadSheet(src, expectW, expectH) {
 }
 
 const DIR_ROW = { down: 0, right: 1, up: 2 };
-const dirSheet = path => loadSheet(path, SPRITE * FRAMES, SPRITE * 4);
+const dirSheet = path => loadSheet(path);
 
 const SPRITES = {
   food:      loadSheet('../assets/images/food.png'),

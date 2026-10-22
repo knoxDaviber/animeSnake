@@ -14,23 +14,25 @@ function hud() {
   document.getElementById('buff').textContent = b ? b.name : '-';
 }
 
-// ---- Sprite helpers ------------------------------------------------------------
-// Draws one 32x32 frame of a directional sheet at 1:1. Sprites face right; left is mirrored.
+// Draws one frame of a directional sheet, scaled to fit one 32x32 tile. Sprites face right; left is mirrored.
+// The frame size comes from the sheet itself (width / 4), so 128x128 and 448x448 sheets both work.
 function drawDirectional(sh, fx, fy, tick, px, py) {
   let row = DIR_ROW.right, flip = false;
   if (fy < 0) row = DIR_ROW.up;
   else if (fy > 0) row = DIR_ROW.down;
   else flip = fx < 0;
-  const sx = (tick % FRAMES) * SPRITE, sy = row * SPRITE;
+  const fw = Math.floor(sh.img.width / FRAMES), fh = Math.floor(sh.img.height / 4);
+  const sx = (tick % FRAMES) * fw, sy = row * fh;
+  ctx.save();
+  ctx.imageSmoothingEnabled = fw !== SPRITE; // smooth only when the sheet had to be scaled down
   if (flip) {
-    ctx.save();
     ctx.translate(px + CELL, py);
     ctx.scale(-1, 1);
-    ctx.drawImage(sh.img, sx, sy, SPRITE, SPRITE, 0, 0, SPRITE, SPRITE);
-    ctx.restore();
+    ctx.drawImage(sh.img, sx, sy, fw, fh, 0, 0, SPRITE, SPRITE);
   } else {
-    ctx.drawImage(sh.img, sx, sy, SPRITE, SPRITE, px, py, SPRITE, SPRITE);
+    ctx.drawImage(sh.img, sx, sy, fw, fh, px, py, SPRITE, SPRITE);
   }
+  ctx.restore();
 }
 // One row of 32x32 frames, looping with the animation clock.
 function drawItem(sh, tick, px, py) {
@@ -138,7 +140,6 @@ function drawEnemies() {
   });
 }
 function drawPlayer() {
-  fit=true;
   if (S.invuln > 0 && S.tick % 2 === 0) return; // chain blinks while invulnerable
   S.snake.forEach((s, i) => {
     const p = lerpPos(S.prev, i, s);
