@@ -14,25 +14,23 @@ function hud() {
   document.getElementById('buff').textContent = b ? b.name : '-';
 }
 
-// Draws one frame of a directional sheet, scaled to fit one 32x32 tile. Sprites face right; left is mirrored.
-// The frame size comes from the sheet itself (width / 4), so 128x128 and 448x448 sheets both work.
+// ---- Sprite helpers ------------------------------------------------------------
+// Draws one 32x32 frame of a directional sheet at 1:1. Sprites face right; left is mirrored.
 function drawDirectional(sh, fx, fy, tick, px, py) {
   let row = DIR_ROW.right, flip = false;
   if (fy < 0) row = DIR_ROW.up;
   else if (fy > 0) row = DIR_ROW.down;
   else flip = fx < 0;
-  const fw = Math.floor(sh.img.width / FRAMES), fh = Math.floor(sh.img.height / 4);
-  const sx = (tick % FRAMES) * fw, sy = row * fh;
-  ctx.save();
-  ctx.imageSmoothingEnabled = fw !== SPRITE; // smooth only when the sheet had to be scaled down
+  const sx = (tick % FRAMES) * SPRITE, sy = row * SPRITE;
   if (flip) {
+    ctx.save();
     ctx.translate(px + CELL, py);
     ctx.scale(-1, 1);
-    ctx.drawImage(sh.img, sx, sy, fw, fh, 0, 0, SPRITE, SPRITE);
+    ctx.drawImage(sh.img, sx, sy, SPRITE, SPRITE, 0, 0, SPRITE, SPRITE);
+    ctx.restore();
   } else {
-    ctx.drawImage(sh.img, sx, sy, fw, fh, px, py, SPRITE, SPRITE);
+    ctx.drawImage(sh.img, sx, sy, SPRITE, SPRITE, px, py, SPRITE, SPRITE);
   }
-  ctx.restore();
 }
 // One row of 32x32 frames, looping with the animation clock.
 function drawItem(sh, tick, px, py) {
@@ -231,14 +229,39 @@ function drawRevive() { // after dying: a countdown to revive (any key or tap) o
   ctx.fillText('Give up  (Q / Backspace)', cx, b.y + 26);
 }
 function drawGameOver() {
-  const cx = cv.width / 2, cy = cv.height / 2;
+  const cx = cv.width / 2;
   ctx.fillStyle = '#fff'; ctx.font = '36px system-ui';
-  ctx.fillText('Game over', cx, cy - 30);
+  ctx.fillText('Game over', cx, 48);
   ctx.font = '20px system-ui';
-  ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, cy + 5);
-  ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}`, cx, cy + 33);
+  ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, 82);
+  ctx.fillStyle = '#c9bde6'; ctx.font = '16px system-ui';
+  ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}`, cx, 108);
+  drawBoard();
   ctx.fillStyle = performance.now() >= S.restartAfter ? '#fff' : '#8a8aa3'; // greyed out during the short lockout
-  ctx.fillText('Tap or press Space to restart', cx, cy + 68);
+  ctx.font = '20px system-ui';
+  ctx.fillText('Tap or press Space to restart', cx, 612);
+}
+function drawBoard() { // the shared top 10 (leaderboard.js fills S.lb). Nothing is drawn while the leaderboard is off.
+  const lb = S.lb, cx = cv.width / 2, top = 150, step = 25;
+  if (!lb || lb.status === 'off' || lb.status === 'idle') return;
+  ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 18px system-ui';
+  ctx.fillText('TOP 10', cx, top);
+  ctx.font = '16px system-ui';
+  if (lb.status === 'loading') { ctx.fillStyle = '#9a8cc4'; ctx.fillText('Loading leaderboard...', cx, top + 40); return; }
+  if (lb.status === 'error') { ctx.fillStyle = '#9a8cc4'; ctx.fillText('Leaderboard offline right now', cx, top + 40); return; }
+  if (!lb.rows.length) { ctx.fillStyle = '#9a8cc4'; ctx.fillText('No scores yet. Be the first!', cx, top + 40); return; }
+  lb.rows.forEach((r, i) => {
+    const y = top + 30 + i * step, mine = i === lb.mine;
+    if (mine) { ctx.fillStyle = 'rgba(255,211,107,.18)'; ctx.fillRect(cx - 130, y - 18, 260, 24); }
+    ctx.fillStyle = mine ? '#ffd36b' : '#f3e9ff';
+    ctx.textAlign = 'right'; ctx.fillText(`${i + 1}.`, cx - 80, y);
+    ctx.textAlign = 'left';  ctx.fillText(r.name, cx - 66, y);
+    ctx.textAlign = 'right'; ctx.fillText(String(r.score), cx + 120, y);
+  });
+  ctx.textAlign = 'center';
+  if (lb.submitting) { ctx.fillStyle = '#9a8cc4'; ctx.fillText('Saving...', cx, 556); }
+  else if (lb.submitted && lb.mine >= 0) { ctx.fillStyle = '#8dff6b'; ctx.fillText(`Saved! You are #${lb.mine + 1}`, cx, 556); }
+  else if (lb.submitted) { ctx.fillStyle = '#8dff6b'; ctx.fillText('Score saved!', cx, 556); }
 }
 function wrapText(text, maxW) { // split text into lines that fit maxW pixels in the current font
   const lines = []; let line = '';
