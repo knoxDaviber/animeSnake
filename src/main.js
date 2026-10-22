@@ -6,6 +6,7 @@ function step() {
   ageDrops();
   agePopups();
   ageBlasts();
+  ageZaps();
   playerMove();
   if (S.alive) {
     updateCombo();

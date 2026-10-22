@@ -28,6 +28,13 @@ const MINE_MAX = 3;         // most mines allowed on the map at once
 const MINE_DAMAGE = 1;      // hit points a mine blast takes off an enemy head (body segments are cut off)
 const BLAST_TICKS = 4;      // how long the explosion flash stays on screen
 
+// Follower skills (skills.js)
+const LIGHTNING_COOLDOWN = 64;  // ticks (8 s) between strikes, per Raiden in the chain
+const LIGHTNING_DAMAGE = 1;     // hit points taken off the nearest enemy head
+const GAZE_COOLDOWN = 80;       // ticks (10 s) between gazes, per Medusa in the chain
+const GAZE_STUN = 4;            // ticks every enemy in the line stays frozen
+const ZAP_TICKS = 3;            // how long the bolt / gaze flash stays on screen
+
 // Follower passives (passives.js)
 const RAIDEN_KILL_BONUS = 5;        // extra base points per kill for each Raiden in the chain (before the combo multiplier)
 const KEYSMAN_DOUBLE_CHANCE = 0.3;  // per Keysman: chance that eating a key summons a second character

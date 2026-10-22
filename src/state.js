@@ -9,6 +9,7 @@
 //   waitDir        true after running into your own tail (and after a revive): the snake stands still until the
 //                  player steers
 //   food           the recruit KEY on the map, or null while RECRUIT_MAX characters are already waiting
+//   zaps  bolt and gaze flashes { kind, age, ... }
 //   recruits       characters summoned by keys: { c, x, y, px, py, dx, dy, left, tx, ty, ready, age }.
 //                  They start off the grid, walk `left` more tiles toward (tx, ty), then wait there, ready
 //   enemies        enemy snakes: { segs, prev, dir, hp, stun }
@@ -51,7 +52,7 @@ function newRun() {
     pickChoices: rollPickChoices(),
     invulnBonus: 0, swingBonus: 0, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false,
-    food: null, recruits: [], hazard: null, mines: [], blasts: [],
+    food: null, recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
     tick: 0, alpha: 1, last: performance.now(),

@@ -108,6 +108,31 @@ function drawBlasts() { // explosion flash on every tile of the blast, fading ou
   });
   ctx.restore();
 }
+function drawZaps() { // Raiden's bolt and Medusa's gaze, fading out
+  ctx.save();
+  S.zaps.forEach(z => {
+    ctx.globalAlpha = 1;
+    const fade = 1 - z.age / ZAP_TICKS;
+    if (z.kind === 'gaze') {
+      ctx.fillStyle = `rgba(141,255,107,${0.4 * fade})`;
+      z.tiles.forEach(t => ctx.fillRect(t.x * CELL, t.y * CELL, CELL, CELL));
+      return;
+    }
+    const ax = z.x1 * CELL + CELL / 2, ay = z.y1 * CELL + CELL / 2, bx = z.x2 * CELL + CELL / 2, by = z.y2 * CELL + CELL / 2;
+    const dx = bx - ax, dy = by - ay, len = Math.hypot(dx, dy) || 1, nx = -dy / len, ny = dx / len;
+    const pts = [[ax, ay], ...z.jig.map((j, k) => {
+      const t = (k + 1) / (z.jig.length + 1);
+      return [ax + dx * t + nx * j, ay + dy * t + ny * j];
+    }), [bx, by]];
+    ctx.globalAlpha = fade; ctx.lineJoin = 'round';
+    [['#6bc5ff', 6], ['#ffffff', 2]].forEach(([c, w]) => {
+      ctx.strokeStyle = c; ctx.lineWidth = w; ctx.beginPath();
+      pts.forEach(([px, py], k) => k ? ctx.lineTo(px, py) : ctx.moveTo(px, py));
+      ctx.stroke();
+    });
+  });
+  ctx.restore();
+}
 function drawAttack(a) {
   const d = a.def;
   if (!d.sheet.ready) return;
@@ -305,6 +330,7 @@ function draw() {
   drawDrops();
   S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
   drawBlasts();
+  drawZaps();
   drawPopups();
   drawComboBar();
   drawStallHint();

@@ -9,14 +9,14 @@
 const FOLLOWERS = [
   { id: 'miner',   name: 'Miner',   color: '#ffb36b', skill: 'mine',
     passive: 'Each extra Miner in the chain shortens the mine cooldown.' },
-  { id: 'raiden',  name: 'Raiden',  color: '#6bc5ff', skill: null,
+  { id: 'raiden',  name: 'Raiden',  color: '#6bc5ff', skill: 'lightning',
     passive: 'Kills are worth +5 points.',
     idea: 'Lightning: every ~8 s strikes the nearest enemy head for 1 damage.' },
   { id: 'keysman', name: 'Keysman', color: '#ffd36b', skill: null,
     passive: 'Each Keysman: 30% chance that eating a key summons a second character.' },
   { id: 'magneto', name: 'Magneto', color: '#c78bff', skill: null,
     passive: 'Pulls food and keys within 3 tiles one tile closer to your head each tick.' },
-  { id: 'medusa',  name: 'Medusa',  color: '#8dff6b', skill: null,
+  { id: 'medusa',  name: 'Medusa',  color: '#8dff6b', skill: 'gaze',
     passive: 'Enemies hit by your sword stay stunned 2 ticks longer.',
     idea: 'Gaze: every ~10 s freezes every enemy in the line ahead for 4 ticks.' },
 ].map(f => ({ ...f, sheet: dirSheet(`../assets/images/followers/${f.id}.png`) }));
