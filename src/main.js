@@ -10,6 +10,7 @@ function step() {
   if (S.alive) {
     updateCombo();
     updateSkills();
+    updatePassives();   // Magneto pulls the key toward you
     updateAttacks();
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
     stepEnemies();

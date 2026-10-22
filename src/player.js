@@ -67,6 +67,7 @@ function playerMove() {
     // Key picked up: it summons a character right away (it still has to walk in). Eating no longer grows the chain.
     addScore(POINTS.food, nx, ny);
     summonRecruit();
+    if (S.recruits.length < RECRUIT_MAX && Math.random() < keyDoubleChance()) summonRecruit(); // Keysman bonus
     S.food = null;                     // step() puts the next key down (refreshKey in recruits.js)
   }
   faceSegments();

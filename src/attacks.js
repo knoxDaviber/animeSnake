@@ -29,8 +29,9 @@ function fireAttack(def, tx, ty, d) {
 function resolveHit(a) {
   const t = enemyAt(a.x, a.y);
   if (!t) return;
-  if (t.i === 0) { damageEnemyHead(t.e, 1); return; }
+  if (t.i === 0) { if (damageEnemyHead(t.e, 1)) addSwordStun(t.e); return; }
   cutEnemy(t.e, t.i);
+  addSwordStun(t.e);
 }
 
 // Called once per tick: ages attacks, resolves hits, and swings the sword on its timer.

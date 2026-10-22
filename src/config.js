@@ -28,6 +28,12 @@ const MINE_MAX = 3;         // most mines allowed on the map at once
 const MINE_DAMAGE = 1;      // hit points a mine blast takes off an enemy head (body segments are cut off)
 const BLAST_TICKS = 4;      // how long the explosion flash stays on screen
 
+// Follower passives (passives.js)
+const RAIDEN_KILL_BONUS = 5;        // extra base points per kill for each Raiden in the chain (before the combo multiplier)
+const KEYSMAN_DOUBLE_CHANCE = 0.3;  // per Keysman: chance that eating a key summons a second character
+const MAGNETO_RANGE = 3;            // tiles: a key this close to your head is pulled one tile closer per tick (+1 per extra Magneto)
+const MEDUSA_STUN_BONUS = 2;        // extra stun ticks per Medusa on an enemy hit by your sword
+
 // Run-start buffs
 const PICK_LOCKOUT_MS = 350;   // the pick screen ignores input this long after it appears
 const BONUS_SCORE_MULT = 1.1;  // the '+10% score' buff
