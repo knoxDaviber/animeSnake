@@ -47,6 +47,18 @@ const REVIVE_SCORE_BONUS = 0.10;    // a revive adds this fraction of the curren
 const REVIVE_INVULN_TICKS = 24;     // immunity after a revive (3 s)
 const DEATH_LOCKOUT_MS = 1000;      // the game-over screen ignores restart input this long
 
+// Shared leaderboard (Supabase, see leaderboard.js and tools/supabase_setup.sql)
+// Paste your PUBLISHABLE key (or the legacy "anon" key) below. It is meant to be public. NEVER paste the secret or
+// service_role key here: this file is served to every player.
+const LEADERBOARD = {
+  url: 'https://jpduvaprhtselimmwmei.supabase.co',
+  key: 'PASTE_YOUR_PUBLISHABLE_KEY_HERE',   // while this is unchanged the leaderboard stays off and the game works as before
+  table: 'scores',
+  size: 10,           // how many scores the board shows
+  timeoutMs: 6000,    // give up on a slow request after this long
+  entryY: 490,        // canvas y (0-640) where the initials box sits on the game-over screen
+};
+
 // Score and combos
 const POINTS = { food: 10, kill: 20, segment: 5 };  // base points (a kill is multiplied by the combo)
 const COMBO_WINDOW = 24;      // ticks (3 s) to land the next kill before the combo ends

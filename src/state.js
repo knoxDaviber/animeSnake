@@ -22,6 +22,9 @@
 //     reviving     true during the revive countdown: reviveEnd = when it runs out (ms), inputAfter = time (ms)
 //                  before which input is ignored, revives = how many revives were used this run
 //     over         true on the game-over screen: restartAfter = time (ms) before which restarting is ignored
+//   runId          counts runs; slow leaderboard answers from an old run check it and are ignored
+//   lb             the leaderboard on the game-over screen: status ('idle' | 'off' | 'loading' | 'ok' | 'error'),
+//                  rows (top scores), qualifies, submitting, submitted, submitError, skipped, name, mine (row index)
 //   tick           animation clock: 1 animation frame = 1 logic tick
 //   alpha          0..1 progress through the current tick, for interpolation
 //   combo          kills chained inside COMBO_WINDOW; comboTimer counts the window down
@@ -29,10 +32,17 @@
 //   best / bestCombo   saved across runs (storage.js); survive newRun()
 const S = { best: 0, bestCombo: 0 };
 
+function newLeaderboardState() {
+  return { status: 'idle', rows: [], qualifies: false, submitting: false, submitted: false, submitError: false,
+           skipped: false, name: '', mine: -1 };
+}
+
 function newRun() {
+  hideNameEntry(); // the initials box belongs to the previous game-over screen
   // The head plus START_FOLLOWERS, in a line heading right from the middle of the grid.
   const snake = range(1 + START_FOLLOWERS.length).map(i => ({ x: 10 - i, y: 10 }));
   Object.assign(S, {
+    runId: (S.runId || 0) + 1, lb: newLeaderboardState(),
     snake,
     prev: snake.map(s => ({ ...s })),
     roster: [newSlot(0, 1, 0), ...START_FOLLOWERS.map(id => newSlot(followerIndex(id), 1, 0))],

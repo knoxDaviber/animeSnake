@@ -12,7 +12,12 @@ addEventListener('blur', pause);
 // Keys that do not count as "any key" on the revive screen (so shortcuts like Ctrl+R do not revive you).
 const MODIFIER_KEYS = ['shift', 'control', 'alt', 'meta', 'capslock', 'altgraph'];
 
+// True for events aimed at the initials box or its buttons (leaderboard.js). The game must not react to them:
+// typing, Enter and taps there belong to the box, and a tap on Save must not restart the game.
+function inNameBox(e) { return !!(e.target && e.target.closest && e.target.closest('#nameEntry')); }
+
 addEventListener('keydown', e => {
+  if (inNameBox(e)) return;
   const k = e.key.toLowerCase();
   if (S.crashed) { if (k === ' ' || k === 'enter') newRun(); return; }
   if (!S.alive) {
@@ -60,6 +65,7 @@ function tapWhileDead(clientX, clientY) {
 
 let touchX, touchY;
 addEventListener('touchstart', e => {
+  if (inNameBox(e)) return;
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
@@ -74,7 +80,7 @@ addEventListener('touchmove', e => {
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
 });
 addEventListener('mousedown', e => {
-  if (S.crashed) return;
+  if (S.crashed || inNameBox(e)) return;
   if (!S.alive) tapWhileDead(e.clientX, e.clientY);
   else if (S.picking) startRun(pickAtPoint(e.clientX, e.clientY));
   else if (S.paused) resume();

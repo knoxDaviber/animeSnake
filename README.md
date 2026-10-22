@@ -29,6 +29,10 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 
 Full details, build order and open questions are in [DESIGN.md](DESIGN.md). Sprite formats are in [ART_SPEC.md](ART_SPEC.md).
 
+## Online leaderboard
+
+An optional shared top 10 kept in a free Supabase project. It stays off until you paste the publishable key into `src/config.js`. Setup steps are in [Handover.md](Handover.md), and the database script is `tools/supabase_setup.sql`. Never put a secret or service_role key in the game files.
+
 ## Structure
 
 ```
@@ -61,6 +65,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `recruits.js` | Keys summon characters that walk in and wait to be recruited |
 | `buffs.js` | Run-start buffs and the pick screen |
 | `revive.js` | Death: the revive countdown and the game-over lockout |
+| `leaderboard.js` | Shared online top 10 (Supabase) and the initials box |
 | `enemies.js` | Enemy snakes, their AI, waves |
 | `render.js` | All drawing (reads `S`, never changes it) |
 | `input.js` | Keyboard, touch, pause |

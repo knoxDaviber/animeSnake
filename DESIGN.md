@@ -84,6 +84,7 @@ These are deliberate. Tune them so deaths feel like near-misses, not cheats.
 - **Frustration meter:** score from short runs, death streaks and fast restarts. When high, next run gives a **pity** rare upgrade early.
 - **Coin tiers:** payout multiplier between about 0.7x and 1.5x based on recent revive spending (heavy users earn more, light users less).
 - **Boast hooks:** previous high score, best combo and best wave shown on the death screen.
+- **Shared leaderboard:** the game-over screen shows an online top 10 (3-letter initials). Beating the 10th place lets the player add their initials. Held in a Supabase table; the browser can only read and add scores.
 
 Note: all coins are earned in-game. If real-money purchases are ever considered, revisit this section first.
 
@@ -94,7 +95,7 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 3. Sword attack hitting enemy snakes, enemy snakes and waves. (done, simple AI)
 3b. Mines: explode when any snake head hits one. (done)
 4. Score and combos. (done)
-5. Coins, revive, high-score tracking, retention systems. (high-score tracking and a free revive countdown are done; coins and the rest are pending)
+5. Coins, revive, high-score tracking, retention systems. (high-score tracking, a free revive countdown and the shared top-10 leaderboard are done; coins and the rest are pending)
 6. Recruitment (keys and walking-in characters replace food growth) (done), then 3 characters and 10 buffs, run-start buff choice (including expand play area).
 7. Merging of three adjacent identical characters.
 8. Character unlocks with different starting weapons.

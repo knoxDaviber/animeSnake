@@ -31,6 +31,7 @@ function revive() {
 function endRevive() { // the countdown is over: show the game-over screen
   S.reviving = false; S.over = true;
   S.restartAfter = performance.now() + DEATH_LOCKOUT_MS;
+  leaderboardGameOver(); // the run is really over: fetch the top 10 and offer the initials box if it qualifies
 }
 function giveUp() { // Q, Backspace or the Give up button
   if (S.alive || !S.reviving || performance.now() < S.inputAfter) return;
