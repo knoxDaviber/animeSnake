@@ -52,7 +52,7 @@ const DEATH_LOCKOUT_MS = 1000;      // the game-over screen ignores restart inpu
 // service_role key here: this file is served to every player.
 const LEADERBOARD = {
   url: 'https://jpduvaprhtselimmwmei.supabase.co',
-  key: 'PASTE_YOUR_PUBLISHABLE_KEY_HERE',   // while this is unchanged the leaderboard stays off and the game works as before
+  key: 'sb_publishable_rB9gfhjgKSfvMZtd7GesFg_C5devkWz',   // while this is unchanged the leaderboard stays off and the game works as before
   table: 'scores',
   size: 10,           // how many scores the board shows
   timeoutMs: 6000,    // give up on a slow request after this long
