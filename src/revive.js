@@ -16,7 +16,7 @@ function beginRevive() { // called once, on the tick you die
 function revive() {
   if (S.alive || !S.reviving || performance.now() < S.inputAfter) return;
   S.reviving = false; S.revives++;
-  const bonus = Math.round(S.score * REVIVE_SCORE_BONUS);
+  const bonus = Math.round(	S.score * S.reviveBonus);
   S.score += bonus;
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }
   S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: '+' + bonus + ' revive', age: 0 });

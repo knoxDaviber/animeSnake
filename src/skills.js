@@ -20,6 +20,6 @@ function updateSkills() {
     const r = S.roster[i], sk = SKILLS[FOLLOWERS[r.c].skill];
     if (!sk) continue;
     if (r.cd > 0) r.cd--;
-    if (r.cd === 0 && sk.fire(r, i)) r.cd = sk.cooldown;
+    if (r.cd === 0 && sk.fire(r, i)) r.cd = Math.max(1, Math.round(sk.cooldown * S.cdMult));
   }
 }

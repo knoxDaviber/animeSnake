@@ -12,7 +12,7 @@ function addScore(points, x, y, suffix = '') {
 }
 function registerKill(x, y) {
   S.combo++;
-  S.comboTimer = COMBO_WINDOW;
+  S.comboTimer = S.comboWindow;
   if (S.combo > S.bestCombo) S.bestCombo = S.combo;
   const m = comboMult();
     addScore((POINTS.kill + killBonus()) * m, x, y, m > 1 ? ' x' + m : '');

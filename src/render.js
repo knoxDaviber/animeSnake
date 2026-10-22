@@ -168,7 +168,7 @@ function drawPopups() { // floating "+60 x3" text where points were scored
 function drawComboBar() { // thin bar along the top: time left to chain the next kill
   if (S.combo <= 0) return;
   ctx.fillStyle = '#ffd36b';
-  ctx.fillRect(0, 0, Math.round(cv.width * S.comboTimer / COMBO_WINDOW), 4);
+  ctx.fillRect(0, 0, Math.round(cv.width * S.comboTimer / S.comboWindow), 4);
 }
 function drawRecruits() { // characters summoned by keys: walking in, then jumping on the spot when ready
   S.recruits.forEach(r => {
@@ -221,7 +221,7 @@ function drawRevive() { // after dying: a countdown to revive (any key or tap) o
   ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 120, cy, 240, 8);
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 120, cy, Math.round(240 * left / (REVIVE_SECONDS * 1000)), 8);
   ctx.fillStyle = live ? '#fff' : '#8a8aa3'; ctx.font = '20px system-ui';
-  ctx.fillText(`Press any key or tap to revive (+${Math.round(REVIVE_SCORE_BONUS * 100)}% score)`, cx, cy + 45);
+  ctx.fillText(`Press any key or tap to revive (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
   ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
   ctx.fillText(`Score ${S.score}   Best ${S.best}`, cx, cy + 75);
   const b = giveUpRect();
@@ -274,13 +274,14 @@ function wrapText(text, maxW) { // split text into lines that fit maxW pixels in
   if (line) lines.push(line);
   return lines;
 }
-function drawPick() { // run-start pick screen: one card per buff
+function drawPick() { //'Tap a card, press 1 / 2 / 3, or use the arrows and Enter'
   if (!S.picking) return;
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
   ctx.fillText('Choose your run-start buff', cv.width / 2, 150);
-  BUFFS.forEach((b, i) => {
+  S.pickChoices.forEach((k, i) => {
+    const b = BUFFS[k];
     const c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
     ctx.fillStyle = sel ? '#2c2250' : '#211a3b'; ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.lineWidth = 3; ctx.strokeStyle = sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(c.x, c.y, c.w, c.h);

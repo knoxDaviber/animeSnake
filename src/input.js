@@ -29,10 +29,10 @@ addEventListener('keydown', e => {
   }
   if (S.picking) {                       // run-start pick screen: 1/2 choose, arrows move, Enter/Space confirm
     if (e.repeat) return;
-    const n = Number(k);
-    if (n >= 1 && n <= BUFFS.length) return startRun(n - 1);
-    if (k === 'arrowleft' || k === 'a') S.pickIndex = (S.pickIndex + BUFFS.length - 1) % BUFFS.length;
-    else if (k === 'arrowright' || k === 'd') S.pickIndex = (S.pickIndex + 1) % BUFFS.length;
+    const n = Number(k), count = S.pickChoices.length;
+    if (n >= 1 && n <= count) return startRun(n - 1);
+    if (k === 'arrowleft' || k === 'a') S.pickIndex = (S.pickIndex + count - 1) % count;
+    else if (k === 'arrowright' || k === 'd') S.pickIndex = (S.pickIndex + 1) % count;
     else if (k === 'enter' || k === ' ') startRun(S.pickIndex);
     return;
   }
@@ -52,7 +52,7 @@ function canvasPoint(clientX, clientY) {
 // Which buff card is under a screen point (-1 if none).
 function pickAtPoint(clientX, clientY) {
   const p = canvasPoint(clientX, clientY);
-  return BUFFS.findIndex((_, i) => { const c = pickCardRect(i); return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h; });
+  return S.pickChoices.findIndex((_, i) => { const c = pickCardRect(i); return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h; });
 }
 // A tap or click while dead: on the revive screen the Give up button gives up and anywhere else revives;
 // on the game-over screen it restarts (after the lockout).

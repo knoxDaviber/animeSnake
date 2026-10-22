@@ -48,6 +48,8 @@ function newRun() {
     roster: [newSlot(0, 1, 0), ...START_FOLLOWERS.map(id => newSlot(followerIndex(id), 1, 0))],
     tailLeft: null,
     picking: true, pickIndex: 0, pickAfter: performance.now() + PICK_LOCKOUT_MS, buff: null, scoreMult: 1,
+    pickChoices: rollPickChoices(),
+    invulnBonus: 0, swingBonus: 0, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false,
     food: null, recruits: [], hazard: null, mines: [], blasts: [],
     score: 0, alive: true, paused: false, crashed: null,

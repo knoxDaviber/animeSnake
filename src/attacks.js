@@ -42,7 +42,7 @@ function updateAttacks() {
   }
   S.attacks = S.attacks.filter(a => a.age < frameCount(a.def) * a.def.ticksPerFrame);
   // The head auto-attacks in its facing direction.
-  if (S.tick - S.lastSwing >= ATTACKS.sword.cooldown) {
+  if (S.tick - S.lastSwing >= ATTACKS.sword.cooldown - S.swingBonus) {
     const tx = S.snake[0].x + S.dir.x, ty = S.snake[0].y + S.dir.y;
     if (inBounds(tx, ty)) {
       fireAttack(ATTACKS.sword, tx, ty, S.dir);

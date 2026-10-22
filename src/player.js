@@ -18,7 +18,7 @@ function faceSegments() {
 }
 
 function takeHit() {
-  S.invuln = INVULN_TICKS;
+  S.invuln = INVULN_TICKS + S.invulnBonus;
   if (S.snake.length === 1) { S.alive = false; return; } // last character lost
   const t = S.snake.pop(), r = S.roster.pop();           // the tail character is the one dropped
   dropFx(t.x, t.y, (px, py) => drawSegment(r, px, py, false));

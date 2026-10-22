@@ -34,9 +34,18 @@ const KEYSMAN_DOUBLE_CHANCE = 0.3;  // per Keysman: chance that eating a key sum
 const MAGNETO_RANGE = 3;            // tiles: a key this close to your head is pulled one tile closer per tick (+1 per extra Magneto)
 const MEDUSA_STUN_BONUS = 2;        // extra stun ticks per Medusa on an enemy hit by your sword
 
-// Run-start buffs
+// Run-start buffs (buffs.js)
 const PICK_LOCKOUT_MS = 350;   // the pick screen ignores input this long after it appears
+const PICK_CHOICES = 3;        // how many random buffs the pick screen offers
+const FORCE_BUFFS = [];        // for testing: buff ids to always offer, e.g. ['minefield', 'thickSkin']. Leave empty normally
 const BONUS_SCORE_MULT = 1.1;  // the '+10% score' buff
+const THICK_SKIN_TICKS = 4;    // extra immunity ticks after a hit
+const QUICK_BLADE_TICKS = 2;   // ticks taken off the sword cooldown
+const COMBO_KEEPER_TICKS = 12; // ticks added to the combo window
+const SKILL_HASTE_MULT = 0.7;  // follower skill cooldowns are multiplied by this
+const BOUNTY_POINTS = 10;      // extra base points per kill (before the combo multiplier)
+const SECOND_WIND_BONUS = 0.25;// revive bonus instead of REVIVE_SCORE_BONUS
+const MINEFIELD_COUNT = 2;     // mines placed at the start (MINE_MAX is 3, so a Miner can still add one)
 
 // Recruitment. The food is now a KEY: eating it summons a character that starts off the grid, walks in,
 // then jumps on the spot when it is ready. Touch it with your head to recruit it onto the tail of the chain.

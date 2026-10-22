@@ -8,7 +8,7 @@ function countFollower(id) {
 }
 
 // Raiden: extra base points per kill (added before the combo multiplier).
-function killBonus() { return RAIDEN_KILL_BONUS * countFollower('raiden'); }
+function killBonus() { return RAIDEN_KILL_BONUS * countFollower('raiden') + S.bounty; }
 
 // Keysman: chance that eating a key summons a second character.
 function keyDoubleChance() { return Math.min(1, KEYSMAN_DOUBLE_CHANCE * countFollower('keysman')); }
