@@ -84,7 +84,7 @@ These are deliberate. Tune them so deaths feel like near-misses, not cheats.
 - **Frustration meter:** score from short runs, death streaks and fast restarts. When high, next run gives a **pity** rare upgrade early.
 - **Coin tiers:** payout multiplier between about 0.7x and 1.5x based on recent revive spending (heavy users earn more, light users less).
 - **Boast hooks:** previous high score, best combo and best wave shown on the death screen.
-- **Shared leaderboard:** the game-over screen shows an online top 10 (3-letter initials). Beating the 10th place lets the player add their initials. Held in a Supabase table; the browser can only read and add scores.
+- **Shared leaderboard:** the game-over screen shows an online top 10 (3-letter initials). Beating the 10th place lets the player add their initials. Held in a Supabase table (best 50 stored, 10 shown); the browser can only read and add scores.
 
 Note: all coins are earned in-game. If real-money purchases are ever considered, revisit this section first.
 

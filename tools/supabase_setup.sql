@@ -8,9 +8,11 @@
 --   * lets anyone (the game running in a browser, using the publishable key) READ the scores and ADD a score,
 --     but never change or delete one: there is no update or delete rule, so those are refused
 --   * checks every new score against sensible limits, so garbage is rejected by the database itself
---   * after every insert, deletes everything outside the top 10, so the table never holds more than 10 rows
+--   * after every insert, deletes everything outside the best 50, so the table never holds more than 50 rows.
+--     The game only shows the top 10. The extra 40 are a safety net: if you delete a fake score, real scores that
+--     it pushed down rise back into the top 10 instead of being lost.
 --
--- Limits you may want to change: the maximum score (500000 below) and, in trim_scores(), the 10.
+-- Limits you may want to change: the maximum score (500000 below) and, in trim_scores(), the 50.
 -- Anyone can still post a fake score inside those limits from the browser console. That is normal for a game with
 -- no server of its own; the limits just keep it from being absurd.
 
@@ -37,7 +39,7 @@ create policy "anyone can add a score"
   to anon, authenticated
   with check (score >= 1 and score <= 500000);
 
--- Keep only the best 10 (earlier scores win ties). Runs with its own rights, because the browser may not delete.
+-- Keep only the best 50 (earlier scores win ties). Runs with its own rights, because the browser may not delete.
 create or replace function public.trim_scores()
 returns trigger
 language plpgsql
@@ -49,7 +51,7 @@ begin
   where id not in (
     select id from public.scores
     order by score desc, created_at asc, id asc
-    limit 10
+    limit 50
   );
   return null;
 end;
