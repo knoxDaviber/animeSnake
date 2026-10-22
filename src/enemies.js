@@ -63,7 +63,8 @@ function stepEnemy(e) {
   if (!opts.length) return; // boxed in: wait a tick
   let pick;
   if (Math.random() < ENEMY_CHASE) {
-    const dist = o => Math.abs(o.x - ph.x) + Math.abs(o.y - ph.y);
+    const tgt = chaseTarget(head, ph);          // usually the player's head, sometimes a nearby recruit
+    const dist = o => Math.abs(o.x - tgt.x) + Math.abs(o.y - tgt.y);
     pick = opts.reduce((a, b) => dist(b) < dist(a) ? b : a);
   } else pick = opts[Math.floor(Math.random() * opts.length)];
   if (pick.headOn) {
@@ -75,11 +76,22 @@ function stepEnemy(e) {
   e.dir = pick.d;
   e.segs.unshift({ x: pick.x, y: pick.y });
   e.segs.pop();
+  S.recruits.filter(r => r.x === pick.x && r.y === pick.y).forEach(killRecruit); // stepping on a recruit kills it
   const mine = mineAt(pick.x, pick.y);
   if (mine) detonateMine(mine);               // enemies do not avoid mines: lure them in
 }
 function stepEnemies() {
   [...S.enemies].forEach(e => { if (S.alive && S.enemies.includes(e)) stepEnemy(e); });
+}
+// What a chasing enemy heads for: the player's head, unless a recruit on the grid is both closer and within
+// RECRUIT_THREAT_DIST tiles, in which case it goes for the recruit.
+function chaseTarget(head, ph) {
+  const d = t => Math.abs(t.x - head.x) + Math.abs(t.y - head.y);
+  let best = ph;
+  for (const r of S.recruits) {
+    if (inBounds(r.x, r.y) && d(r) <= RECRUIT_THREAT_DIST && d(r) < d(best)) best = r;
+  }
+  return best;
 }
 
 // ---- Waves -------------------------------------------------------------------
@@ -95,7 +107,7 @@ function spawnEnemy() {
     else                 { d = DIRS[3]; segs = range(len).map(i => ({ x: c, y: ROWS - len + i })); }
     const head = S.snake[0];
     const far = Math.abs(segs[0].x - head.x) + Math.abs(segs[0].y - head.y) >= ENEMY_SPAWN_MIN_DIST;
-    if (far && segs.every(s => enemyCanEnter(s.x, s.y))) {
+    if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y))) {
       S.enemies.push({ segs, prev: segs.map(s => ({ ...s })), dir: d, hp: hitsToKill(S.wave), stun: 0 });
       return true;
     }

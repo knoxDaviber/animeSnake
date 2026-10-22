@@ -9,7 +9,7 @@ const BUFFS = [
       const t = { x: tail.x - 1, y: tail.y };            // one more tile behind the tail
       S.snake.push(t); S.prev.push({ ...t });
       S.roster.push(newSlot(randomFollower(), slot.fx, slot.fy));
-      if (S.food.x === t.x && S.food.y === t.y) placeFood();
+      if (S.food && S.food.x === t.x && S.food.y === t.y) placeFood();
     } },
   { id: 'bonusScore', name: '+10% score', desc: 'Everything you score this run is worth 10% more. (Coins too, once coins exist.)',
     apply() { S.scoreMult = BONUS_SCORE_MULT; } },

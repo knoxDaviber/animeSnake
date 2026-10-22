@@ -18,12 +18,14 @@ Start a run, pick a starting buff, steer the chain around the grid, eat food, re
 - The snake is a chain of anime characters following each other on a grid.
 - Each character gives a **buff**, and some also modify the head's attack. A character can have a buff, an attack modifier, or both. Attacks never replace buffs.
 - **Rings:** a hit drops one character (the tail). You die when none are left. Walls, hazards and your own body all count as hits. The snake stays put on a blocked move, and after a hit it is invulnerable for 8 ticks (the chain blinks) so one obstacle can't strip the whole chain.
+- **Tail stall:** moving into your own tail tile is not a hit. The snake just stops and waits until you choose a direction, which gives enemy snakes time to chase you.
 - **Merging:** three **adjacent** identical characters merge into one bigger version with a stronger buff. Chain order becomes a puzzle.
 
 ## Recruitment
 
 - Recruitment replaces food growth. The old food is now a **key**: eating food no longer grows the chain. You grow by recruiting a character, which needs a key plus a character.
 - Characters **walk into the play area from the edges at random**. Touch one while holding a key to recruit it onto the tail of the chain.
+- Picking up a key summons a character right away. It starts outside the grid, walks in, then jumps on the spot to show it is ready. The whole process takes 1 to 2 seconds at most. Only a ready (jumping) character can be recruited. Up to 3 can wait at once; no new key appears until one is recruited or killed.
 - Enemy snakes can kill recruitable characters. If the character dies before you reach it, the key is wasted and you need another.
 - For now there is one generic key. Later, each character needs its own specific key.
 
@@ -71,6 +73,7 @@ Enemies move like the player and have simple AI at first.
 - Every run pays **coins**.
 - Coins revive the run on the spot. Cost rises with each revive in a run.
 - Each revive adds **10% of the current score on top of the current score**, to encourage using coins.
+- On death a **10 second countdown** offers the revive. Any key (or tap) revives; Backspace, Q or running out of time goes to the death screen, which ignores restart input briefly so there is no instant restart. Until coins exist, revives are free.
 - Coins also unlock and switch the **starting character**. Each character has a different starting weapon.
 
 ## Retention systems (hook design)
@@ -89,10 +92,10 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 1. Core Snake with colored squares (done), now with sprite sheets, smooth movement, pause and an attack layer.
 2. Rings and damage: hits remove a segment, death at zero, one static hazard. (done)
 3. Sword attack hitting enemy snakes, enemy snakes and waves. (done, simple AI)
-3b. Mines: explode when any snake head hits one. (planned)
+3b. Mines: explode when any snake head hits one. (done)
 4. Score and combos. (done)
-5. Coins, revive, high-score tracking, retention systems.
-6. Recruitment (keys and walking-in characters replace food growth), 3 characters and 10 buffs, run-start buff choice (including expand play area).
+5. Coins, revive, high-score tracking, retention systems. (high-score tracking and a free revive countdown are done; coins and the rest are pending)
+6. Recruitment (keys and walking-in characters replace food growth) (done), then 3 characters and 10 buffs, run-start buff choice (including expand play area).
 7. Merging of three adjacent identical characters.
 8. Character unlocks with different starting weapons.
 9. Assets and polish: sprites, music, sound effects.
@@ -101,6 +104,5 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 
 - Sword cooldown and swing timing (currently a 6-tick cycle).
 - Of the 10 buffs, how many belong to a specific character and how many are run-start picks?
-- Does picking up a key summon a character right away (assumed), or do characters wander in on their own timer?
-- Mine blast size, damage, and how many spawn.
+- Mine blast size, damage, and how many spawn (fine for now, tune after playing).
 - When recruitment keys become specific per character, how do they spawn?

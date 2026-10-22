@@ -73,7 +73,7 @@ Every object has a placeholder PNG at its final path and size. To swap in real a
 | `attacks/slash_sword.png` | 256x41 | 4 frames of 64x41 |
 | `food.png` | 128x32 | 4 frames |
 | `hazard.png` | 128x32 | 4 frames |
-| `recruit.png` | 128x32 | 4 frames (used from build step 6) |
+| `recruit.png` | 128x32 | 4 frames. The small "recruit me" marker above a ready recruit, drawn at 16x16, so keep its icon readable at half size. `food.png` is now the recruit key |
 
 ## Rules for every sprite
 

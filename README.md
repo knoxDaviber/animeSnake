@@ -6,7 +6,7 @@ A small, fully vibecoded first game: code is written with AI help, and art, musi
 
 ## Status
 
-Early prototype. The core Snake loop works (grid movement with smooth interpolation, food, growing chain, pause). Character sprite sheets and a separate attack layer are wired up and fall back to colored squares or nothing when a sheet is missing. Everything else is planned in [DESIGN.md](DESIGN.md).
+Early prototype. The core Snake loop works (grid movement with smooth interpolation, pause), with rings and damage, enemy snakes in waves, an auto-sword, mines, score and combos, and recruitment: eat a key, then touch the character that walks in and starts jumping to add it to your chain. Running into your own tail stops you until you choose a direction. Dying starts a 10 second revive countdown. Character sprite sheets and a separate attack layer are wired up and fall back to colored squares or nothing when a sheet is missing. Everything else is planned in [DESIGN.md](DESIGN.md).
 
 ## Run it
 
@@ -15,7 +15,8 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 - Desktop: arrow keys or WASD
 - Phone: swipe
 - Pause: P or Escape (also pauses when the tab loses focus); tap to resume
-- Restart after dying: tap or press Space
+- After dying: any key, click or tap revives within 10 seconds (+10% score). Q, Backspace, the Give up button or the timer ends the run
+- Restart from the game-over screen: tap or press Space
 
 ## The idea in short
 
@@ -51,10 +52,15 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `sprites.js` | Loads every sprite sheet |
 | `state.js` | The `S` object holding all mutable game state, and `newRun()` |
 | `storage.js` | Saves best score and best combo in the browser |
-| `world.js` | Food, the hazard, drop effects |
+| `world.js` | Keys (the old food), the hazard, drop effects |
 | `score.js` | Points, combos, floating score text |
-| `player.js` | Steering, moving, eating, rings and damage |
+| `player.js` | Steering, moving, keys, recruiting, the tail stall, rings and damage |
 | `attacks.js` | Attack definitions, the swing timer, hit resolution |
+| `skills.js` | Active skills carried by followers (the Miner's mines) |
+| `mines.js` | Mines on the map and their explosions |
+| `recruits.js` | Keys summon characters that walk in and wait to be recruited |
+| `buffs.js` | Run-start buffs and the pick screen |
+| `revive.js` | Death: the revive countdown and the game-over lockout |
 | `enemies.js` | Enemy snakes, their AI, waves |
 | `render.js` | All drawing (reads `S`, never changes it) |
 | `input.js` | Keyboard, touch, pause |

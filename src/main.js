@@ -11,17 +11,20 @@ function step() {
     updateCombo();
     updateSkills();
     updateAttacks();
+    updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
     stepEnemies();
+    refreshKey();       // puts the next key down unless enough characters are already waiting
     updateWaves();
   } else S.alpha = 1;
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }
   hud();
-  if (!S.alive) saveProgress();
+  if (!S.alive) { saveProgress(); beginRevive(); } // you just died: start the revive countdown
 }
 
 // Runs every display frame. Logic ticks are fixed; drawing is smooth in between.
 // If anything throws, the game shows an error screen instead of silently freezing.
 function loop(t) {
+  updateRevive(); // ends the revive countdown when the time is up
   if (S.alive && !S.paused && !S.crashed && !S.picking) {
     try {
       if (t - S.last >= TICK_MS) {

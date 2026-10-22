@@ -80,7 +80,8 @@ function drawHazard() {
     ctx.fill();
   }
 }
-function drawFood() {
+function drawFood() { // the recruit key (still the food sprite until it gets its own art)
+  if (!S.food) return; // no key while enough characters are already waiting
   const x = S.food.x * CELL, y = S.food.y * CELL;
   if (SPRITES.food.ready) return drawItem(SPRITES.food, S.tick, x, y);
   ctx.fillStyle = '#ff4d4d';
@@ -137,7 +138,6 @@ function drawEnemies() {
   });
 }
 function drawPlayer() {
-  fit=true;
   if (S.invuln > 0 && S.tick % 2 === 0) return; // chain blinks while invulnerable
   S.snake.forEach((s, i) => {
     const p = lerpPos(S.prev, i, s);
@@ -168,17 +168,75 @@ function drawComboBar() { // thin bar along the top: time left to chain the next
   ctx.fillStyle = '#ffd36b';
   ctx.fillRect(0, 0, Math.round(cv.width * S.comboTimer / COMBO_WINDOW), 4);
 }
+function drawRecruits() { // characters summoned by keys: walking in, then jumping on the spot when ready
+  S.recruits.forEach(r => {
+    const x = (r.px + (r.x - r.px) * S.alpha) * CELL, y = (r.py + (r.y - r.py) * S.alpha) * CELL;
+    if (!r.ready) {
+      drawSegment({ c: r.c, fx: r.dx, fy: r.dy }, x, y, false); // walking: faces where it is heading
+      return;
+    }
+    const jump = RECRUIT_JUMP[S.tick % RECRUIT_JUMP.length];
+    ctx.save();
+    ctx.fillStyle = 'rgba(0,0,0,.3)';                           // shadow stays on the ground while it jumps
+    ctx.beginPath(); ctx.ellipse(Math.round(x) + CELL / 2, Math.round(y) + CELL - 4, 9 - jump / 3, 3, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+    drawSegment({ c: r.c, fx: 0, fy: 1 }, x, y - jump, false);  // facing down = its portrait pose
+    if (SPRITES.recruit.ready) {                                // small "recruit me" marker (recruit.png)
+      const frames = Math.max(1, Math.floor(SPRITES.recruit.img.width / SPRITE));
+      ctx.drawImage(SPRITES.recruit.img, (S.tick % frames) * SPRITE, 0, SPRITE, SPRITE,
+        Math.round(x) + 16, Math.round(y) - 4, 16, 16);
+    }
+  });
+}
+function drawStallHint() { // after running into your own tail (or reviving): the snake waits for a direction
+  if (!S.alive || S.paused || S.picking || !S.waitDir) return;
+  ctx.save();
+  ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#14101f';
+  ctx.globalAlpha = S.tick % 4 < 3 ? 1 : 0.5;
+  ctx.strokeText('Choose a direction', cv.width / 2, cv.height - 24);
+  ctx.fillStyle = '#fff'; ctx.fillText('Choose a direction', cv.width / 2, cv.height - 24);
+  ctx.restore();
+}
 function drawOverlay() {
   if (S.alive && !S.paused) return;
   ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.fillStyle = '#fff'; ctx.font = '36px system-ui'; ctx.textAlign = 'center';
-  ctx.fillText(S.alive ? 'Paused' : 'Game over', cv.width / 2, cv.height / 2 - 30);
+  ctx.textAlign = 'center';
+  if (S.alive) {
+    ctx.fillStyle = '#fff'; ctx.font = '36px system-ui';
+    ctx.fillText('Paused', cv.width / 2, cv.height / 2 - 30);
+    ctx.font = '20px system-ui';
+    ctx.fillText('Tap or press P to resume', cv.width / 2, cv.height / 2 + 20);
+  } else if (S.reviving) drawRevive();
+  else drawGameOver();
+}
+function drawRevive() { // after dying: a countdown to revive (any key or tap) or give up (Q, Backspace or the button)
+  const now = performance.now(), cx = cv.width / 2, cy = cv.height / 2;
+  const left = Math.max(0, S.reviveEnd - now), live = now >= S.inputAfter;
+  ctx.fillStyle = '#fff'; ctx.font = '32px system-ui';
+  ctx.fillText('Revive?', cx, cy - 115);
+  ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 84px system-ui';
+  ctx.fillText(String(Math.ceil(left / 1000)), cx, cy - 25);
+  ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 120, cy, 240, 8);
+  ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 120, cy, Math.round(240 * left / (REVIVE_SECONDS * 1000)), 8);
+  ctx.fillStyle = live ? '#fff' : '#8a8aa3'; ctx.font = '20px system-ui';
+  ctx.fillText(`Press any key or tap to revive (+${Math.round(REVIVE_SCORE_BONUS * 100)}% score)`, cx, cy + 45);
+  ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
+  ctx.fillText(`Score ${S.score}   Best ${S.best}`, cx, cy + 75);
+  const b = giveUpRect();
+  ctx.fillStyle = '#211a3b'; ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.lineWidth = 2; ctx.strokeStyle = '#3a2d5c'; ctx.strokeRect(b.x, b.y, b.w, b.h);
+  ctx.fillStyle = live ? '#f3e9ff' : '#8a8aa3'; ctx.font = '16px system-ui';
+  ctx.fillText('Give up  (Q / Backspace)', cx, b.y + 26);
+}
+function drawGameOver() {
+  const cx = cv.width / 2, cy = cv.height / 2;
+  ctx.fillStyle = '#fff'; ctx.font = '36px system-ui';
+  ctx.fillText('Game over', cx, cy - 30);
   ctx.font = '20px system-ui';
-  if (!S.alive) {
-    ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cv.width / 2, cv.height / 2 + 5);
-    ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}`, cv.width / 2, cv.height / 2 + 33);
-  }
-  ctx.fillText(S.alive ? 'Tap or press P to resume' : 'Tap or press Space to restart', cv.width / 2, cv.height / 2 + (S.alive ? 20 : 68));
+  ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, cy + 5);
+  ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}`, cx, cy + 33);
+  ctx.fillStyle = performance.now() >= S.restartAfter ? '#fff' : '#8a8aa3'; // greyed out during the short lockout
+  ctx.fillText('Tap or press Space to restart', cx, cy + 68);
 }
 function wrapText(text, maxW) { // split text into lines that fit maxW pixels in the current font
   const lines = []; let line = '';
@@ -213,6 +271,7 @@ function draw() {
   drawHazard();
   drawFood();
   drawMines();
+  drawRecruits();
   drawEnemies();
   drawPlayer();
   drawDrops();
@@ -220,6 +279,7 @@ function draw() {
   drawBlasts();
   drawPopups();
   drawComboBar();
+  drawStallHint();
   drawOverlay();
   drawPick();
 }

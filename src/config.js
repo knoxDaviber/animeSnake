@@ -32,6 +32,21 @@ const BLAST_TICKS = 4;      // how long the explosion flash stays on screen
 const PICK_LOCKOUT_MS = 350;   // the pick screen ignores input this long after it appears
 const BONUS_SCORE_MULT = 1.1;  // the '+10% score' buff
 
+// Recruitment. The food is now a KEY: eating it summons a character that starts off the grid, walks in,
+// then jumps on the spot when it is ready. Touch it with your head to recruit it onto the tail of the chain.
+const RECRUIT_WALK_MIN = 6;         // tiles a summoned character walks in from outside the grid (1 tile per tick)
+const RECRUIT_WALK_MAX = 12;        // so the whole summon takes 6-12 ticks (0.75-1.5 s) before it starts jumping
+const RECRUIT_MAX = 3;              // no new key appears while this many characters are already waiting
+const RECRUIT_THREAT_DIST = 6;      // a chasing enemy goes for a recruit instead of you when one is this close
+const RECRUIT_JUMP = [0, 6, 10, 6]; // jump height in px per animation tick while a recruit waits, ready
+
+// Death and revive (no coins yet, so a revive is free for now)
+const REVIVE_SECONDS = 10;          // countdown after dying: any key or tap revives; Q, Backspace or timeout ends the run
+const REVIVE_LOCKOUT_MS = 700;      // input is ignored this long after dying so a steering key cannot revive by accident
+const REVIVE_SCORE_BONUS = 0.10;    // a revive adds this fraction of the current score on top of it
+const REVIVE_INVULN_TICKS = 24;     // immunity after a revive (3 s)
+const DEATH_LOCKOUT_MS = 1000;      // the game-over screen ignores restart input this long
+
 // Score and combos
 const POINTS = { food: 10, kill: 20, segment: 5 };  // base points (a kill is multiplied by the combo)
 const COMBO_WINDOW = 24;      // ticks (3 s) to land the next kill before the combo ends
