@@ -23,6 +23,7 @@ function faceOf(e, i) {
 function damageEnemyHead(e, n) {
   e.hp -= n;
   if (e.hp <= 0) { killEnemy(e); return false; }
+  playSfx('hitEnemy');
   e.stun = Math.max(e.stun, 2);
   return true;
 }
@@ -43,6 +44,7 @@ function cutEnemy(e, i) {
     dropFx(s.x, s.y, (px, py) => drawEnemySeg(false, f.fx, f.fy, px, py));
   });
   addScore(POINTS.segment * cut.length, cut[0].x, cut[0].y);
+  playSfx('cut');
   e.stun = Math.max(e.stun, 2);
 }
 

@@ -15,6 +15,7 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 - Desktop: arrow keys or WASD
 - Phone: swipe
 - Hero select (the title screen): tap a card, or press its number, or use the arrows and Enter. Tapping a locked hero buys it with coins
+- Mute: M (or the speaker icon on the hero select screen). Sound starts after your first tap or key press
 - Pause: P or Escape (also pauses when the tab loses focus); tap to resume
 - Info bar (hero and follower timers): press I, or hold the small bar under the game
 - After dying: any key, click or tap revives if you can pay the coins. Q, Backspace, the Give up button or the timer ends the run
@@ -61,6 +62,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `state.js` | The `S` object holding all mutable game state, and `newRun()` |
 | `storage.js` | Saves best score, best combo, coins and unlocks in the browser |
 | `unlocks.js` | Click-to-buy unlocks (heroes now), prices from config.js |
+| `audio.js` | Sound effects and music: synthesized placeholders, real files can replace them |
 | `world.js` | Keys, the hazard, free-tile checks, drop effects |
 | `score.js` | Points, combos, kill coins, floating score text |
 | `player.js` | Steering, moving, keys, recruiting, the tail stall, rings and damage |

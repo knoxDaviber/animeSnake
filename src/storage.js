@@ -16,10 +16,11 @@ function loadProgress() {
     S.bestCombo = Number(d.bestCombo) || 0;
     S.coins = Number(d.coins) || 0;
     S.unlocked = cleanUnlocked(d.unlocked);
+    S.muted = !!d.muted;
   } catch (err) { console.warn('Could not load saved progress:', err); }
 }
 function saveProgress() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked })); }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted })); }
   catch (err) { console.warn('Could not save progress:', err); }
 }
 addEventListener('pagehide', saveProgress);

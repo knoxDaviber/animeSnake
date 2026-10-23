@@ -23,6 +23,7 @@ function blastTiles(m) {
 
 function detonateMine(m) {
   S.mines = S.mines.filter(x => x !== m);
+  playSfx('explosion');
   const tiles = blastTiles(m);
   tiles.forEach(t => S.blasts.push({ x: t.x, y: t.y, age: 0 }));
   for (const t of tiles) {          // look up each tile fresh: an earlier hit can cut or kill a snake

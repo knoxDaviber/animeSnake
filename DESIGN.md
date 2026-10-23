@@ -99,6 +99,13 @@ Speed and slowdown change the hero only, not enemies or skill timers. The hero h
 - Nothing sits above the canvas, so no number can ever move or resize the game.
 - Chain length and the run's buff are on the info bar's muted line. Best score and best combo are on the game-over screen.
 
+## Audio
+
+- Placeholder sounds and music are synthesized in code (`audio.js`), so the game has sound before any real audio exists. A real file replaces any one of them by being listed in `SFX_FILES` / `MUSIC_FILES` (config.js).
+- Sound effects follow what happens: sword swish, shockwave, gunshot, enemy hit, cut, kill (the pitch climbs with the combo), mine drop and explosion, Shogun lightning, Medusa gaze, Mr.X shot, Swordsman block (a clang) versus Gorgon shield (stone), losing a character, portal, tail stall, key, summon, recruit, recruit lost, merge fanfare, wave horn and wave-clear jingle, enemy arrival, death, revive countdown ticks (higher in the last 3 s), revive, game over, new best, and menu sounds (focus, choose hero, unlock, can't afford, run start, pause).
+- Music has four moods that crossfade: title (hero and buff pick), run (calm), battle (enemies about; lingers 2.5 s after the last one dies), tense (revive countdown). The game-over screen is silent apart from its sting. Music gets quieter while paused.
+- Mute with M anywhere, or the speaker icon on the hero select screen. The choice is saved. Sound starts at the player's first tap or key press (a browser rule).
+
 ## Retention systems (hook design, not built yet)
 
 These are deliberate. Tune them so deaths feel like near-misses, not cheats.
@@ -131,7 +138,7 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 7. Merging into fusions: all five families (Miner, Keysman, Magneto, Raiden, Gorgon) plus the hero speed system. (done)
 8. Coin-gated hero unlocks, title screen as hero select, on-canvas display. (done)
 9. Rooms, wall types and map variety.
-10. Assets and polish: sprites, music, sound effects (shield-block sound first).
+10. Assets and polish: sprites (pending). Music and sound effects: placeholder synth sounds and music are done, real recordings are still to come.
 
 ## Open questions
 

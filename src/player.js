@@ -26,6 +26,7 @@ function takeHit(source) {
   if (source === 'enemyHead' && shieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // blocked: no blink
   if (gorgonAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
   S.quietHit = false;
+  playSfx('hit');
   if (S.snake.length === 1) { S.alive = false; return; } // last character lost
   const t = S.snake.pop(), r = S.roster.pop();           // the tail character is the one dropped
   dropFx(t.x, t.y, (px, py) => drawSegment(r, px, py, false));
@@ -46,6 +47,7 @@ function playerMove() {
     // Own tail: no hit, but the snake stops. It waits for a new direction, so enemies get time to close in.
     S.dir = { x: wrapStep(h.x - S.snake[1].x), y: wrapStep(h.y - S.snake[1].y) }; // back to the real heading
     S.waitDir = true;
+    playSfx('stall');
     return;
   }
   const self = S.snake.some(s => s.x === nx && s.y === ny);
@@ -66,13 +68,14 @@ function playerMove() {
   const key = S.keys.find(k => k.x === nx && k.y === ny);   // the key
   let rec = touchableRecruitAt(nx, ny); if (rec && countFollower('mrx') > 0) { shootRecruit(rec, nx, ny); rec = null; }                          // a character that is jumping, ready
   S.snake.unshift({ x: nx, y: ny });
-  if (portal) S.zaps.push({ kind: 'portal', ...portal, age: 0 });
+  if (portal) { S.zaps.push({ kind: 'portal', ...portal, age: 0 }); playSfx('portal'); }
   if (rec) {
     // Recruited: the character joins the tail (the snake grows by not shedding its tail tile).
     const last = S.roster[S.roster.length - 1];
     S.roster.push(newSlot(rec.c, last.fx, last.fy));
     S.recruits = S.recruits.filter(r => r !== rec);
     S.popups.push({ x: nx, y: ny, text: FOLLOWERS[rec.c].name + '!', age: 0 });
+    playSfx('recruit');
   } else if (S.growQueue.length) {
     // A recruit that walked into your hero joins now: the snake grows instead of shedding its tail.
     const last = S.roster[S.roster.length - 1];

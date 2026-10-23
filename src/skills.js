@@ -15,6 +15,7 @@ function dropMine() {
   const t = S.tailLeft;                         // null when the snake grew or did not move this tick
   if (!t || S.mines.length >= MINE_MAX || !tileFree(t.x, t.y)) return false;
   S.mines.push({ x: t.x, y: t.y });
+  playSfx('mineDrop');
   return true;
 }
 
@@ -29,6 +30,7 @@ function castShogun(r, i) {
   const from = S.snake[i], dmg = SHOGUN_DMG_MIN + Math.floor(Math.random() * (SHOGUN_DMG_MAX - SHOGUN_DMG_MIN + 1));
   S.zaps.push({ kind: 'bolt', x1: from.x, y1: from.y, x2: best.x, y2: best.y, age: 0,
                 jig: range(3).map(() => (Math.random() - 0.5) * 24) });
+  playSfx('lightning');
   strikeEnemyAt(best.x, best.y, dmg);                       // a head loses `dmg` hit points, a body segment is cut off
   return true;
 }

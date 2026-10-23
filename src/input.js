@@ -21,6 +21,7 @@ addEventListener('keydown', e => {
   if (inNameBox(e)) return;
   const k = e.key.toLowerCase();
   if (S.crashed) { if (k === ' ' || k === 'enter') newRun(); return; }
+    if (k === 'm' && !e.repeat && !e.ctrlKey && !e.metaKey) return toggleMute();
   if (!S.alive) {
     if (S.reviving) {                    // revive countdown: Q / Backspace give up, any other key revives
       if (e.repeat || MODIFIER_KEYS.includes(k)) return;
@@ -61,6 +62,14 @@ function pickAtPoint(clientX, clientY) {
   return range(n).findIndex(i => { const c = rect(i); return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h; });
 }
 function chooseCard(i) { return S.headPicking ? chooseHead(i) : startRun(i); }
+// Tap on the hero select screen: the speaker icon mutes, anything else is a card.
+function tapPick(clientX, clientY) {
+  if (S.headPicking) {
+    const p = canvasPoint(clientX, clientY), b = muteButtonRect();
+    if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return toggleMute();
+  }
+  tapCard(pickAtPoint(clientX, clientY));
+}
 // A tap or click on a card. In the compact hero grid the first tap only focuses the card (its description shows
 // under the grid) and tapping the focused card acts. Big cards and buff cards act at once.
 function tapCard(i) {
@@ -84,7 +93,7 @@ addEventListener('touchstart', e => {
   S.lastTouchAt = performance.now();   // phones fire a fake mouse click after a tap: mousedown ignores it
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
-  if (S.picking) return tapCard(pickAtPoint(touchX, touchY));
+  if (S.picking) return tapPick(touchX, touchY);
   resume();
 });
 addEventListener('touchmove', e => {
@@ -99,7 +108,7 @@ addEventListener('mousedown', e => {
   if (S.crashed || inNameBox(e)) return;
   if (performance.now() - S.lastTouchAt < 700) return; // the fake click that follows a touch
   if (!S.alive) tapWhileDead(e.clientX, e.clientY);
-  else if (S.picking) tapCard(pickAtPoint(e.clientX, e.clientY));
+  else if (S.picking) tapPick(e.clientX, e.clientY);
   else if (S.paused) resume();
 });
 addEventListener('mousemove', e => {

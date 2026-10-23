@@ -15,6 +15,7 @@ function mergeAt(idx) { // idx = the three slot numbers, lowest first
   const first = idx[0], fusionC = followerIndex(FOLLOWERS[S.roster[first].c].merge);
   const at = S.snake[first];
   S.popups.push({ x: at.x, y: at.y, text: FOLLOWERS[fusionC].name + '!', age: 0 });
+  playSfx('merge');
   const gone = [S.roster.splice(idx[2], 1)[0], S.roster.splice(idx[1], 1)[0]]; // highest first so the numbers stay valid
   gone.forEach(r => {                              // their fade-out is drawn on the last two tiles of the chain
     const t = S.snake.pop(); S.prev.pop();

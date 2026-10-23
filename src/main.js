@@ -45,6 +45,7 @@ function step() {
 // If anything throws, the game shows an error screen instead of silently freezing.
 function loop(t) {
   updateRevive(); // ends the revive countdown when the time is up
+  audioUpdate();
   if (S.alive && !S.paused && !S.crashed && !S.picking) {
     try {
       const iv = heroInterval();

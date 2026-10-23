@@ -62,6 +62,7 @@ function gorgonAbsorbs() {
   if (i === undefined) return false;
   S.roster[i].cd = GORGON_SHIELD_RECHARGE;
   S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Shielded!', age: 0 });
+  playSfx('shield');
   return true;
 }
 function updateGorgons() {
@@ -79,7 +80,7 @@ function medusaGaze() {
     const t = enemyAt(x, y);
     if (t && t.i === 0) { if (t.e.stun <= 0) fresh = true; t.e.stun = Math.max(t.e.stun, MEDUSA_FREEZE_TICKS); }
   }
-  if (fresh) S.zaps.push({ kind: 'gaze', tiles, age: 0 });
+  if (fresh) { S.zaps.push({ kind: 'gaze', tiles, age: 0 }); playSfx('gaze'); }
 }
 // Called once per tick, after the player has moved.
 function updatePassives() { magnetPull(); updateGorgons(); medusaGaze(); }

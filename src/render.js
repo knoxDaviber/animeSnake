@@ -170,6 +170,22 @@ function fitText(text, x, y, maxW, px, bold) { // one line of text, shrunk until
   do { ctx.font = `${bold ? 'bold ' : ''}${fs}px system-ui`; fs--; } while (fs >= 9 && ctx.measureText(text).width > maxW);
   ctx.fillText(text, x, y);
 }
+function drawSpeaker() { // hero select, top left: tap to mute or unmute (M does the same anywhere)
+  const b = muteButtonRect(), cx = b.x + b.w / 2, cy = b.y + b.h / 2, col = S.muted ? '#8a8aa3' : '#ffd36b';
+  ctx.save();
+  ctx.fillStyle = '#211a3b'; ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.lineWidth = 2; ctx.strokeStyle = '#3a2d5c'; ctx.strokeRect(b.x, b.y, b.w, b.h);
+  ctx.fillStyle = col; ctx.strokeStyle = col;
+  ctx.beginPath(); ctx.moveTo(cx - 9, cy - 4); ctx.lineTo(cx - 4, cy - 4); ctx.lineTo(cx + 2, cy - 9);
+  ctx.lineTo(cx + 2, cy + 9); ctx.lineTo(cx - 4, cy + 4); ctx.lineTo(cx - 9, cy + 4); ctx.closePath(); ctx.fill();
+  if (S.muted) {
+    ctx.beginPath(); ctx.moveTo(cx + 6, cy - 5); ctx.lineTo(cx + 14, cy + 5); ctx.moveTo(cx + 14, cy - 5); ctx.lineTo(cx + 6, cy + 5); ctx.stroke();
+  } else {
+    ctx.beginPath(); ctx.arc(cx + 2, cy, 7, -0.9, 0.9); ctx.stroke();
+    ctx.beginPath(); ctx.arc(cx + 2, cy, 12, -0.9, 0.9); ctx.stroke();
+  }
+  ctx.restore();
+}
 function drawHeadPick() { // title screen = hero select: one card per hero. A locked hero is dimmed with its price; clicking buys it.
   const L = headLayout(), now = performance.now(), mid = cv.width / 2;
   ctx.save();
@@ -191,6 +207,7 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
   ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
   ctx.textAlign = 'center';
 
+  drawSpeaker();
   HEAD_DEFS.forEach((h, i) => {
     const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
     const price = heroPrice(h.id), locked = !isUnlocked('hero', h.id, price), afford = S.coins >= price;

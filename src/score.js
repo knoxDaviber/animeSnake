@@ -16,7 +16,8 @@ function registerKill(x, y) {
   S.comboTimer = S.comboWindow;
   if (S.combo > S.bestCombo) S.bestCombo = S.combo;
   const m = comboMult();
-    addScore((POINTS.kill + killBonus()) * m, x, y, m > 1 ? ' x' + m : '');
+  playSfx('kill', S.combo - 1);
+  addScore((POINTS.kill + killBonus()) * m, x, y, m > 1 ? ' x' + m : '');
 }
 // Called once per tick: runs the combo window down.
 function updateCombo() {

@@ -154,6 +154,22 @@ const SPLASHES = [
 const TEST_START_COINS = 0;    // above 0: coins are set to this on every page load (try 30, then 100)
 const TEST_RELOCK = false;     // true: all bought unlocks are forgotten on every page load
 
+// Audio (audio.js). Every placeholder sound is synthesized, so there are no files to add. To use a real file, put it in
+// assets/audio/sfx/ or music/ and list it below. Only listed files are requested.
+const MASTER_VOLUME = 0.8;      // 0 to 1
+const SFX_VOLUME = 0.7;
+const MUSIC_VOLUME = 0.35;
+const PAUSE_DUCK = 0.3;         // music plays at this fraction of its volume while paused
+const MUSIC_BPM = 120;          // placeholder music tempo
+const MUSIC_FADE = 0.3;         // how quickly music crossfades between moods (bigger = slower)
+const BATTLE_HOLD_MS = 2500;    // battle music lingers this long after the last enemy dies
+const SFX_MIN_GAP_MS = 45;      // the same sound cannot retrigger faster than this
+const SFX_GAPS = { tick: 30, hitEnemy: 70, kill: 60, explosion: 120, spawn: 150 }; // per-sound overrides
+const AUDIO_LOG = false;        // true: log every sound name to the console
+const AUDIO_DIR = '../assets/audio/';
+const SFX_FILES = {};           // e.g. { block: 'block.mp3' } loads assets/audio/sfx/block.mp3 instead of the beep
+const MUSIC_FILES = {};         // e.g. { title: 'title.mp3', run: 'run.mp3', battle: 'battle.mp3', tense: 'tense.mp3' }
+
 // Shared leaderboard (Supabase, see leaderboard.js and tools/supabase_setup.sql)
 // Paste your PUBLISHABLE key (or the legacy "anon" key) below. It is meant to be public. NEVER paste the secret or
 // service_role key here: this file is served to every player.

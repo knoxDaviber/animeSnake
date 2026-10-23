@@ -8,9 +8,9 @@ Snake, but anime: a fast roguelike where the snake is a chain of anime character
 
 **Wording:** the playable head is called a **hero** in anything the player sees. The code still says head / `HEADS` / `HEAD_DEFS` (renaming is optional and not worth the risk yet).
 
-**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, follower skills (mines, Shogun lightning), a run-start buff pick (10 buffs), recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (all five families: Miner, Keysman, Magneto, Raiden, Gorgon), the hero speed system, score and combos, saved bests and coins, the Supabase top-10 leaderboard (needs the key in `config.js`), the title screen that is the hero select screen (random title and splash line), coin-gated hero unlocks, the on-canvas score / wave / coins display, the info bar, pause and an error screen.
+**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, follower skills (mines, Shogun lightning), a run-start buff pick (10 buffs), recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (all five families: Miner, Keysman, Magneto, Raiden, Gorgon), the hero speed system, score and combos, saved bests and coins, the Supabase top-10 leaderboard (needs the key in `config.js`), the title screen that is the hero select screen (random title and splash line), coin-gated hero unlocks, the on-canvas score / wave / coins display, placeholder sound effects and music (synthesized, mutable), the info bar, pause and an error screen.
 
-**Not built yet:** retention systems, mine kicking, expand-grid, rooms, audio.
+**Not built yet:** retention systems, mine kicking, expand-grid, rooms, real audio files and sprites (placeholder audio is built).
 
 ## Run it
 
@@ -26,6 +26,7 @@ Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so ke
 | `state.js` | The `S` object (all mutable state) and `newRun()` |
 | `storage.js` | Saves best score, best combo, coins and unlocks (localStorage) |
 | `unlocks.js` | Click-to-buy unlocks: `isUnlocked`, `tryUnlock`, `heroPrice` |
+| `audio.js` | All sound: synthesized placeholder effects (`SYNTH`) and music moods, `playSfx`, `audioUpdate`, mute |
 | `world.js` | `tileFree`, keys (`placeFood`), hazard, drop effects |
 | `score.js` | Points, combos, kill coins, popups |
 | `player.js` | Steering, `playerMove`, `takeHit` |
@@ -96,6 +97,16 @@ The game has two fixed clocks, both run from `loop()` in `main.js`. Each frame t
 - Phones send a fake mouse click after a tap, so `mousedown` ignores clicks within 700 ms of a touch (`S.lastTouchAt`).
 - The numbers are drawn on the canvas (`drawHud` in render.js). Hard rule: nothing may sit above the canvas where it could move or resize the game. The info bar line is fixed height, one line, ellipsised.
 
+## Audio (built)
+
+- `audio.js` makes every placeholder sound with the Web Audio API, so no files are needed and it works from `file://`. Game code calls `playSfx('name', optionalNumber)`. The names are the keys of `SYNTH`. Try `audioDemo()` in the browser console (after one click) to hear all of them, or set `AUDIO_LOG = true` in config.js.
+- Most sounds need no hook: `audioWatch()` (called every frame by `audioUpdate()` in `loop()`) spots changes in `S` and plays the menu, pause, death, revive, game-over, countdown, wave, spawn, shield-ready and new-best sounds. Combat sounds are explicit `playSfx` calls placed next to the event (heads.js, enemies.js, score.js, player.js, recruits.js, mines.js, skills.js, passives.js, merge.js).
+- Music moods come from `audioMode()`: title, run, battle, tense. They crossfade on one shared clock (`MUSIC_BPM`).
+- Real files: put them in `assets/audio/sfx/` or `assets/audio/music/` and list them in `SFX_FILES` (sound name to file) or `MUSIC_FILES` (mood to file) in config.js. Only listed files are requested, so nothing 404s. A listed sfx file plays instead of its synth version; a listed music file replaces that mood's synth music.
+- Browsers keep audio silent until the first tap or key press: `audioUnlock()` handles that. Mute: M, or the speaker icon top left of the hero select screen (`muteButtonRect`); saved as `muted` in storage.js.
+- Audio can never crash the game: every entry point is wrapped, and an error turns sound off for the session (see the console).
+- Volumes and timing live in config.js (`MASTER_VOLUME`, `SFX_VOLUME`, `MUSIC_VOLUME`, `SFX_GAPS`...).
+
 ## Hero speed (built)
 
 Raiden, Shogun, Gorgon and Medusa all work through `heroSpeed()` in `passives.js`. The hero has its own move timer (`S.heroLast`, `heroStep()` in `main.js`), so speed changes never touch enemies or skill timers.
@@ -137,6 +148,7 @@ Every object has a PNG at its final path, so art is swapped by overwriting the f
 
 - Nothing has been played in a real browser by the assistant. Recent changes (coins, fusions, enemy corner fix, shield flash, recruit touching, any-order merging) are untested.
 - Batch 2: the hero speed system has been checked in a browser. Raiden/Shogun lightning and Gorgon shields / Medusa freeze still need a proper play-through. Delete this line once they are tested.
+- Audio is tested only against a mock of Web Audio (no errors), not by ear. Levels and the music will need your ears.
 - The title screen, unlocks and the on-canvas display are untested in a real browser (by the assistant).
 - Enemy AI is simple. The corner fix lets a boxed-in snake flip itself; if enemies still get stuck, note where.
 - Anyone can post a fake score from the console. Accepted for a hobby game.
@@ -155,4 +167,4 @@ Every object has a PNG at its final path, so art is swapped by overwriting the f
 
 ## Last session
 
-Built build-order step 8: the title screen is the hero select screen (random title and splash), coin-gated hero unlocks (Gunman 40 coins), and the on-canvas display replacing the row above the canvas. To check in a browser: play to game over and back to hero select, buy Gunman with `TEST_START_COINS = 100`, try 5 to 8 heroes in the grid, and watch that the canvas never moves when numbers or the info bar line change. Next: retention systems, or rooms and wall types (see DESIGN.md).
+Also added placeholder audio (audio.js, see the Audio section). Before that, built build-order step 8: the title screen is the hero select screen (random title and splash), coin-gated hero unlocks (Gunman 40 coins), and the on-canvas display replacing the row above the canvas. To check in a browser: play to game over and back to hero select, buy Gunman with `TEST_START_COINS = 100`, try 5 to 8 heroes in the grid, and watch that the canvas never moves when numbers or the info bar line change. Next: retention systems, or rooms and wall types (see DESIGN.md).

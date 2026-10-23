@@ -32,6 +32,7 @@ function updateSwordsman() {
   const h = S.snake[0], tx = h.x + S.dir.x, ty = h.y + S.dir.y;
   if (!inBounds(tx, ty)) return;
   fireAttack(ATTACKS.sword, tx, ty, S.dir, SWORD_DAMAGE);
+  playSfx('sword');
   S.lastSwing = S.tick;
 }
 // Called by takeHit for a hit from an enemy HEAD. True if the Swordsman's block absorbs it.
@@ -39,6 +40,7 @@ function shieldAbsorbs() {
   if (headId() !== 'swordsman' || !S.shield) return false;
   S.shield = false; S.shieldTimer = SHIELD_RECHARGE;
   S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Blocked!', age: 0 });
+  playSfx('block');
   return true;
 }
 
@@ -49,6 +51,7 @@ function updateMagician() {
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
     if (inBounds(cx + dx, cy + dy)) tiles.push({ x: cx + dx, y: cy + dy });
   S.zaps.push({ kind: 'wave', tiles, age: 0 });
+  playSfx('shock');
   tiles.forEach(t => strikeEnemyAt(t.x, t.y, SHOCK_DAMAGE)); // each tile is looked up fresh: an earlier hit can cut or kill a snake
   S.lastSwing = S.tick;
 }
@@ -57,6 +60,7 @@ function updateMagician() {
 function updateGunman() {
   if (!weaponReady(GUNMAN_COOLDOWN)) return;
   const h = S.snake[0], d = S.dir;
+  playSfx('shoot');
   for (const side of [-1, 1]) {                    // the two sides of the heading
     S.bullets.push({ x: h.x, y: h.y, px: h.x, py: h.y, dx: -d.y * side, dy: d.x * side, dmg: BULLET_DAMAGE, dead: false });
   }
@@ -88,6 +92,7 @@ function chooseHead(i) {
   const price = heroPrice(def.id);
   if (!isUnlocked('hero', def.id, price)) {
     const r = tryUnlock('hero', def.id, price);
+    playSfx(r.ok ? 'unlock' : 'deny');
     S.pickIndex = i;
     S.cardNote = { i, ok: r.ok, until: performance.now() + CARD_NOTE_MS,
                    text: r.ok ? 'Unlocked!' : `Need ${r.need} more coin${r.need === 1 ? '' : 's'}` };

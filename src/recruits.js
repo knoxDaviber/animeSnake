@@ -36,6 +36,7 @@ function summonRecruit() {
     if (!clear) continue;
     S.recruits.push({ c: randomFollower(), x: sx, y: sy, px: sx, py: sy, dx: d.x, dy: d.y,
                       left: len, tx, ty, ready: false, age: 0 });
+                      playSfx('summon');
     return true;
   }
   return false;
@@ -56,11 +57,13 @@ function updateRecruits() {
     S.recruits = S.recruits.filter(q => q !== r);
     S.growQueue.push(r.c);                              // joins on the next move (playerMove)
     S.popups.push({ x: h.x, y: h.y, text: FOLLOWERS[r.c].name + '!', age: 0 });
+    playSfx('recruit');
   });
 }
 
 // An enemy stepped on it: it is gone, and so is the key that summoned it.
 function killRecruit(r) {
+  playSfx('recruitLost');
   S.recruits = S.recruits.filter(x => x !== r);
   const c = r.c;
   dropFx(r.x, r.y, (px, py) => drawSegment({ c, fx: 0, fy: 1 }, px, py, false));
@@ -70,6 +73,7 @@ function killRecruit(r) {
 function eatKey(k) {
   S.keys = S.keys.filter(x => x !== k);
   addScore(POINTS.food, k.x, k.y);
+  playSfx('key');
   summonRecruit();
   if (S.recruits.length < RECRUIT_MAX && Math.random() < keyDoubleChance()) summonRecruit(); // Keysman bonus
 }
@@ -87,5 +91,6 @@ function shootRecruit(r, x, y) {
   if (!best) return;
   const dmg = MRX_SHOT_MIN + Math.floor(Math.random() * (MRX_SHOT_MAX - MRX_SHOT_MIN + 1));
   S.zaps.push({ kind: 'bolt', x1: x, y1: y, x2: best.x, y2: best.y, age: 0, jig: range(3).map(() => (Math.random() - 0.5) * 24) });
+  playSfx('mrx');
   strikeEnemyAt(best.x, best.y, dmg);
 }

@@ -32,7 +32,7 @@
 //   heroLast / heroAlpha   the hero's own move timer (ms of its last move) and progress through its current move (0..1)
 //   popups         floating score text
 //   best / bestCombo   saved across runs (storage.js); survive newRun()
-const S = { best: 0, bestCombo: 0, coins: 0, unlocked: {}, lastTouchAt: 0 };
+const S = { best: 0, bestCombo: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false };
 
 function newLeaderboardState() {
   return { status: 'idle', rows: [], qualifies: false, submitting: false, submitted: false, submitError: false,

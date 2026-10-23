@@ -12,7 +12,7 @@
   <div id="panel"></div>
   <button id="panelHandle" type="button" tabindex="-1" aria-label="Hold to show or hide the info bar"></button>
 </div>
-<div id="hint">Arrows / WASD / swipe to steer. P pauses. I, or hold the small bar under the game, shows or hides the info bar. Eat a key, then touch the jumping character to recruit it. After dying: any key or tap revives, Q gives up.</div>
+<div id="hint">Arrows / WASD / swipe to steer. P pauses. M mutes. I, or hold the small bar under the game, shows or hides the info bar. Eat a key, then touch the jumping character to recruit it. After dying: any key or tap revives, Q gives up.</div>
 
 <!-- Plain scripts (no server or build step needed). Order matters: each file may use the ones above it
      when it loads, and every function in any file when the game runs. -->
@@ -22,6 +22,7 @@
 <script src="state.js"></script>    <!-- the S object: all mutable game state, newRun() -->
 <script src="storage.js"></script>  <!-- saves best score and best combo in the browser -->
 <script src="unlocks.js"></script>  <!-- click-to-buy unlocks (heroes now, more later) -->
+<script src="audio.js"></script>    <!-- sound effects and music (synthesized placeholders) -->
 <script src="world.js"></script>    <!-- food, hazard, drop effects -->
 <script src="score.js"></script>    <!-- points, combos, floating score text -->
 <script src="player.js"></script>   <!-- steering, moving, rings and damage -->
