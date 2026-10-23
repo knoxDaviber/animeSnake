@@ -6,7 +6,7 @@ A small, fully vibecoded first game: code is written with AI help, and art, musi
 
 ## Status
 
-Early prototype, but the core loop is complete. You pick a hero (Swordsman, Magician or Gunman) and a run-start buff, then steer a chain of characters around a 20x20 grid. Your hero attacks automatically. Enemy snakes arrive in waves. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a stronger fusion follower. Hits drop characters from the tail (rings). Dying starts a 10 second revive countdown that costs coins, which you earn from kills and waves. Best score, best combo and coins are saved in the browser, and an optional shared top 10 uses Supabase. Everything else is planned in [DESIGN.md](DESIGN.md).
+Early prototype, but the core loop is complete. You pick a hero on the title screen (Swordsman and Magician are free, Gunman is bought with coins) and a run-start buff, then steer a chain of characters around a 20x20 grid. Your hero attacks automatically. Enemy snakes arrive in waves. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a stronger fusion follower. Hits drop characters from the tail (rings). Dying starts a 10 second revive countdown that costs coins, which you earn from kills and waves. Coins also unlock heroes. Best score, best combo and coins are saved in the browser, and an optional shared top 10 uses Supabase. Everything else is planned in [DESIGN.md](DESIGN.md).
 
 ## Run it
 
@@ -14,6 +14,7 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 
 - Desktop: arrow keys or WASD
 - Phone: swipe
+- Hero select (the title screen): tap a card, or press its number, or use the arrows and Enter. Tapping a locked hero buys it with coins
 - Pause: P or Escape (also pauses when the tab loses focus); tap to resume
 - Info bar (hero and follower timers): press I, or hold the small bar under the game
 - After dying: any key, click or tap revives if you can pay the coins. Q, Backspace, the Give up button or the timer ends the run
@@ -26,7 +27,7 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 - The hero auto-attacks in the direction it faces. Followers add passives, and some have active skills or change how fast the hero moves.
 - Three identical followers anywhere in the chain merge into one fusion follower with completely different abilities (you lose 2 characters, so merging is a choice).
 - Enemy snakes arrive in waves and get tougher.
-- Runs are short. Coins from kills and waves buy revives; hero unlocks are planned.
+- Runs are short. Coins from kills and waves buy revives and hero unlocks.
 
 Full details, build order and open questions are in [DESIGN.md](DESIGN.md). Sprite formats are in [ART_SPEC.md](ART_SPEC.md). A status note for the next session is in [Handover.md](Handover.md).
 
@@ -58,7 +59,8 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `sprites.js` | Loads the shared sprite sheets |
 | `followers.js` | Followers and fusions, their sheets, `newSlot()` |
 | `state.js` | The `S` object holding all mutable game state, and `newRun()` |
-| `storage.js` | Saves best score, best combo and coins in the browser |
+| `storage.js` | Saves best score, best combo, coins and unlocks in the browser |
+| `unlocks.js` | Click-to-buy unlocks (heroes now), prices from config.js |
 | `world.js` | Keys, the hazard, free-tile checks, drop effects |
 | `score.js` | Points, combos, kill coins, floating score text |
 | `player.js` | Steering, moving, keys, recruiting, the tail stall, rings and damage |
@@ -73,7 +75,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `revive.js` | Death: the revive countdown, revive cost, game-over lockout |
 | `leaderboard.js` | Shared online top 10 (Supabase) and the initials box |
 | `enemies.js` | Enemy snakes, their AI, waves |
-| `render.js` | All drawing (reads `S`, never changes it) |
+| `render.js` | All drawing, including the title screen and the on-canvas score, wave and coins (reads `S`, never changes it) |
 | `panel.js` | The info bar |
 | `input.js` | Keyboard, touch, pause |
 | `main.js` | One world tick (`step`), one hero move (`heroStep`), the frame loop, start-up |

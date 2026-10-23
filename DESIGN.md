@@ -73,16 +73,31 @@ Speed and slowdown change the hero only, not enemies or skill timers. The hero h
 | 14-17 | 4    |
 | 18+   | 5    |
 
+## Title screen and unlocks
+
+- The title screen IS the hero select screen. The game opens on it, and so does every new run (death, revive countdown, game-over screen, tap, hero select). There is no separate menu.
+- The only title element is the game name, floating at the top: "animeSnake", or "Snake-lite" about half the time. A Minecraft-style splash line (a random joke, or a dig at the player or the dev) sits tilted beside it. Both are rolled each time the screen appears (`TITLE_*` and `SPLASHES` in config.js).
+- Swordsman and Magician are free. Every other hero is locked until bought with coins (Gunman costs 40). Clicking or tapping a locked card buys it on the spot if you can pay. If you cannot, the card says how many more coins you need and nothing is spent. A bought hero is picked with another click. Your coin total is shown on the screen. There is no shop screen.
+- Unlocks are saved by hero id, so adding heroes never breaks old saves. A new hero is locked by default.
+- Up to 3 heroes show as big cards. 4 to 8 show as a compact grid, with the focused hero's description under it.
+- The unlock logic (`unlocks.js`) is generic. Planned, not built: more sections on this screen, such as Followers (choose which can appear in your run) and Upgrades, with locked items bought by clicking them, like heroes.
+
 ## Run start
 
-- First pick the hero, then one of 3 random buffs (10 exist): Extra follower, +10% score, Thick skin, Quick hands, Combo keeper, Skill haste, Bounty hunter, Second wind, Welcome party, Minefield.
+- First pick the hero (see above), then one of 3 random buffs (10 exist): Extra follower, +10% score, Thick skin, Quick hands, Combo keeper, Skill haste, Bounty hunter, Second wind, Welcome party, Minefield.
 
 ## Score and coins
 
 - Kills, keys and cut segments give points. Kill points are 20 x the combo count (capped at x5), plus bonuses. A kill must land within 3 seconds of the last one.
-- **Coins** are earned in-game: 3 per kill and 5 per wave started, kept between runs.
+- **Coins** are earned in-game: 3 per kill and 5 per wave started, kept between runs. They pay for revives and hero unlocks.
 - **Revive:** on death a 10 second countdown offers a revive for coins (15, then 30, 45... within a run). A revive adds 10% of the score and brings back just the hero with 3 seconds of immunity. If you cannot afford it, the run ends at once. The game-over screen ignores restart input briefly.
 - Best score, best combo and coins are saved in the browser. A shared online top 10 (initials) is optional.
+
+## In-game display
+
+- Score, wave and coins are drawn on the canvas in a fixed row at the top (score left, wave centre, coins right). While a combo runs it shows under the score.
+- Nothing sits above the canvas, so no number can ever move or resize the game.
+- Chain length and the run's buff are on the info bar's muted line. Best score and best combo are on the game-over screen.
 
 ## Retention systems (hook design, not built yet)
 
@@ -114,7 +129,7 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 5. Coins and revive cost. (done, minimal) Retention systems. (pending)
 6. Recruitment, 3 heroes, 5 followers, 10 buffs, run-start picks. (done)
 7. Merging into fusions: all five families (Miner, Keysman, Magneto, Raiden, Gorgon) plus the hero speed system. (done)
-8. Coin-gated hero unlocks. (next)
+8. Coin-gated hero unlocks, title screen as hero select, on-canvas display. (done)
 9. Rooms, wall types and map variety.
 10. Assets and polish: sprites, music, sound effects (shield-block sound first).
 
@@ -123,3 +138,4 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 - Sword numbers: 3 damage about once a second makes early waves trivial. Check against the difficulty curve.
 - How should keys spawn once they become specific per character?
 - Rooms: how do the player and enemies move between them, and what carries over?
+- Followers and Upgrades sections on the title screen: what do they unlock, and what do they cost?

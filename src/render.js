@@ -3,18 +3,7 @@
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-function hud() {
-  document.getElementById('score').textContent = S.score;
-  document.getElementById('len').textContent = S.snake.length;
-  document.getElementById('wave').textContent = S.wave || 1;
-  document.getElementById('combo').textContent = S.combo ? `${S.combo} (x${comboMult()})` : '-';
-  document.getElementById('best').textContent = S.best;
-  document.getElementById('coins').textContent = S.coins;
-  document.getElementById('bestcombo').textContent = S.bestCombo;
-  const b = BUFFS.find(x => x.id === S.buff);
-  document.getElementById('buff').textContent = b ? b.name : '-';
-  updatePanel();
-}
+function hud() { updatePanel(); } // the numbers now live on the canvas (drawHud); this only refreshes the info bar
 
 // Draws one frame of a directional sheet, scaled to fit one 32x32 tile. Sprites face right; left is mirrored.
 // The frame size comes from the sheet itself (width / 4), so 128x128 and 448x448 sheets both work.
@@ -160,26 +149,93 @@ function drawShield() { // Swordsman: a ring around the head while the block is 
   ctx.beginPath(); ctx.arc(p.x + CELL / 2, p.y + CELL / 2, CELL / 2 + 1, 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
 }
-function drawHeadPick() { // first pick screen: one card per head
+// ---- Hero select screen (the title screen) ------------------------------------------
+function drawLock(cx, cy, s, color) { // a padlock about s px tall, centred on (cx, cy)
   ctx.save();
-  ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
-  ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
-  ctx.fillText('Choose your hero', cv.width / 2, 100);
+  ctx.fillStyle = color; ctx.strokeStyle = color; ctx.lineWidth = Math.max(2, s / 8);
+  const top = cy - s * 0.25;                                                     // top edge of the body
+  ctx.beginPath(); ctx.arc(cx, top, s * 0.24, Math.PI, 0); ctx.stroke();        // shackle
+  ctx.fillRect(cx - s * 0.4, top, s * 0.8, s * 0.7);                             // body
+  ctx.fillStyle = '#14101f'; ctx.beginPath(); ctx.arc(cx, top + s * 0.33, s * 0.07, 0, Math.PI * 2); ctx.fill(); // keyhole
+  ctx.restore();
+}
+function drawCoinIcon(x, y, r) {
+  ctx.save();
+  ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#b8892a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(x, y, r * 0.55, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+}
+function fitText(text, x, y, maxW, px, bold) { // one line of text, shrunk until it fits maxW
+  let fs = px;
+  do { ctx.font = `${bold ? 'bold ' : ''}${fs}px system-ui`; fs--; } while (fs >= 9 && ctx.measureText(text).width > maxW);
+  ctx.fillText(text, x, y);
+}
+function drawHeadPick() { // title screen = hero select: one card per hero. A locked hero is dimmed with its price; clicking buys it.
+  const L = headLayout(), now = performance.now(), mid = cv.width / 2;
+  ctx.save();
+  ctx.fillStyle = '#14101f'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.textAlign = 'center';
+  const bob = Math.sin(now / 700) * 4;                    // the title floats
+  ctx.font = 'bold 48px system-ui'; ctx.lineWidth = 6; ctx.strokeStyle = '#3a2d5c'; ctx.lineJoin = 'round';
+  const tw = ctx.measureText(S.titleText).width;
+  ctx.strokeText(S.titleText, mid, 72 + bob);
+  ctx.fillStyle = '#ffd36b'; ctx.fillText(S.titleText, mid, 72 + bob);
+  ctx.save();                                             // the splash line: tilted and pulsing, tucked under the title's right end
+  ctx.translate(Math.min(mid + tw / 2 - 10, cv.width - 120), 94 + bob); ctx.rotate(-0.2);
+  const pulse = 1 + Math.sin(now / 250) * 0.06; ctx.scale(pulse, pulse);
+  ctx.fillStyle = '#8dff6b'; fitText(S.splashText, 0, 0, 220, 16, true);
+  ctx.restore();
+  ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'right'; // your coins (top right), so you can see what you can afford
+  const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
+  drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
+  ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
+  ctx.textAlign = 'center';
+
   HEAD_DEFS.forEach((h, i) => {
     const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
-    ctx.fillStyle = sel ? '#2c2250' : '#211a3b'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    const price = heroPrice(h.id), locked = !isUnlocked('hero', h.id, price), afford = S.coins >= price;
+    const note = S.cardNote && S.cardNote.i === i && now < S.cardNote.until ? S.cardNote : null;
+    ctx.fillStyle = locked ? (sel ? '#251e3d' : '#1a1530') : (sel ? '#2c2250' : '#211a3b');
+    ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.lineWidth = 3; ctx.strokeStyle = sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(c.x, c.y, c.w, c.h);
-    ctx.save();                                            // portrait: frame 0 of the "down" row, drawn at 2x
-    ctx.translate(Math.round(cx - SPRITE), c.y + 20); ctx.scale(2, 2);
+    const py = c.y + (L.big ? 20 : 14);                   // top of the portrait (frame 0 of the "down" row, drawn at 2x)
+    ctx.save();
+    ctx.globalAlpha = locked ? 0.3 : 1;
+    ctx.translate(Math.round(cx - SPRITE), py); ctx.scale(2, 2);
     drawSegment({ c: i, fx: 0, fy: 1 }, 0, 0, true);
     ctx.restore();
-    ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 22px system-ui'; ctx.fillText(h.name, cx, c.y + 120);
-    ctx.fillStyle = '#f3e9ff'; ctx.font = '14px system-ui';
-    wrapText(h.desc, c.w - 24).forEach((line, k) => ctx.fillText(line, cx, c.y + 148 + k * 18));
-    ctx.fillStyle = '#9a8cc4'; ctx.fillText(`[${i + 1}]`, cx, c.y + c.h - 14);
+    if (locked) drawLock(cx, py + SPRITE, 30, '#c9bde6');
+    ctx.fillStyle = locked ? '#9a8cc4' : '#ffd36b';
+    fitText(h.name, cx, py + (L.big ? 100 : 86), c.w - 12, L.big ? 22 : 16, true);
+    if (L.big) {
+      ctx.fillStyle = locked ? '#9a8cc4' : '#f3e9ff'; ctx.font = '14px system-ui';
+      wrapText(h.desc, c.w - 24).forEach((line, k) => ctx.fillText(line, cx, c.y + 148 + k * 18));
+    }
+    const sy = L.big ? c.y + c.h - 40 : c.y + 124, sz = L.big ? 16 : 13;   // status line: a note, or the price
+    if (note) {
+      ctx.fillStyle = note.ok ? '#8dff6b' : '#ff8a8a'; fitText(note.text, cx, sy, c.w - 10, sz, true);
+    } else if (locked) {
+      ctx.font = `bold ${sz}px system-ui`;
+      const tw = ctx.measureText(String(price)).width, x0 = cx - (tw + 18) / 2;
+      drawCoinIcon(x0 + 7, sy - sz * 0.35, 6);
+      ctx.fillStyle = afford ? '#ffd36b' : '#8a8aa3'; ctx.textAlign = 'left';
+      ctx.fillText(String(price), x0 + 18, sy); ctx.textAlign = 'center';
+    }
+    ctx.fillStyle = '#9a8cc4'; ctx.font = '12px system-ui';
+    if (L.big) ctx.fillText(`[${i + 1}]`, cx, c.y + c.h - 14);
+    else { ctx.textAlign = 'left'; ctx.fillText(String(i + 1), c.x + 8, c.y + 16); ctx.textAlign = 'center'; }
   });
-  ctx.font = '14px system-ui'; ctx.fillStyle = '#9a8cc4';
-  ctx.fillText('Tap a card, press 1 / 2 / 3, or use the arrows and Enter', cv.width / 2, 480);
+
+  if (!L.big && HEAD_DEFS[S.pickIndex]) {                 // compact grid: the focused hero's description
+    const h = HEAD_DEFS[S.pickIndex];
+    ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 18px system-ui'; ctx.fillText(h.name, mid, 476);
+    ctx.fillStyle = '#f3e9ff'; ctx.font = '14px system-ui';
+    wrapText(h.desc, 560).slice(0, 3).forEach((line, k) => ctx.fillText(line, mid, 500 + k * 18));
+  }
+  ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
+  ctx.fillText(L.big ? 'Tap a card, or press its number, or use the arrows and Enter'
+                     : 'Tap a card to look, tap it again to choose (or use the number keys, arrows and Enter)', mid, 588);
+  ctx.fillText('Locked heroes cost coins: tap one to unlock it', mid, 610);
   ctx.restore();
 }
 function drawAttack(a) {
@@ -238,6 +294,23 @@ function drawPopups() { // floating "+60 x3" text where points were scored
     ctx.strokeText(p.text, x, y);
     ctx.fillStyle = '#ffd36b'; ctx.fillText(p.text, x, y);
   });
+  ctx.restore();
+}
+function drawHud() { // score (left), wave (centre) and coins (right), drawn on the canvas so no layout can ever move the game
+  if (S.picking || !S.alive) return;
+  ctx.save();
+  ctx.font = 'bold 16px system-ui'; ctx.textBaseline = 'alphabetic'; ctx.lineWidth = 3; ctx.strokeStyle = '#14101f'; ctx.lineJoin = 'round';
+  const text = (s, x, y, align, color) => {
+    ctx.textAlign = align; ctx.strokeText(s, x, y); ctx.fillStyle = color; ctx.fillText(s, x, y);
+  };
+  text(`Score ${S.score}`, 8, 22, 'left', '#fff');
+  if (S.combo > 0) { const m = comboMult(); text(`Combo ${S.combo}` + (m > 1 ? `  x${m}` : ''), 8, 42, 'left', '#ffd36b'); }
+  text(`Wave ${S.wave || 1}`, cv.width / 2, 22, 'center', '#fff');
+  const label = String(S.coins);
+  ctx.textAlign = 'right';
+  const w = ctx.measureText(label).width;
+  drawCoinIcon(cv.width - 8 - w - 12, 17, 6);
+  text(label, cv.width - 8, 22, 'right', '#ffd36b');
   ctx.restore();
 }
 function drawComboBar() { // thin bar along the top: time left to chain the next kill
@@ -385,6 +458,7 @@ function draw() {
   drawBlasts();
   drawZaps();
   drawPopups();
+  drawHud();
   drawComboBar();
   drawStallHint();
   drawOverlay();

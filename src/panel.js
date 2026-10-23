@@ -100,7 +100,8 @@ function updatePanel() {
   const wave = S.wave === 0 ? `first wave ${panelTime(S.waveTimer)}`
     : left > 0 ? `wave ${S.wave} \u00b7 ${left} left`
     : `next wave ${panelTime(S.waveTimer)}`;
-  PANEL.line.textContent = `${wave} \u00b7 recruits ${S.recruits.length}/${RECRUIT_MAX}`;
+  const buff = BUFFS.find(x => x.id === S.buff);
+  PANEL.line.textContent = `${wave} \u00b7 chain ${S.snake.length} \u00b7 recruits ${S.recruits.length}/${RECRUIT_MAX}` + (buff ? ` \u00b7 buff: ${buff.name}` : '');
 }
 
 // ---- Show / hide ------------------------------------------------------------------

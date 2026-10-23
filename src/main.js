@@ -72,5 +72,7 @@ function loop(t) {
 }
 
 loadProgress();
+if (TEST_RELOCK) S.unlocked = {};                     // TEST ONLY
+if (TEST_START_COINS > 0) S.coins = TEST_START_COINS; // TEST ONLY
 newRun();
 requestAnimationFrame(loop);

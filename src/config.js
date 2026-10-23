@@ -112,6 +112,48 @@ const COIN_PER_WAVE = 5;            // coins each time a wave starts
 const REVIVE_COST_BASE = 15;        // coins for the first revive in a run
 const REVIVE_COST_STEP = 15;        // each further revive in the same run costs this much more
 
+// Hero unlocks (unlocks.js). A hero not in HERO_FREE costs HERO_PRICES[id] coins, or HERO_DEFAULT_PRICE if it has no entry.
+// So a new hero is locked automatically; add it to HERO_PRICES only to give it its own price.
+const HERO_FREE = ['swordsman', 'magician'];
+const HERO_PRICES = { gunman: 40 };
+const HERO_DEFAULT_PRICE = 80;
+const HERO_GRID_COLS = 4;      // hero select: most cards per row once there are more than 3 heroes
+const CARD_NOTE_MS = 1800;     // how long "Need N more coins" / "Unlocked!" stays on a card
+
+// Title screen (render.js drawHeadPick). The title is TITLE_ALT TITLE_ALT_CHANCE of the time, otherwise TITLE_MAIN.
+// A random splash line wobbles beside it, Minecraft style. Both are rolled whenever the hero select screen appears.
+const TITLE_MAIN = 'animeSnake';
+const TITLE_ALT = 'Snake-lite';
+const TITLE_ALT_CHANCE = 0.5;
+const SPLASHES = [
+  'Now with 100% more anime!',
+  'Skill issue.',
+  'The dev vibecoded this. Mostly.',
+  'Tail stall is a feature!',
+  'git commit -m "it works"',
+  'Please do not eat the hazard.',
+  'Your high score is watching you.',
+  'One more run...',
+  'Mines: now with friendly fire!',
+  'Have you tried not dying?',
+  'The wall is not your friend.',
+  'Tail first, ask questions later.',
+  'Revive responsibly.',
+  'Mom, I am on the leaderboard!',
+  'Also try Minecraft!',
+  'Contains traces of snake.',
+  'Works on my machine.',
+  'Medusa sees you.',
+  'Eat keys, not your own tail!',
+  'Snake-lite: half the anime!',
+  'Hit points are a social construct.',
+  'Free of nutritional value.',
+];
+
+// TEST ONLY, remove later. Leave at 0 / false for normal play.
+const TEST_START_COINS = 0;    // above 0: coins are set to this on every page load (try 30, then 100)
+const TEST_RELOCK = false;     // true: all bought unlocks are forgotten on every page load
+
 // Shared leaderboard (Supabase, see leaderboard.js and tools/supabase_setup.sql)
 // Paste your PUBLISHABLE key (or the legacy "anon" key) below. It is meant to be public. NEVER paste the secret or
 // service_role key here: this file is served to every player.

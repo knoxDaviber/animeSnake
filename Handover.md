@@ -8,13 +8,13 @@ Snake, but anime: a fast roguelike where the snake is a chain of anime character
 
 **Wording:** the playable head is called a **hero** in anything the player sees. The code still says head / `HEADS` / `HEAD_DEFS` (renaming is optional and not worth the risk yet).
 
-**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, follower skills (mines, Shogun lightning), a run-start buff pick (10 buffs), recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (all five families: Miner, Keysman, Magneto, Raiden, Gorgon), the hero speed system, score and combos, saved bests and coins, the Supabase top-10 leaderboard (needs the key in `config.js`), the info bar, pause and an error screen.
+**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, follower skills (mines, Shogun lightning), a run-start buff pick (10 buffs), recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (all five families: Miner, Keysman, Magneto, Raiden, Gorgon), the hero speed system, score and combos, saved bests and coins, the Supabase top-10 leaderboard (needs the key in `config.js`), the title screen that is the hero select screen (random title and splash line), coin-gated hero unlocks, the on-canvas score / wave / coins display, the info bar, pause and an error screen.
 
-**Not built yet:** coin-gated hero unlocks (next), retention systems, mine kicking, expand-grid, rooms, audio.
+**Not built yet:** retention systems, mine kicking, expand-grid, rooms, audio.
 
 ## Run it
 
-Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so keep the folder structure. Controls: arrows / WASD / swipe, P or Escape pauses, I (or hold the small bar under the game) shows or hides the info bar. After dying: any key, click or tap revives (costs coins), Q / Backspace / Give up ends the run, Space or tap restarts from game over.
+Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so keep the folder structure. Controls: arrows / WASD / swipe, P or Escape pauses, I (or hold the small bar under the game) shows or hides the info bar. After dying: any key, click or tap revives (costs coins), Q / Backspace / Give up ends the run, Space or tap restarts from game over. The game opens on the hero select screen (and returns to it after game over): tap a card, or press 1-9, or use the arrows and Enter. Tapping a locked hero buys it if you have the coins.
 
 ## Code layout (`src/`, loaded in this order by `index.html`)
 
@@ -24,12 +24,13 @@ Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so ke
 | `sprites.js` | Shared sprite sheets (`SPRITES`, `HEADS`) |
 | `followers.js` | `FOLLOWERS` (5 base followers + fusions), `newSlot`, `randomFollower` (never a fusion) |
 | `state.js` | The `S` object (all mutable state) and `newRun()` |
-| `storage.js` | Saves best score, best combo and coins (localStorage) |
+| `storage.js` | Saves best score, best combo, coins and unlocks (localStorage) |
+| `unlocks.js` | Click-to-buy unlocks: `isUnlocked`, `tryUnlock`, `heroPrice` |
 | `world.js` | `tileFree`, keys (`placeFood`), hazard, drop effects |
 | `score.js` | Points, combos, kill coins, popups |
 | `player.js` | Steering, `playerMove`, `takeHit` |
 | `attacks.js` | Attack sheets, sword hit, bullets |
-| `heads.js` | `HEAD_DEFS`: the 3 heroes, their weapons, the hero-select screen |
+| `heads.js` | `HEAD_DEFS`: the 3 heroes, their weapons, the hero-select layout and `chooseHead` (which also buys locked heroes) |
 | `skills.js` | Follower active skills (mine, bomb, Shogun lightning) |
 | `mines.js` | Mines, blast shape (`blastRange`, `blastTiles`) |
 | `passives.js` | Follower passives (Keysman chance, Magneto pull, enemy chase), `heroSpeed()`, Gorgon shields, Medusa freeze |
@@ -39,7 +40,7 @@ Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so ke
 | `revive.js` | Revive countdown, revive cost, game over |
 | `leaderboard.js` | Shared top 10 (Supabase) and the initials box |
 | `enemies.js` | Enemy snakes, AI, damage, waves |
-| `render.js` | All drawing (reads `S`, never changes it) |
+| `render.js` | All drawing, including the title screen and the on-canvas score / wave / coins (reads `S`, never changes it). `hud()` now only refreshes the info bar |
 | `panel.js` | The info bar |
 | `input.js` | Keyboard, touch, pause |
 | `main.js` | `step()` (world tick), `heroStep()` (hero move), `loop()`, start-up |
@@ -83,6 +84,18 @@ The game has two fixed clocks, both run from `loop()` in `main.js`. Each frame t
 | Raiden | +10% hero speed each (max +50%) | **Raiden Shogun**: +30% hero speed; every 5 s lightning hits the closest enemy tile (any segment) for 1-3 damage |
 | Gorgon | 1-hit shield each (max 5, recharge 20 s); slows the hero 5% each (max 50%) | **Medusa**: enemy heads in the line you face freeze; any enemy head you touch dies at once; hero slowed 10% |
 
+## Title screen and hero unlocks (built)
+
+- `newRun()` always starts on the hero select screen (`S.headPicking`), so it is also the title screen: at game start and after every game over. `drawHeadPick` (render.js) draws it, `headLayout` / `headCardRect` / `chooseHead` (heads.js) lay it out and act on it, and input.js handles taps (`tapCard`), keys 1-9, arrows and Enter.
+- `unlocks.js` is generic: `isUnlocked(kind, id, price)` and `tryUnlock(kind, id, price)`. `heroPrice(id)` reads `HERO_FREE`, `HERO_PRICES` and `HERO_DEFAULT_PRICE` in config.js. Bought ids live in `S.unlocked[kind]` and are saved by storage.js under `unlocked` (ids, not indexes; old saves without it load with nothing bought, so Gunman is locked).
+- Clicking a locked card calls `tryUnlock` and never starts the run. A note shows on the card (`S.cardNote`, `CARD_NOTE_MS`).
+- Layout: up to 3 heroes are big cards, 4 to 8 a compact grid (`HERO_GRID_COLS` per row). In the grid the first tap focuses a card and the second acts.
+- The title is `S.titleText` ("animeSnake", or "Snake-lite" with chance `TITLE_ALT_CHANCE`) and the splash line is `S.splashText`, picked from `SPLASHES`. Both are rolled in `newRun()`.
+- To add a hero: one `HEAD_DEFS` entry, its sheet name in `HEADS` (sprites.js), and optionally a price in `HERO_PRICES`. A hero not in `HERO_FREE` is locked by default.
+- Testing: `TEST_START_COINS` and `TEST_RELOCK` in config.js, marked TEST ONLY. Keep them at 0 / false and remove them later.
+- Phones send a fake mouse click after a tap, so `mousedown` ignores clicks within 700 ms of a touch (`S.lastTouchAt`).
+- The numbers are drawn on the canvas (`drawHud` in render.js). Hard rule: nothing may sit above the canvas where it could move or resize the game. The info bar line is fixed height, one line, ellipsised.
+
 ## Hero speed (built)
 
 Raiden, Shogun, Gorgon and Medusa all work through `heroSpeed()` in `passives.js`. The hero has its own move timer (`S.heroLast`, `heroStep()` in `main.js`), so speed changes never touch enemies or skill timers.
@@ -108,18 +121,23 @@ Every object has a PNG at its final path, so art is swapped by overwriting the f
 - Fusions are completely different characters, not stronger copies, and each merge combination gives its own fusion.
 - Merging does not need strict order.
 - Speed and slowdown change the hero only, never enemies or skill timers.
-- Coins: earned per kill and wave, spent on revives. Hero unlocks come later.
+- Coins: earned per kill and wave, spent on revives and on hero unlocks.
 - The 20x20 grid stays for now. Future idea: several rooms you can enter to expand the map, different wall types, and either floors that change hazard positions or curated dungeon-like rooms (the user leans towards curated rooms). See DESIGN.md.
 - Retention hooks are deliberate (see DESIGN.md).
+- The title screen is the hero select screen, with no separate menu. Locked heroes are bought by clicking them. The title is "animeSnake" or, half the time, "Snake-lite", with a Minecraft-style splash joke.
+- Score, wave and coins are drawn on the canvas. Best score and best combo are on the game-over screen.
 
 ## Ideas for later (not decided)
 
 - **Kick the mines:** a kicked mine slides in the facing direction and explodes the moment it touches anything. Open questions: who kicks (the hero by walking into a mine, or a follower or fusion such as the Bomber?), how fast and how far it slides, what counts as "anything" (enemy segments, your own chain, walls, the hazard, keys, recruits, other mines), whether the blast can hurt you, and whether kicking uses a cooldown. Mines currently only go off when a snake head steps on them (`detonateMine` in `mines.js` can be reused for the explosion).
 
+- **More title-screen sections:** Followers (choose which can appear in a run) and Upgrades, with locked items bought by clicking them, reusing `unlocks.js`. Not built.
+
 ## Known gaps and cautions
 
 - Nothing has been played in a real browser by the assistant. Recent changes (coins, fusions, enemy corner fix, shield flash, recruit touching, any-order merging) are untested.
 - Batch 2: the hero speed system has been checked in a browser. Raiden/Shogun lightning and Gorgon shields / Medusa freeze still need a proper play-through. Delete this line once they are tested.
+- The title screen, unlocks and the on-canvas display are untested in a real browser (by the assistant).
 - Enemy AI is simple. The corner fix lets a boxed-in snake flip itself; if enemies still get stuck, note where.
 - Anyone can post a fake score from the console. Accepted for a hobby game.
 - The assistant cannot push to git. Files are delivered as edits; the user copies them in and commits.
@@ -134,3 +152,7 @@ Every object has a PNG at its final path, so art is swapped by overwriting the f
 - Commit when something works, and before big AI changes.
 - Keep raw AI art in `assets/_raw/` (git-ignored); commit only cleaned sheets.
 - Say "hero", not "head", in anything the player sees. Use kaomojis in chat replies.
+
+## Last session
+
+Built build-order step 8: the title screen is the hero select screen (random title and splash), coin-gated hero unlocks (Gunman 40 coins), and the on-canvas display replacing the row above the canvas. To check in a browser: play to game over and back to hero select, buy Gunman with `TEST_START_COINS = 100`, try 5 to 8 heroes in the grid, and watch that the canvas never moves when numbers or the info bar line change. Next: retention systems, or rooms and wall types (see DESIGN.md).

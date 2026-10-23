@@ -31,9 +31,12 @@ addEventListener('keydown', e => {
   if (S.picking) {                       // pick screens: 1/2/3 choose, arrows move, Enter/Space confirm
     if (e.repeat) return;
     const n = Number(k), count = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
-    if (n >= 1 && n <= count) return chooseCard(n - 1);
+    if (n >= 1 && n <= count) return chooseCard(n - 1);   // on a locked hero this unlocks it (if affordable)
+    const cols = S.headPicking ? headLayout().cols : count;
     if (k === 'arrowleft' || k === 'a') S.pickIndex = (S.pickIndex + count - 1) % count;
     else if (k === 'arrowright' || k === 'd') S.pickIndex = (S.pickIndex + 1) % count;
+    else if (k === 'arrowup' || k === 'w') { if (S.pickIndex - cols >= 0) S.pickIndex -= cols; }
+    else if (k === 'arrowdown' || k === 's') { if (S.pickIndex + cols < count) S.pickIndex += cols; }
     else if (k === 'enter' || k === ' ') chooseCard(S.pickIndex);
     return;
   }
@@ -58,6 +61,13 @@ function pickAtPoint(clientX, clientY) {
   return range(n).findIndex(i => { const c = rect(i); return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h; });
 }
 function chooseCard(i) { return S.headPicking ? chooseHead(i) : startRun(i); }
+// A tap or click on a card. In the compact hero grid the first tap only focuses the card (its description shows
+// under the grid) and tapping the focused card acts. Big cards and buff cards act at once.
+function tapCard(i) {
+  if (i < 0) return;
+  if (S.headPicking && !headLayout().big && S.pickIndex !== i) { S.pickIndex = i; return; }
+  chooseCard(i);
+}
 // A tap or click while dead: on the revive screen the Give up button gives up and anywhere else revives;
 // on the game-over screen it restarts (after the lockout).
 function tapWhileDead(clientX, clientY) {
@@ -71,9 +81,10 @@ let touchX, touchY;
 addEventListener('touchstart', e => {
   if (inNameBox(e)) return;
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+  S.lastTouchAt = performance.now();   // phones fire a fake mouse click after a tap: mousedown ignores it
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
-  if (S.picking) return chooseCard(pickAtPoint(touchX, touchY));
+  if (S.picking) return tapCard(pickAtPoint(touchX, touchY));
   resume();
 });
 addEventListener('touchmove', e => {
@@ -86,7 +97,13 @@ addEventListener('touchmove', e => {
 });
 addEventListener('mousedown', e => {
   if (S.crashed || inNameBox(e)) return;
+  if (performance.now() - S.lastTouchAt < 700) return; // the fake click that follows a touch
   if (!S.alive) tapWhileDead(e.clientX, e.clientY);
-  else if (S.picking) chooseCard(pickAtPoint(e.clientX, e.clientY));
+  else if (S.picking) tapCard(pickAtPoint(e.clientX, e.clientY));
   else if (S.paused) resume();
+});
+addEventListener('mousemove', e => {
+  if (!S.picking || inNameBox(e)) return;
+  const i = pickAtPoint(e.clientX, e.clientY);
+  if (i >= 0) S.pickIndex = i;
 });

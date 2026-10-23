@@ -63,18 +63,41 @@ function updateGunman() {
   S.lastSwing = S.tick;
 }
 
-// ---- Head select screen (the first pick screen of a run) ----------------------------
+// ---- Hero select screen (the title screen, and the first pick screen of every run) --------
+// Layout for any number of heroes. Up to 3: one row of big cards with the description on the card. More: a grid of
+// compact cards (HERO_GRID_COLS per row, last row centred); the focused hero's description is drawn under the grid.
+function headLayout() {
+  const n = HEAD_DEFS.length, big = n <= 3, cols = big ? n : HERO_GRID_COLS, rows = Math.ceil(n / cols);
+  const gap = big ? 20 : 14, margin = 30, top = big ? 140 : 130, area = big ? 300 : 310;
+  const w = (COLS * CELL - 2 * margin - (cols - 1) * gap) / cols;
+  const h = big ? area : Math.min(190, (area - (rows - 1) * gap) / rows);
+  return { n, big, cols, rows, gap, margin, top, w, h };
+}
 // Where card i sits on the 640x640 canvas. Shared by drawing (render.js) and tapping (input.js).
 function headCardRect(i) {
-  const n = HEAD_DEFS.length, gap = 20, margin = 30, w = (COLS * CELL - 2 * margin - (n - 1) * gap) / n;
-  return { x: margin + i * (w + gap), y: 140, w, h: 300 };
+  const L = headLayout(), col = i % L.cols, row = Math.floor(i / L.cols);
+  const inRow = Math.min(L.cols, L.n - row * L.cols), shift = (L.cols - inRow) * (L.w + L.gap) / 2; // centres a short last row
+  return { x: L.margin + shift + col * (L.w + L.gap), y: L.top + row * (L.h + L.gap), w: L.w, h: L.h };
 }
-// Chooses head i, then the buff pick screen follows. Ignored for a moment after the screen appears.
+// Acts on hero i. A free or bought hero starts the run (the buff pick follows). A locked hero is BOUGHT instead, if you
+// can pay: it does not start the run, you click it again to pick it. Ignored for a moment after the screen appears
+// and after each unlock attempt, so one click or a double click cannot do both.
 function chooseHead(i) {
-  if (!S.picking || !S.headPicking || performance.now() < S.pickAfter || !HEAD_DEFS[i]) return;
+  const def = HEAD_DEFS[i];
+  if (!S.picking || !S.headPicking || performance.now() < S.pickAfter || !def) return;
+  const price = heroPrice(def.id);
+  if (!isUnlocked('hero', def.id, price)) {
+    const r = tryUnlock('hero', def.id, price);
+    S.pickIndex = i;
+    S.cardNote = { i, ok: r.ok, until: performance.now() + CARD_NOTE_MS,
+                   text: r.ok ? 'Unlocked!' : `Need ${r.need} more coin${r.need === 1 ? '' : 's'}` };
+    S.pickAfter = performance.now() + PICK_LOCKOUT_MS;
+    hud();                                             // the coin count changed
+    return;
+  }
   S.roster[0].c = i;
   S.headPicking = false;
   S.pickIndex = 0;
-  S.pickAfter = performance.now() + PICK_LOCKOUT_MS; // the tap that chose the head must not also choose a buff
+  S.pickAfter = performance.now() + PICK_LOCKOUT_MS; // the tap that chose the hero must not also choose a buff
   hud(); // the buff pick screen is drawn by hud() (render.js)
 }

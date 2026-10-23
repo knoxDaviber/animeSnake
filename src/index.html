@@ -7,7 +7,6 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="hud"><span>Score <b id="score">0</b></span><span>Chain <b id="len">3</b></span><span>Wave <b id="wave">1</b></span><span>Combo <b id="combo">-</b></span><span>Coins <b id="coins">0</b></span><span>Best <b id="best">0</b></span><span>Best combo <b id="bestcombo">0</b></span><span>Buff <b id="buff">-</b></span></div>
 <canvas id="c" width="640" height="640"></canvas>
 <div id="dock">
   <div id="panel"></div>
@@ -22,6 +21,7 @@
 <script src="followers.js"></script><!-- the 5 followers (body characters), their sheets, newSlot() -->
 <script src="state.js"></script>    <!-- the S object: all mutable game state, newRun() -->
 <script src="storage.js"></script>  <!-- saves best score and best combo in the browser -->
+<script src="unlocks.js"></script>  <!-- click-to-buy unlocks (heroes now, more later) -->
 <script src="world.js"></script>    <!-- food, hazard, drop effects -->
 <script src="score.js"></script>    <!-- points, combos, floating score text -->
 <script src="player.js"></script>   <!-- steering, moving, rings and damage -->

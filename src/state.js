@@ -32,7 +32,7 @@
 //   heroLast / heroAlpha   the hero's own move timer (ms of its last move) and progress through its current move (0..1)
 //   popups         floating score text
 //   best / bestCombo   saved across runs (storage.js); survive newRun()
-const S = { best: 0, bestCombo: 0, coins: 0 };
+const S = { best: 0, bestCombo: 0, coins: 0, unlocked: {}, lastTouchAt: 0 };
 
 function newLeaderboardState() {
   return { status: 'idle', rows: [], qualifies: false, submitting: false, submitted: false, submitError: false,
@@ -50,7 +50,9 @@ function newRun() {
     roster: [newSlot(0, 1, 0), ...START_FOLLOWERS.map(id => newSlot(followerIndex(id), 1, 0))],
     tailLeft: null,
     picking: true, pickIndex: 0, pickAfter: performance.now() + PICK_LOCKOUT_MS, buff: null, scoreMult: 1,
-    pickChoices: rollPickChoices(),
+    pickChoices: rollPickChoices(), cardNote: null,
+    titleText: Math.random() < TITLE_ALT_CHANCE ? TITLE_ALT : TITLE_MAIN,
+    splashText: SPLASHES[Math.floor(Math.random() * SPLASHES.length)],
     headPicking: true,                          // first pick screen: choose the head. The buff pick follows
     shield: true, shieldTimer: 0, bullets: [],  // Swordsman block ready / ticks until it is back; Gunman bullets
     invulnBonus: 0, swingMult: 1, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
