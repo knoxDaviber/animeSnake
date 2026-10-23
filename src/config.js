@@ -30,7 +30,7 @@ function waveSize(w) { return Math.min(1 + Math.floor(w / 3), 5); }
 function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 
 // Followers, skills and mines
-const START_FOLLOWERS = ['miner', 'raiden']; // who follows the head at the start of a run (ids from followers.js)
+const START_FOLLOWERS = ['raiden', 'raiden']; // who follows the head at the start of a run (ids from followers.js)
 const MINE_COOLDOWN = 64;   // ticks (8 s) between mines dropped by each Miner in the chain
 const MINE_MAX = 8;         // most mines allowed on the map at once
 const MINE_DAMAGE = 1;      // hit points a mine blast takes off an enemy head (body segments are cut off)

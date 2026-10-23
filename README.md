@@ -23,7 +23,7 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 
 - Your snake is a chain of characters: a hero at the front, followers behind it.
 - Characters act as rings: a hit drops one, and you die when none are left.
-- The hero auto-attacks in the direction it faces. Followers add passives and some have active skills.
+- The hero auto-attacks in the direction it faces. Followers add passives, and some have active skills or change how fast the hero moves.
 - Three identical followers anywhere in the chain merge into one fusion follower with completely different abilities (you lose 2 characters, so merging is a choice).
 - Enemy snakes arrive in waves and get tougher.
 - Runs are short. Coins from kills and waves buy revives; hero unlocks are planned.
@@ -66,7 +66,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `heads.js` | The 3 heroes: weapons, passives, the hero-select screen |
 | `skills.js` | Active skills carried by followers |
 | `mines.js` | Mines on the map and their explosions |
-| `passives.js` | Follower passives |
+| `passives.js` | Follower passives, hero speed, Gorgon shields |
 | `recruits.js` | Keys summon characters that walk in and wait to be recruited |
 | `merge.js` | Three identical followers fuse into a fusion follower |
 | `buffs.js` | Run-start buffs and the pick screen |
@@ -76,7 +76,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `render.js` | All drawing (reads `S`, never changes it) |
 | `panel.js` | The info bar |
 | `input.js` | Keyboard, touch, pause |
-| `main.js` | One logic tick (`step`), the frame loop, start-up |
+| `main.js` | One world tick (`step`), one hero move (`heroStep`), the frame loop, start-up |
 
 Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goes in `render.js`. If the game code throws, it shows an error screen (details in the browser console) instead of freezing.
 

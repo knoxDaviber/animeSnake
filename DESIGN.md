@@ -18,7 +18,7 @@ Pick a hero and a starting buff, steer the chain around the grid, eat keys, recr
 ## The chain
 
 - The snake is a chain of anime characters following each other on a grid. Slot 0 is the hero, every other slot is a follower.
-- **Rings:** a hit drops one character (the tail). You die when none are left. Walls, the hazard, enemy snakes, your own body and mine blasts all count as hits. The snake stays put on a blocked move, and after a hit it is invulnerable for 8 ticks (the chain blinks). A hit absorbed by a shield does not blink.
+- **Rings:** a hit drops one character (the tail). You die when none are left. Walls, the hazard, enemy snakes, your own body and mine blasts all count as hits. The snake stays put on a blocked move, and after a hit it is invulnerable for 8 ticks (the chain blinks). A hit absorbed by a shield (the Swordsman's block or a Gorgon's shield) does not blink.
 - **Tail stall:** moving into your own tail tile is not a hit. The snake just stops and waits until you choose a direction, which gives enemy snakes time to chase you.
 - **Merging:** three identical followers **anywhere in the chain** (no need to be side by side) merge into one **fusion follower**. A fusion is a completely different character with different abilities, not a stronger copy, and it counts as one character, so a merge costs you 2 characters. Fusions are killed like any follower and cannot merge again. Different merges make different fusions.
 
@@ -32,17 +32,17 @@ Pick a hero and a starting buff, steer the chain around the grid, eat keys, recr
 
 ## Followers and fusions
 
-Followers form the body and give passives, and some have active skills. The five base followers and the fusions planned for them:
+Followers form the body and give passives, and some have active skills. The five base followers and their fusions:
 
 | Follower | Now | Fusion |
 |----------|-----|--------|
 | Miner | +1 mine blast arm each, mine every 8 s each, max 5 mines | **Bomber**: blast reaches the whole row and column of the mine (like Bomberman), mine every 5 s |
 | Keysman | +10% each (max 50%) that a key summons 2 characters | **Kingsman**: key drops are 1-3 keys; Keysman are 40% likelier to be summoned |
 | Magneto | Pulls keys up to 4 tiles; enemies chase you more | **Mr.X**: eats keys within 3x3 of your hero; recruits are rejected and shot at the nearest snake for 2-5 damage |
-| Raiden | Kills +5 points each; lightning every 8 s (old version) | **Raiden Shogun** (batch 2): +30% hero speed, every 5 s 1-3 lightning damage to the closest enemy tile |
-| Medusa | Sword stuns +2 ticks each; gaze every 10 s (old version) | Becomes **Gorgon** in batch 2; the fusion is then called **Medusa** |
+| Raiden | +10% hero speed each (max +50%) | **Raiden Shogun**: +30% hero speed, every 5 s 1-3 lightning damage to the closest enemy tile |
+| Gorgon | 1-hit shield each (recharge 20 s, max 5); slows the hero 5% each (max 50%) | **Medusa**: enemy heads in the line you face freeze, any head you touch dies at once; hero slowed 10% |
 
-Batch 2 reworks Raiden (+10% hero speed each, max 50%) and Gorgon (1-hit shield each, recharge 20 s, max 5; slows the hero 5% each, max 50%). Medusa makes enemy heads in your facing line freeze and die instantly on contact, and slows the hero 10%. Speed and slowdown change the hero only, not enemies or skill timers.
+Speed and slowdown change the hero only, not enemies or skill timers. The hero has its own move timer, separate from the 125 ms world tick.
 
 ## Recruitment
 
@@ -103,6 +103,7 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 - **Floors vs curated rooms:** floors could move hazard locations around, but curated, dungeon-like rooms may be the better way to give the map variety. The user leans towards curated rooms. Decide before building any map system.
 - **Expand-grid buff:** set aside; it may be replaced by rooms.
 - **Per-character keys** once recruitment is richer.
+- **Kick the mines:** the hero (or a follower) can kick a mine so it slides and explodes on contact with anything. Undecided: who kicks, slide speed and distance, what counts as contact, and whether the blast can hurt you.
 
 ## Build order
 
@@ -112,8 +113,8 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 4. Score and combos. (done)
 5. Coins and revive cost. (done, minimal) Retention systems. (pending)
 6. Recruitment, 3 heroes, 5 followers, 10 buffs, run-start picks. (done)
-7. Merging into fusions: Miner, Keysman, Magneto families (done); Raiden and Gorgon families plus hero speed (next).
-8. Coin-gated hero unlocks.
+7. Merging into fusions: all five families (Miner, Keysman, Magneto, Raiden, Gorgon) plus the hero speed system. (done)
+8. Coin-gated hero unlocks. (next)
 9. Rooms, wall types and map variety.
 10. Assets and polish: sprites, music, sound effects (shield-block sound first).
 

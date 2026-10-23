@@ -8,9 +8,9 @@ Snake, but anime: a fast roguelike where the snake is a chain of anime character
 
 **Wording:** the playable head is called a **hero** in anything the player sees. The code still says head / `HEADS` / `HEAD_DEFS` (renaming is optional and not worth the risk yet).
 
-**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, 3 follower skills, a run-start buff pick (10 buffs), recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (Miner, Keysman and Magneto families), score and combos, saved bests and coins, the Supabase top-10 leaderboard (needs the key in `config.js`), the info bar, pause and an error screen.
+**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, follower skills (mines, Shogun lightning), a run-start buff pick (10 buffs), recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (all five families: Miner, Keysman, Magneto, Raiden, Gorgon), the hero speed system, score and combos, saved bests and coins, the Supabase top-10 leaderboard (needs the key in `config.js`), the info bar, pause and an error screen.
 
-**Not built yet:** fusion batch 2 (Raiden and Medusa/Gorgon families plus the hero speed system, spec below), coin-gated hero unlocks, retention systems, expand-grid, rooms, audio.
+**Not built yet:** coin-gated hero unlocks (next), retention systems, mine kicking, expand-grid, rooms, audio.
 
 ## Run it
 
@@ -30,9 +30,9 @@ Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so ke
 | `player.js` | Steering, `playerMove`, `takeHit` |
 | `attacks.js` | Attack sheets, sword hit, bullets |
 | `heads.js` | `HEAD_DEFS`: the 3 heroes, their weapons, the hero-select screen |
-| `skills.js` | Follower active skills (mine, bomb, lightning, gaze) |
+| `skills.js` | Follower active skills (mine, bomb, Shogun lightning) |
 | `mines.js` | Mines, blast shape (`blastRange`, `blastTiles`) |
-| `passives.js` | Follower passives (kill bonus, Keysman chance, Magneto pull, enemy chase) |
+| `passives.js` | Follower passives (Keysman chance, Magneto pull, enemy chase), `heroSpeed()`, Gorgon shields, Medusa freeze |
 | `recruits.js` | Keys and recruits: summon, walk in, touch, `eatKey`, `shootRecruit` |
 | `merge.js` | `mergeCheck`: three identical followers anywhere in the chain fuse |
 | `buffs.js` | `BUFFS`, buff pick layout, `startRun` |
@@ -42,18 +42,22 @@ Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so ke
 | `render.js` | All drawing (reads `S`, never changes it) |
 | `panel.js` | The info bar |
 | `input.js` | Keyboard, touch, pause |
-| `main.js` | `step()`, `loop()`, start-up |
+| `main.js` | `step()` (world tick), `heroStep()` (hero move), `loop()`, start-up |
 
 Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goes in `render.js`. No loose globals. No `import`/`export` modules (they fail from `file://`).
 
-## How one tick works (125 ms)
+## How the clocks work
 
-1. `S.tick++`, then `ageDrops`, `agePopups`, `ageBlasts`, `ageZaps`.
-2. `playerMove()`.
-3. If alive: `mergeCheck`, `updateCombo`, `updateSkills`, `updatePassives` (Magneto), `updateAttacks`, `updateHead` (hero weapon), `updateRecruits`, `stepEnemies`, `refreshKey`, `updateWaves`.
-4. Update best, `hud()`. If dead: `saveProgress()` and `beginRevive()`.
+The game has two fixed clocks, both run from `loop()` in `main.js`. Each frame the hero clock goes first.
 
-`loop()` also calls `updateRevive()` every frame. If anything throws, a "Something broke" screen shows.
+**Hero move (`heroStep`)**, every `heroInterval()` ms = `TICK_MS / heroSpeed()` (125 ms at speed 1; see Hero speed below): `playerMove()`, `hud()`, `checkDeath()`. The player is drawn with its own progress value, `S.heroAlpha` (everything else uses `S.alpha`).
+
+**World tick (`step`)**, every 125 ms:
+1. `S.tick++`, the immunity countdown, then `ageDrops`, `agePopups`, `ageBlasts`, `ageZaps`.
+2. If alive: `mergeCheck`, `updateCombo`, `updateSkills` (then `S.tailLeft` is cleared), `updatePassives` (Magneto pull, Gorgon recharge, Medusa freeze), `updateAttacks`, `updateHead` (hero weapon), `updateRecruits`, `stepEnemies`, `refreshKey`, `updateWaves`.
+3. Update best, `hud()`, `checkDeath()` (if dead: `saveProgress()` and `beginRevive()`).
+
+`loop()` also calls `updateRevive()` every frame. Pause, revive and run start reset both clocks (`S.last`, `S.heroLast`). If anything throws, a "Something broke" screen shows.
 
 ## Rules as built
 
@@ -62,6 +66,8 @@ Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goe
 - **Enemies and waves:** first wave after 24 ticks; wave size `1 + wave/3` (max 5); enemies spawn on the edges, never reverse, chase 60% of the time (plus 10% per Magneto). A boxed-in enemy flips itself (its tail becomes the head); an enemy may step onto its own tail tile. Hits to kill grow with the wave (`hitsToKill`).
 - **Keys and recruits:** keys are an array, `S.keys`. Eating one scores 10 and summons a random follower (never a fusion) that walks in from outside the grid, then jumps. A recruit can be touched by the hero from the moment it is on the grid, walking or ready (it also joins if it walks into your head). At most 3 wait at once; no new key drops until all keys are gone and fewer than 3 wait. Enemy heads kill recruits.
 - **Merging:** three identical followers anywhere in the chain (no need to be side by side) fuse into one fusion follower in the first one's slot, so the chain loses 2 characters. Fusions are killed like any follower and cannot merge again. The base follower lists its fusion with `merge: '<id>'` in `followers.js`.
+- **Hero speed:** `heroSpeed()` = 1 + Raiden (+10% each, max +50%) + Shogun (+30% each) - Gorgon (5% each, max 50%) - Medusa (10% each), kept between 0.4 and 1.8. `HERO_SPEED_TEST` in `config.js` multiplies it for testing (keep it at 1). It changes the **hero only**: enemies, skill timers and animations stay on the 125 ms world tick.
+- **Gorgon shields:** each Gorgon (the first 5 in the chain) holds a 1-hit shield that blocks any hit without blinking, then recharges for 20 s (`slot.cd`). The Swordsman's block is used first.
 - **Coins:** +3 per kill, +5 per wave started, kept between runs. A revive costs 15, then 30, 45... (`REVIVE_COST_*`). If you cannot afford it, you go straight to game over.
 - **Score:** key 10, cut segment 5, kill 20 x combo (cap x5). Combo window 24 ticks.
 - **Run start:** pick a hero, then one of 3 random buffs from 10 (Extra follower, +10% score, Thick skin, Quick hands, Combo keeper, Skill haste, Bounty hunter, Second wind, Welcome party, Minefield).
@@ -74,21 +80,19 @@ Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goe
 | Miner | +1 mine blast arm length each; mine every 8 s each (max 5 mines) | **Bomber**: blast arms reach the map edge (a + shape); mine every 5 s |
 | Keysman | +10% each (max 50%) that a key summons 2 characters | **Kingsman**: key drops are 1-3 keys; Keysman 40% likelier to be summoned |
 | Magneto | pulls keys up to 4 tiles; enemies chase you more | **Mr.X**: eats keys within 3x3 of your hero; new recruits are rejected and shot at the nearest snake for 2-5 damage |
-| Raiden | kills +5 points each; lightning every 8 s (old version) | batch 2 |
-| Medusa | sword stuns +2 ticks each; gaze every 10 s (old version) | batch 2 |
+| Raiden | +10% hero speed each (max +50%) | **Raiden Shogun**: +30% hero speed; every 5 s lightning hits the closest enemy tile (any segment) for 1-3 damage |
+| Gorgon | 1-hit shield each (max 5, recharge 20 s); slows the hero 5% each (max 50%) | **Medusa**: enemy heads in the line you face freeze; any enemy head you touch dies at once; hero slowed 10% |
 
-## Fusion batch 2 (agreed, not built)
+## Hero speed (built)
 
-- **Raiden:** +10% hero speed each (max 50%). Fusion **Raiden Shogun**: +30% speed, every 5 s deals 1-3 lightning damage to the closest enemy tile (any segment).
-- **Gorgon** (the current Medusa renamed; rename `followers/medusa.png` to `gorgon.png`): each gives the hero a 1-hit shield (recharge 20 s, max 5) and slows the hero 5% (max 50%). Fusion **Medusa**: enemy heads in the line you face freeze and die instantly on contact; hero slowed 10%.
-- Speed and slowdown change the **hero only** (enemies and skill timers stay at normal speed). This needs a hero move timer separate from the 125 ms world tick.
+Raiden, Shogun, Gorgon and Medusa all work through `heroSpeed()` in `passives.js`. The hero has its own move timer (`S.heroLast`, `heroStep()` in `main.js`), so speed changes never touch enemies or skill timers.
 
 ## Assets (`assets/images/`)
 
 Every object has a PNG at its final path, so art is swapped by overwriting the file. Missing sheets fall back to coloured squares.
 
 - `characters/<name>.png`: heroes (`character1`, `magician`, `gunman`), 128x128, 4x4 directional. `character1.png` is the user's own art, never overwrite it.
-- `followers/<id>.png`: miner, raiden, keysman, magneto, medusa, plus the fusions bomber, kingsman, mrx (batch 2 adds shogun and gorgon).
+- `followers/<id>.png`: miner, raiden, keysman, magneto, gorgon (was medusa), plus the fusions bomber, kingsman, mrx, shogun, medusa (the new fusion). `tools/make_placeholders.py` draws a placeholder for each one that is missing.
 - `enemies/enemy_head.png`, `enemy_body.png`; `attacks/slash_sword.png` (256x41, 4 frames of 64x41); `food.png` (the key), `hazard.png`, `mine.png`, `recruit.png` (128x32, 4 frames).
 
 ## Leaderboard setup (one time)
@@ -103,13 +107,19 @@ Every object has a PNG at its final path, so art is swapped by overwriting the f
 - Keys plus characters replace food growth. A hit takes the tail character; losing the last one kills you.
 - Fusions are completely different characters, not stronger copies, and each merge combination gives its own fusion.
 - Merging does not need strict order.
+- Speed and slowdown change the hero only, never enemies or skill timers.
 - Coins: earned per kill and wave, spent on revives. Hero unlocks come later.
 - The 20x20 grid stays for now. Future idea: several rooms you can enter to expand the map, different wall types, and either floors that change hazard positions or curated dungeon-like rooms (the user leans towards curated rooms). See DESIGN.md.
 - Retention hooks are deliberate (see DESIGN.md).
 
+## Ideas for later (not decided)
+
+- **Kick the mines:** a kicked mine slides in the facing direction and explodes the moment it touches anything. Open questions: who kicks (the hero by walking into a mine, or a follower or fusion such as the Bomber?), how fast and how far it slides, what counts as "anything" (enemy segments, your own chain, walls, the hazard, keys, recruits, other mines), whether the blast can hurt you, and whether kicking uses a cooldown. Mines currently only go off when a snake head steps on them (`detonateMine` in `mines.js` can be reused for the explosion).
+
 ## Known gaps and cautions
 
 - Nothing has been played in a real browser by the assistant. Recent changes (coins, fusions, enemy corner fix, shield flash, recruit touching, any-order merging) are untested.
+- Batch 2: the hero speed system has been checked in a browser. Raiden/Shogun lightning and Gorgon shields / Medusa freeze still need a proper play-through. Delete this line once they are tested.
 - Enemy AI is simple. The corner fix lets a boxed-in snake flip itself; if enemies still get stuck, note where.
 - Anyone can post a fake score from the console. Accepted for a hobby game.
 - The assistant cannot push to git. Files are delivered as edits; the user copies them in and commits.
@@ -118,7 +128,7 @@ Every object has a PNG at its final path, so art is swapped by overwriting the f
 ## Working preferences
 
 - Ask a clarifying question on vague instructions.
-- Give copy-paste edits with exact Ctrl+F find text and where it goes. Do not resend whole files unless needed.
+- Give copy-paste edits with exact Ctrl+F find text and where it goes. Do not resend whole files unless needed. For the docs (Handover, DESIGN, README), give the full files.
 - Write a short handover after long code sessions.
 - Code split across files, not one big file.
 - Commit when something works, and before big AI changes.
