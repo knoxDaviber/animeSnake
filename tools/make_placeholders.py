@@ -6,7 +6,11 @@ from PIL import Image, ImageDraw
 
 OUT = 'assets/images'
 FOLLOWERS = {'miner': (255, 179, 107), 'raiden': (107, 197, 255), 'keysman': (255, 211, 107),
-             'magneto': (199, 139, 255), 'medusa': (141, 255, 107)}
+             'magneto': (199, 139, 255), 'gorgon': (141, 255, 107),
+             # fusions (colours match followers.js)
+             'bomber': (255, 138, 60), 'kingsman': (255, 227, 107), 'mrx': (154, 75, 214),
+             'shogun': (58, 141, 255), 'medusa': (47, 191, 113)}
+LABELS = {'mrx': 'X'}   # the letter drawn on the sheet; defaults to the first letter of the name
 HEADS = {'magician': (120, 110, 255), 'gunman': (255, 120, 120)}   # the Swordsman is character1.png (real art)
 
 def follower_sheet(name, rgb):
@@ -22,7 +26,7 @@ def follower_sheet(name, rgb):
                 for ex in (11, 19): d.rectangle((ox + ex, oy + 17 - bob, ox + ex + 2, oy + 21 - bob), fill=(20, 16, 31, 255))
             elif row == 1:                                 # facing right: one eye on the right
                 d.rectangle((ox + 20, oy + 14 - bob, ox + 22, oy + 18 - bob), fill=(20, 16, 31, 255))
-            d.text((ox + 13, oy + 5 - bob), name[0].upper(), fill=dark + (255,))
+            d.text((ox + 13, oy + 5 - bob), LABELS.get(name, name[0].upper()), fill=dark + (255,))
     return img
 
 def head_sheet(name, rgb):

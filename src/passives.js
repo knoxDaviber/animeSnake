@@ -7,14 +7,11 @@ function countFollower(id) {
   return n;
 }
 
-// Raiden: extra base points per kill (added before the combo multiplier).
-function killBonus() { return RAIDEN_KILL_BONUS * countFollower('raiden') + S.bounty; }
+// Kill bonus: only the Bounty hunter buff now (Raiden gives hero speed instead).
+function killBonus() { return S.bounty; }
 
 // Keysman: chance that eating a key summons a second character.
 function keyDoubleChance() { return Math.min(KEYSMAN_MAX_CHANCE, KEYSMAN_DOUBLE_CHANCE * countFollower('keysman')); }
-
-// Medusa: extra stun ticks on an enemy that your sword just hit.
-function addSwordStun(e) { e.stun += MEDUSA_STUN_BONUS * countFollower('medusa'); }
 
 // Enemies chase you more for every Magneto in the chain.
 function enemyChase() { return Math.min(0.95, ENEMY_CHASE + MAGNETO_CHASE_BONUS * countFollower('magneto')); }
@@ -45,9 +42,44 @@ function magnetPull() {
 // Hero speed: 1 = one tile per world tick. 1.5 = 1.5 tiles per tick. Batch 2 adds the Raiden bonus and Gorgon slowdown
 // to the line marked below. Only the hero uses this.
 function heroSpeed() {
-  const m = HERO_SPEED_TEST; // batch 2: m = 1 + RAIDEN_SPEED_BONUS * countFollower('raiden') - GORGON_SLOW * countFollower('gorgon') ...
+  const raiden = Math.min(RAIDEN_MAX_BONUS, RAIDEN_SPEED_BONUS * countFollower('raiden'));
+  const gorgon = Math.min(GORGON_MAX_SLOW, GORGON_SLOW * countFollower('gorgon'));
+  const m = HERO_SPEED_TEST * (1 + raiden + SHOGUN_SPEED_BONUS * countFollower('shogun') - gorgon - MEDUSA_SLOW * countFollower('medusa'));
   return Math.min(HERO_SPEED_MAX, Math.max(HERO_SPEED_MIN, m));
 }
 function heroInterval() { return TICK_MS / heroSpeed(); } // ms between hero moves
+// Gorgon shields. Each Gorgon (the first GORGON_MAX_SHIELDS in the chain) holds one 1-hit shield. Its slot's cd is the
+// recharge: 0 = ready. takeHit (player.js) asks gorgonAbsorbs() for every hit.
+function gorgonSlots() {
+  const list = [];
+  for (let i = 1; i < S.roster.length && list.length < GORGON_MAX_SHIELDS; i++)
+    if (FOLLOWERS[S.roster[i].c].id === 'gorgon') list.push(i);
+  return list;
+}
+function gorgonReady() { return gorgonSlots().filter(i => S.roster[i].cd === 0).length; }
+function gorgonAbsorbs() {
+  const i = gorgonSlots().find(k => S.roster[k].cd === 0);
+  if (i === undefined) return false;
+  S.roster[i].cd = GORGON_SHIELD_RECHARGE;
+  S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Shielded!', age: 0 });
+  return true;
+}
+function updateGorgons() {
+  for (let i = 1; i < S.roster.length; i++)
+    if (FOLLOWERS[S.roster[i].c].id === 'gorgon' && S.roster[i].cd > 0) S.roster[i].cd--;
+}
+
+// Medusa: every enemy HEAD in the line you face stays frozen while it is in that line. A green flash shows when one first freezes.
+function medusaGaze() {
+  if (!countFollower('medusa')) return;
+  const h = S.snake[0], d = S.dir, tiles = [];
+  let fresh = false;
+  for (let x = h.x + d.x, y = h.y + d.y; inBounds(x, y); x += d.x, y += d.y) {
+    tiles.push({ x, y });
+    const t = enemyAt(x, y);
+    if (t && t.i === 0) { if (t.e.stun <= 0) fresh = true; t.e.stun = Math.max(t.e.stun, MEDUSA_FREEZE_TICKS); }
+  }
+  if (fresh) S.zaps.push({ kind: 'gaze', tiles, age: 0 });
+}
 // Called once per tick, after the player has moved.
-function updatePassives() { magnetPull(); }
+function updatePassives() { magnetPull(); updateGorgons(); medusaGaze(); }

@@ -5,10 +5,8 @@
 const SKILLS = {
   // Miner: drops a mine on the tile the tail just left, so your own chain can loop back into it.
   mine:      { cooldown: MINE_COOLDOWN, fire: dropMine },
-  // Raiden: a bolt hits the nearest enemy head.
-  lightning: { cooldown: LIGHTNING_COOLDOWN, fire: castLightning },
-  // Medusa: freezes every enemy in the line ahead of the head.
-  gaze:      { cooldown: GAZE_COOLDOWN, fire: castGaze },
+  // Raiden Shogun (3 Raidens fused): a bolt hits the closest enemy tile.
+  shogun:    { cooldown: SHOGUN_COOLDOWN, fire: castShogun },
   // Bomber (3 Miners fused): same mine drop, shorter cooldown
   bomb:      { cooldown: BOMBER_COOLDOWN, fire: dropMine },
 };
@@ -20,31 +18,18 @@ function dropMine() {
   return true;
 }
 
-function castLightning(r, i) {
+function castShogun(r, i) {
   const h = S.snake[0];
   let best = null, bestD = Infinity;
-  for (const e of S.enemies) {
-    const d = Math.abs(e.segs[0].x - h.x) + Math.abs(e.segs[0].y - h.y);
-    if (d < bestD) { best = e; bestD = d; }
+  for (const e of S.enemies) for (const s of e.segs) {      // any segment counts, not just heads
+    const d = Math.abs(s.x - h.x) + Math.abs(s.y - h.y);
+    if (d < bestD) { best = s; bestD = d; }
   }
   if (!best) return false;
-  const from = S.snake[i], to = best.segs[0];  // the bolt leaves the Raiden's own tile
-  S.zaps.push({ kind: 'bolt', x1: from.x, y1: from.y, x2: to.x, y2: to.y, age: 0,
+  const from = S.snake[i], dmg = SHOGUN_DMG_MIN + Math.floor(Math.random() * (SHOGUN_DMG_MAX - SHOGUN_DMG_MIN + 1));
+  S.zaps.push({ kind: 'bolt', x1: from.x, y1: from.y, x2: best.x, y2: best.y, age: 0,
                 jig: range(3).map(() => (Math.random() - 0.5) * 24) });
-  damageEnemyHead(best, LIGHTNING_DAMAGE);      // a kill here feeds the combo like any other
-  return true;
-}
-
-function castGaze() {
-  const h = S.snake[0], d = S.dir, tiles = [], hit = new Set();
-  for (let x = h.x + d.x, y = h.y + d.y; inBounds(x, y); x += d.x, y += d.y) {
-    tiles.push({ x, y });
-    const t = enemyAt(x, y);
-    if (t) hit.add(t.e);                        // any segment in the line freezes that whole snake
-  }
-  if (!hit.size) return false;
-  hit.forEach(e => { e.stun = Math.max(e.stun, GAZE_STUN); });
-  S.zaps.push({ kind: 'gaze', tiles, age: 0 });
+  strikeEnemyAt(best.x, best.y, dmg);                       // a head loses `dmg` hit points, a body segment is cut off
   return true;
 }
 

@@ -24,6 +24,7 @@ function faceSegments() {
 function takeHit(source) {
   S.invuln = INVULN_TICKS + S.invulnBonus;
   if (source === 'enemyHead' && shieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // blocked: no blink
+  if (gorgonAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
   S.quietHit = false;
   if (S.snake.length === 1) { S.alive = false; return; } // last character lost
   const t = S.snake.pop(), r = S.roster.pop();           // the tail character is the one dropped
@@ -48,7 +49,8 @@ function playerMove() {
     return;
   }
   const self = S.snake.some(s => s.x === nx && s.y === ny);
-  const en = enemyAt(nx, ny);
+  let en = enemyAt(nx, ny);
+  if (en && en.i === 0 && countFollower('medusa') > 0) { killEnemy(en.e); en = null; } // Medusa: touching a head kills it at once
   const blocked = !inBounds(nx, ny) || self || en || (nx === S.hazard.x && ny === S.hazard.y);
   if (blocked) {
     // Wall, hazard, enemy or own body: the snake stays put and loses one character (unless invulnerable).

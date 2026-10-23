@@ -29,9 +29,8 @@ function fireAttack(def, tx, ty, d, damage = 1) {
 function resolveHit(a) {
   const t = enemyAt(a.x, a.y);
   if (!t) return;
-  if (t.i === 0) { if (damageEnemyHead(t.e, a.damage)) addSwordStun(t.e); return; }
+  if (t.i === 0) { damageEnemyHead(t.e, a.damage); return; }
   cutEnemy(t.e, t.i);
-  addSwordStun(t.e);
 }
 
 // Hits whatever enemy is on (x, y): a head loses `dmg` hit points, a body segment is cut (with everything behind it).

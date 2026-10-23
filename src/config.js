@@ -17,7 +17,7 @@ const HAZARD_MIN_DIST = 5;         // the hazard spawns at least this many tiles
 // Hero speed (passives.js heroSpeed). 1 = normal. Only the hero changes speed, never enemies or skill timers.
 const HERO_SPEED_MIN = 0.4;        // slowest allowed (Gorgons slow you down)
 const HERO_SPEED_MAX = 1.8;        // fastest allowed (Raidens speed you up)
-const HERO_SPEED_TEST = 0.6;         // for testing: try 1.5 (fast) or 0.6 (slow), then set back to 1
+const HERO_SPEED_TEST = 1;         // for testing: try 1.5 (fast) or 0.6 (slow), then set back to 1
 
 // Enemies and waves
 const ENEMY_CHASE = 0.6;           // chance per move that an enemy heads toward the player instead of wandering
@@ -37,8 +37,8 @@ const MINE_DAMAGE = 1;      // hit points a mine blast takes off an enemy head (
 const BLAST_TICKS = 4;      // how long the explosion flash stays on screen
 
 // Follower skills (skills.js)
-const LIGHTNING_COOLDOWN = 64;  // ticks (8 s) between strikes, per Raiden in the chain
-const LIGHTNING_DAMAGE = 1;     // hit points taken off the nearest enemy head
+//const LIGHTNING_COOLDOWN = 64;  // ticks (8 s) between strikes, per Raiden in the chain
+//const LIGHTNING_DAMAGE = 1;     // hit points taken off the nearest enemy head
 const GAZE_COOLDOWN = 80;       // ticks (10 s) between gazes, per Medusa in the chain
 const GAZE_STUN = 4;            // ticks every enemy in the line stays frozen
 const ZAP_TICKS = 3;            // how long the bolt / gaze flash stays on screen
@@ -55,10 +55,14 @@ const BULLET_DAMAGE = 1;
 const BULLET_SPEED = 2;         // tiles per tick
 
 // Follower passives (passives.js)
-const RAIDEN_KILL_BONUS = 5;        // extra base points per kill for each Raiden in the chain (before the combo multiplier)
 const KEYSMAN_DOUBLE_CHANCE = 0.1;  // per Keysman: chance that eating a key summons a second character
 const MAGNETO_RANGE = 3;            // tiles: a key this close to your head is pulled one tile closer per tick (+1 per extra Magneto)
-const MEDUSA_STUN_BONUS = 2;        // extra stun ticks per Medusa on an enemy hit by your sword
+const GORGON_SLOW = 0.05;           // per Gorgon: hero speed -5%
+const GORGON_MAX_SLOW = 0.50;       // cap on the Gorgon slowdown
+const GORGON_SHIELD_RECHARGE = 160; // ticks (20 s) until a used Gorgon shield is ready again
+const GORGON_MAX_SHIELDS = 5;       // most Gorgon shields that count
+const MEDUSA_SLOW = 0.10;           // per Medusa: hero speed -10%
+const MEDUSA_FREEZE_TICKS = 2;      // an enemy head in your facing line stays frozen this long (refreshed every tick)        // extra stun ticks per Medusa on an enemy hit by your sword
 
 const KEYSMAN_MAX_CHANCE = 0.7;     // cap on the double-summon chance
 const MAGNETO_MAX_RANGE = 4;        // most tiles a key can be pulled from
@@ -68,6 +72,11 @@ const BOMBER_COOLDOWN = 40;         // ticks (5 s) between mines dropped by a Bo
 const KINGSMAN_BOUNTY_MAX = 3;      // with a Kingsman, a key drop is 1 to this many keys
 const KINGSMAN_SUMMON_BONUS = 0.4;  // Keysman is this much more likely to be summoned
 const MRX_SHOT_MIN = 2, MRX_SHOT_MAX = 5; // damage of a rejected recruit shot by Mr.X
+const RAIDEN_SPEED_BONUS = 0.10;    // per Raiden: hero speed +10%
+const RAIDEN_MAX_BONUS = 0.50;      // cap on the Raiden speed bonus (5 Raidens)
+const SHOGUN_SPEED_BONUS = 0.30;    // per Raiden Shogun: hero speed +30%
+const SHOGUN_COOLDOWN = 40;         // ticks (5 s) between Shogun lightning strikes
+const SHOGUN_DMG_MIN = 1, SHOGUN_DMG_MAX = 3; // lightning damage to the closest enemy tile
 
 // Run-start buffs (buffs.js)
 const PICK_LOCKOUT_MS = 350;   // the pick screen ignores input this long after it appears
