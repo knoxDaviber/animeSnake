@@ -33,8 +33,6 @@ function takeHit(source) {
 function playerMove() {
   S.tailLeft = null;
   S.prev = S.snake.map(s => ({ ...s }));
-  const wasInvuln = S.invuln > 0;
-  if (S.invuln > 0) S.invuln--; else S.quietHit = false;
   if (S.waitDir) return;               // stalled: stand still until the player steers (enemies keep moving)
   S.dir = S.nextDir;
   const h = S.snake[0], tail = S.snake[S.snake.length - 1];
@@ -54,7 +52,7 @@ function playerMove() {
   const blocked = !inBounds(nx, ny) || self || en || (nx === S.hazard.x && ny === S.hazard.y);
   if (blocked) {
     // Wall, hazard, enemy or own body: the snake stays put and loses one character (unless invulnerable).
-    if (!wasInvuln) {
+    if (S.invuln <= 0) {
       if (self && !SELF_HIT_COSTS_RING) S.alive = false;
       else {
         takeHit(en && en.i === 0 ? 'enemyHead' : undefined);

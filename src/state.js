@@ -29,6 +29,7 @@
 //   tick           animation clock: 1 animation frame = 1 logic tick
 //   alpha          0..1 progress through the current tick, for interpolation
 //   combo          kills chained inside COMBO_WINDOW; comboTimer counts the window down
+//   heroLast / heroAlpha   the hero's own move timer (ms of its last move) and progress through its current move (0..1)
 //   popups         floating score text
 //   best / bestCombo   saved across runs (storage.js); survive newRun()
 const S = { best: 0, bestCombo: 0, coins: 0 };
@@ -57,7 +58,7 @@ function newRun() {
     keys: [], growQueue: [], recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
-    tick: 0, alpha: 1, last: performance.now(),
+    tick: 0, alpha: 1, last: performance.now(), heroLast: performance.now(), heroAlpha: 1,
     invuln: 0, quietHit: false, newBest: false,
     combo: 0, comboTimer: 0, popups: [],
     attacks: [], lastSwing: 0, drops: [],

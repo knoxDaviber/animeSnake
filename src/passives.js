@@ -42,5 +42,12 @@ function magnetPull() {
   }
 }
 
+// Hero speed: 1 = one tile per world tick. 1.5 = 1.5 tiles per tick. Batch 2 adds the Raiden bonus and Gorgon slowdown
+// to the line marked below. Only the hero uses this.
+function heroSpeed() {
+  const m = HERO_SPEED_TEST; // batch 2: m = 1 + RAIDEN_SPEED_BONUS * countFollower('raiden') - GORGON_SLOW * countFollower('gorgon') ...
+  return Math.min(HERO_SPEED_MAX, Math.max(HERO_SPEED_MIN, m));
+}
+function heroInterval() { return TICK_MS / heroSpeed(); } // ms between hero moves
 // Called once per tick, after the player has moved.
 function updatePassives() { magnetPull(); }

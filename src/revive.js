@@ -30,7 +30,8 @@ function revive() {
   S.invuln = REVIVE_INVULN_TICKS;
   S.waitDir = true;                              // stand still until the player chooses a direction
   S.prev = S.snake.map(s => ({ ...s }));
-  S.alpha = 1; S.last = performance.now();
+  S.alpha = 1; S.last = performance.now(); S.heroLast = S.last;
+  S.heroAlpha = 1; S.heroLast = S.last;
   hud();
 }
 

@@ -154,7 +154,7 @@ function drawBullets() { // the Gunman's bullets, interpolated between ticks
 }
 function drawShield() { // Swordsman: a ring around the head while the block is ready
   if (!S.alive || S.picking || headId() !== 'swordsman' || !S.shield) return;
-  const p = lerpPos(S.prev, 0, S.snake[0]);
+  const p = lerpPos(S.prev, 0, S.snake[0], S.heroAlpha);
   ctx.save();
   ctx.strokeStyle = '#6bc5ff'; ctx.lineWidth = 2; ctx.globalAlpha = 0.8;
   ctx.beginPath(); ctx.arc(p.x + CELL / 2, p.y + CELL / 2, CELL / 2 + 1, 0, Math.PI * 2); ctx.stroke();
@@ -200,10 +200,10 @@ function drawAttack(a) {
 
 // ---- Layers --------------------------------------------------------------------
 // Positions are interpolated between ticks: draw at prev + (now - prev) * alpha.
-function lerpPos(prevList, i, cur) {
+function lerpPos(prevList, i, cur, a = S.alpha) {
   const p = prevList[Math.min(i, prevList.length - 1)];
   if (Math.abs(cur.x - p.x) > 1 || Math.abs(cur.y - p.y) > 1) return { x: cur.x * CELL, y: cur.y * CELL }; // teleported (portal)
-  return { x: (p.x + (cur.x - p.x) * S.alpha) * CELL, y: (p.y + (cur.y - p.y) * S.alpha) * CELL };
+  return { x: (p.x + (cur.x - p.x) * a) * CELL, y: (p.y + (cur.y - p.y) * a) * CELL };
 }
 function drawEnemies() {
   S.enemies.forEach(e => {
@@ -217,7 +217,7 @@ function drawEnemies() {
 function drawPlayer() {
   if (S.invuln > 0 && !S.quietHit && S.tick % 2 === 0) return; // chain blinks while invulnerable
   S.snake.forEach((s, i) => {
-    const p = lerpPos(S.prev, i, s);
+    const p = lerpPos(S.prev, i, s, S.heroAlpha);
     drawSegment(S.roster[i], p.x, p.y, i === 0);
   });
 }

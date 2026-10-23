@@ -5,6 +5,7 @@ function resume() {
   if (!S.paused) return;
   S.paused = false;
   S.last = performance.now() - S.alpha * TICK_MS; // continue mid-tick instead of skipping ahead
+  S.heroLast = performance.now() - S.heroAlpha * heroInterval();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 addEventListener('blur', pause);

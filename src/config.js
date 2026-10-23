@@ -14,6 +14,11 @@ const DROP_TICKS = 4;              // length of the drop fade, in ticks
 const SELF_HIT_COSTS_RING = true;  // false = running into your own body is instant death
 const HAZARD_MIN_DIST = 5;         // the hazard spawns at least this many tiles from the head
 
+// Hero speed (passives.js heroSpeed). 1 = normal. Only the hero changes speed, never enemies or skill timers.
+const HERO_SPEED_MIN = 0.4;        // slowest allowed (Gorgons slow you down)
+const HERO_SPEED_MAX = 1.8;        // fastest allowed (Raidens speed you up)
+const HERO_SPEED_TEST = 0.6;         // for testing: try 1.5 (fast) or 0.6 (slow), then set back to 1
+
 // Enemies and waves
 const ENEMY_CHASE = 0.6;           // chance per move that an enemy heads toward the player instead of wandering
 const ENEMY_SPAWN_MIN_DIST = 6;    // enemies spawn at least this many tiles from the player's head
