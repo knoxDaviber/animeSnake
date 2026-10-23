@@ -118,7 +118,7 @@ function spawnEnemy() {
     else                 { d = DIRS[3]; segs = range(len).map(i => ({ x: c, y: ROWS - len + i })); }
     const head = S.snake[0];
     const far = Math.abs(segs[0].x - head.x) + Math.abs(segs[0].y - head.y) >= ENEMY_SPAWN_MIN_DIST;
-    if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y))) {
+    if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y) && !inTextZone(s.x, s.y))) {
       S.enemies.push({ segs, prev: segs.map(s => ({ ...s })), dir: d, hp: hitsToKill(S.wave), stun: 0 });
       return true;
     }
@@ -129,6 +129,6 @@ function updateWaves() {
   if (S.toSpawn > 0) {
     if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = SPAWN_GAP; }
   } else if (S.enemies.length === 0) {
-    if (--S.waveTimer <= 0) { S.wave++; S.coins += COIN_PER_WAVE; S.toSpawn = waveSize(S.wave); S.spawnTimer = 0; S.waveTimer = WAVE_DELAY; }
+    if (--S.waveTimer <= 0) { S.wave++; S.coins += coinReward(COIN_PER_WAVE); S.toSpawn = waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()); S.spawnTimer = 0; S.waveTimer = WAVE_DELAY; }
   }
 }

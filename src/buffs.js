@@ -64,6 +64,7 @@ function startRun(i) {
   buff.apply();
   S.buff = buff.id;
   S.picking = false;
+  retentionRunStart(); // run timer, fast-restart check and the pity boost (retention.js)
   S.last = performance.now();
   hud();
 }

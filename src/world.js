@@ -3,6 +3,7 @@
 // True if nothing is on the tile: inside the grid, and no hazard, key, mine, recruit, player or enemy segment.
 // Everything that spawns something on the map asks this first. (Enemies walk over food and mines on purpose,
 // so enemyCanEnter in enemies.js has its own rules.)
+function inTextZone(x, y) { return TEXT_ZONES.some(z => x >= z.x && x < z.x + z.w && y >= z.y && y < z.y + z.h); }
 function tileFree(x, y) {
   return inBounds(x, y) &&
     !(S.hazard && x === S.hazard.x && y === S.hazard.y) &&

@@ -205,6 +205,7 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
   const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
   drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
   ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
+  if (S.coinMult !== 1) { ctx.fillStyle = '#9a8cc4'; ctx.font = '12px system-ui'; ctx.fillText(`Dev sad. Earning x${S.coinMult} less coin`, cv.width - 16, 48); }
   ctx.textAlign = 'center';
 
   drawSpeaker();
@@ -238,9 +239,6 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
       ctx.fillStyle = afford ? '#ffd36b' : '#8a8aa3'; ctx.textAlign = 'left';
       ctx.fillText(String(price), x0 + 18, sy); ctx.textAlign = 'center';
     }
-    ctx.fillStyle = '#9a8cc4'; ctx.font = '12px system-ui';
-    if (L.big) ctx.fillText(`[${i + 1}]`, cx, c.y + c.h - 14);
-    else { ctx.textAlign = 'left'; ctx.fillText(String(i + 1), c.x + 8, c.y + 16); ctx.textAlign = 'center'; }
   });
 
   if (!L.big && HEAD_DEFS[S.pickIndex]) {                 // compact grid: the focused hero's description
@@ -250,9 +248,8 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
     wrapText(h.desc, 560).slice(0, 3).forEach((line, k) => ctx.fillText(line, mid, 500 + k * 18));
   }
   ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
-  ctx.fillText(L.big ? 'Tap a card, or press its number, or use the arrows and Enter'
-                     : 'Tap a card to look, tap it again to choose (or use the number keys, arrows and Enter)', mid, 588);
-  ctx.fillText('Locked heroes cost coins: tap one to unlock it', mid, 610);
+  ctx.fillText(L.big ? 'Tap a hero to start' : 'Tap a hero to look, tap again to start', mid, 592);
+  ctx.fillText('Steer with swipes, taps or arrow keys', mid, 614);
   ctx.restore();
 }
 function drawAttack(a) {
@@ -307,7 +304,7 @@ function drawPopups() { // floating "+60 x3" text where points were scored
   ctx.font = 'bold 16px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 3; ctx.strokeStyle = '#14101f';
   S.popups.forEach(p => {
     const x = p.x * CELL + CELL / 2, y = p.y * CELL + 10 - p.age * 3;
-    ctx.globalAlpha = 1 - p.age / POPUP_TICKS;
+    ctx.globalAlpha = TEXT_ALPHA * (1 - p.age / POPUP_TICKS);
     ctx.strokeText(p.text, x, y);
     ctx.fillStyle = '#ffd36b'; ctx.fillText(p.text, x, y);
   });
@@ -316,12 +313,17 @@ function drawPopups() { // floating "+60 x3" text where points were scored
 function drawHud() { // score (left), wave (centre) and coins (right), drawn on the canvas so no layout can ever move the game
   if (S.picking || !S.alive) return;
   ctx.save();
-  ctx.font = 'bold 16px system-ui'; ctx.textBaseline = 'alphabetic'; ctx.lineWidth = 3; ctx.strokeStyle = '#14101f'; ctx.lineJoin = 'round';
+  ctx.globalAlpha = TEXT_ALPHA; ctx.font = 'bold 16px system-ui'; ctx.textBaseline = 'alphabetic'; ctx.lineWidth = 3; ctx.strokeStyle = '#14101f'; ctx.lineJoin = 'round';
   const text = (s, x, y, align, color) => {
     ctx.textAlign = align; ctx.strokeText(s, x, y); ctx.fillStyle = color; ctx.fillText(s, x, y);
   };
   text(`Score ${S.score}`, 8, 22, 'left', '#fff');
   if (S.combo > 0) { const m = comboMult(); text(`Combo ${S.combo}` + (m > 1 ? `  x${m}` : ''), 8, 42, 'left', '#ffd36b'); }
+  const bb = S.bestAtStart;                            // retention: how far from beating your best
+  if (RETENTION_ON && bb >= RET_PRESSURE_MIN_BEST && S.score >= bb * RET_SHOW_FROM) {
+    const left = bb - S.score + 1;
+    text(left > 0 ? `${left} to beat best` : 'New best!', 8, S.combo > 0 ? 62 : 42, 'left', left > 0 ? '#c9bde6' : '#8dff6b');
+  }
   text(`Wave ${S.wave || 1}`, cv.width / 2, 22, 'center', '#fff');
   const label = String(S.coins);
   ctx.textAlign = 'right';
@@ -359,7 +361,7 @@ function drawStallHint() { // after running into your own tail (or reviving): th
   if (!S.alive || S.paused || S.picking || !S.waitDir) return;
   ctx.save();
   ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#14101f';
-  ctx.globalAlpha = S.tick % 4 < 3 ? 1 : 0.5;
+  ctx.globalAlpha = TEXT_ALPHA;
   ctx.strokeText('Choose a direction', cv.width / 2, cv.height - 24);
   ctx.fillStyle = '#fff'; ctx.fillText('Choose a direction', cv.width / 2, cv.height - 24);
   ctx.restore();
@@ -401,15 +403,20 @@ function drawGameOver() {
   ctx.fillText('Game over', cx, 48);
   ctx.font = '20px system-ui';
   ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, 82);
-  ctx.fillStyle = '#c9bde6'; ctx.font = '16px system-ui';
-  ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}   Coins ${S.coins}`, cx, 108);
+  ctx.fillStyle = '#c9bde6';
+  fitText(`Best ${S.best}   Best combo ${S.bestCombo}   Best wave ${S.bestWave}   Coins ${S.coins}`, cx, 108, 620, 16, false);
+  const gap = S.best - S.score;                         // boast hook
+  ctx.fillStyle = '#ffd36b';
+  if (S.newBest && S.bestAtStart > 0) fitText(`Previous best was ${S.bestAtStart}. You smashed it!`, cx, 132, 620, 16, true);
+  else if (!S.newBest && S.score > 0 && gap > 0)
+    fitText(`${gap <= S.best * 0.15 ? 'So close! ' : ''}${gap} short of your best`, cx, 132, 620, 16, true);
   drawBoard();
   ctx.fillStyle = performance.now() >= S.restartAfter ? '#fff' : '#8a8aa3'; // greyed out during the short lockout
   ctx.font = '20px system-ui';
   ctx.fillText('Tap or press Space to restart', cx, 612);
 }
 function drawBoard() { // the shared top 10 (leaderboard.js fills S.lb). Nothing is drawn while the leaderboard is off.
-  const lb = S.lb, cx = cv.width / 2, top = 150, step = 25;
+  const lb = S.lb, cx = cv.width / 2, top = 160, step = 25;
   if (!lb || lb.status === 'off' || lb.status === 'idle') return;
   ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 18px system-ui';
   ctx.fillText('TOP 10', cx, top);
@@ -445,7 +452,7 @@ function drawPick() { //'Tap a card, press 1 / 2 / 3, or use the arrows and Ente
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
-  ctx.fillText('Choose your run-start buff', cv.width / 2, 150);
+  ctx.fillText('Pick a buff', cv.width / 2, 150);
   S.pickChoices.forEach((k, i) => {
     const b = BUFFS[k];
     const c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
@@ -454,10 +461,7 @@ function drawPick() { //'Tap a card, press 1 / 2 / 3, or use the arrows and Ente
     ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 22px system-ui'; ctx.fillText(b.name, cx, c.y + 50);
     ctx.fillStyle = '#f3e9ff'; ctx.font = '16px system-ui';
     wrapText(b.desc, c.w - 30).forEach((line, k) => ctx.fillText(line, cx, c.y + 90 + k * 22));
-    ctx.fillStyle = '#9a8cc4'; ctx.fillText(`[${i + 1}]`, cx, c.y + c.h - 20);
   });
-  ctx.font = '14px system-ui'; ctx.fillStyle = '#9a8cc4';
-  ctx.fillText('Tap a card, press 1 / 2, or use the arrows and Enter', cv.width / 2, 490);
   ctx.restore();
 }
 function draw() {

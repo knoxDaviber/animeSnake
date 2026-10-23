@@ -86,14 +86,22 @@ function tapWhileDead(clientX, clientY) {
   } else restartRun();
 }
 
-let touchX, touchY;
+// A tap steers by four zones split by an X, centred at TAP_CENTER_Y of the canvas height. No visual feedback.
+function tapSteer(x, y) {
+  const dx = x - cv.width / 2, dy = y - cv.height * TAP_CENTER_Y;
+  if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0); else setDir(0, dy > 0 ? 1 : -1);
+}
+
+let touchX, touchY, tapArmed = false; // tapArmed: this touch has not turned into a swipe, so lifting the finger is a tap
 addEventListener('touchstart', e => {
   if (inNameBox(e)) return;
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
   S.lastTouchAt = performance.now();   // phones fire a fake mouse click after a tap: mousedown ignores it
+  tapArmed = false;
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
   if (S.picking) return tapPick(touchX, touchY);
+  tapArmed = !S.paused;                // a tap that only resumes from pause must not also steer
   resume();
 });
 addEventListener('touchmove', e => {
@@ -101,9 +109,18 @@ addEventListener('touchmove', e => {
   if (S.paused) return;
   const dx = e.touches[0].clientX - touchX, dy = e.touches[0].clientY - touchY;
   if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
+  tapArmed = false;                    // it is a swipe now
   if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0); else setDir(0, dy > 0 ? 1 : -1);
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
 });
+addEventListener('touchend', e => {
+  if (inNameBox(e) || !tapArmed) return;
+  tapArmed = false;
+  if (!S.alive || S.picking || S.paused || S.crashed) return;
+  const t = e.changedTouches[0], p = canvasPoint(t.clientX, t.clientY);
+  tapSteer(p.x, p.y);
+});
+addEventListener('contextmenu', e => { if (!inNameBox(e)) e.preventDefault(); }); // no long-press menus
 addEventListener('mousedown', e => {
   if (S.crashed || inNameBox(e)) return;
   if (performance.now() - S.lastTouchAt < 700) return; // the fake click that follows a touch

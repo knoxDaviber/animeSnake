@@ -32,7 +32,12 @@
 //   heroLast / heroAlpha   the hero's own move timer (ms of its last move) and progress through its current move (0..1)
 //   popups         floating score text
 //   best / bestCombo   saved across runs (storage.js); survive newRun()
-const S = { best: 0, bestCombo: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false };
+//   bestWave / bestAtStart   best wave ever (saved) / the best score when this run began (retention.js)
+//   ret            retention meter (saved): frustration 0-100, deathStreak, spendHist (revive coins per recent run), runs
+//   coinMult       this run's coin payout multiplier (coin tiers); runSpend = revive coins spent this run
+//   runStart / deathAt / lastEndAt   ms stamps: run began / last death / last run ended. pity = got the pity boost
+const S = { best: 0, bestCombo: 0, bestWave: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false,
+            ret: { frustration: 0, deathStreak: 0, spendHist: [], runs: 0 }, lastEndAt: 0, coinMult: 1 };
 
 function newLeaderboardState() {
   return { status: 'idle', rows: [], qualifies: false, submitting: false, submitted: false, submitError: false,
@@ -62,6 +67,7 @@ function newRun() {
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
     tick: 0, alpha: 1, last: performance.now(), heroLast: performance.now(), heroAlpha: 1,
     invuln: 0, quietHit: false, newBest: false,
+    bestAtStart: S.best, coinMult: coinMult(), runSpend: 0, runStart: 0, deathAt: 0, pity: false, // retention.js
     combo: 0, comboTimer: 0, popups: [],
     attacks: [], lastSwing: 0, drops: [],
     enemies: [], wave: 0, toSpawn: 0, spawnTimer: 0, waveTimer: START_DELAY,

@@ -12,8 +12,6 @@
   <div id="panel"></div>
   <button id="panelHandle" type="button" tabindex="-1" aria-label="Hold to show or hide the info bar"></button>
 </div>
-<div id="hint">Arrows / WASD / swipe to steer. P pauses. M mutes. I, or hold the small bar under the game, shows or hides the info bar. Eat a key, then touch the jumping character to recruit it. After dying: any key or tap revives, Q gives up.</div>
-
 <!-- Plain scripts (no server or build step needed). Order matters: each file may use the ones above it
      when it loads, and every function in any file when the game runs. -->
 <script src="config.js"></script>   <!-- constants and tuning numbers -->
@@ -35,6 +33,7 @@
 <script src="merge.js"></script>
 <script src="buffs.js"></script>    <!-- run-start buffs, the pick screen layout, startRun() -->
 <script src="revive.js"></script>   <!-- death: revive countdown, game-over lockout -->
+<script src="retention.js"></script><!-- retention hooks: pressure, frustration meter, coin tiers -->
 <script src="leaderboard.js"></script><!-- shared top-10 leaderboard (Supabase), initials box -->
 <script src="enemies.js"></script>  <!-- enemy snakes, their AI, waves -->
 <script src="render.js"></script>   <!-- all drawing; reads S, never changes it -->

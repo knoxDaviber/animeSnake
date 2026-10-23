@@ -9,6 +9,7 @@
 function reviveCost() { return REVIVE_COST_BASE + REVIVE_COST_STEP * S.revives; }
 
 function beginRevive() { // called once, on the tick you die
+  S.deathAt = performance.now();
   if (S.coins < reviveCost()) { endRevive(); return; } // can't afford it: straight to game over
   const now = performance.now();
   S.reviving = true; S.over = false;
@@ -20,7 +21,7 @@ function revive() {
   if (S.alive || !S.reviving || performance.now() < S.inputAfter) return;
   const cost = reviveCost();
   if (S.coins < cost) return;
-  S.coins -= cost; saveProgress();
+  S.coins -= cost; S.runSpend += cost; saveProgress();
   S.reviving = false; S.revives++;
   const bonus = Math.round(	S.score * S.reviveBonus);
   S.score += bonus;
@@ -38,6 +39,7 @@ function revive() {
 function endRevive() { // the countdown is over: show the game-over screen
   S.reviving = false; S.over = true;
   S.restartAfter = performance.now() + DEATH_LOCKOUT_MS;
+  retentionRunEnd(); // frustration meter and coin tier history
   leaderboardGameOver(); // the run is really over: fetch the top 10 and offer the initials box if it qualifies
 }
 function giveUp() { // Q, Backspace or the Give up button

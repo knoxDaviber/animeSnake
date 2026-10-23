@@ -36,6 +36,7 @@ function step() {
     updateWaves();
   }
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }
+  if (S.wave > S.bestWave) S.bestWave = S.wave;
   hud();
   checkDeath();         // an enemy or mine may have killed you
 }

@@ -6,14 +6,14 @@ A small, fully vibecoded first game: code is written with AI help, and art, musi
 
 ## Status
 
-Early prototype, but the core loop is complete. You pick a hero on the title screen (Swordsman and Magician are free, Gunman is bought with coins) and a run-start buff, then steer a chain of characters around a 20x20 grid. Your hero attacks automatically. Enemy snakes arrive in waves. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a stronger fusion follower. Hits drop characters from the tail (rings). Dying starts a 10 second revive countdown that costs coins, which you earn from kills and waves. Coins also unlock heroes. Best score, best combo and coins are saved in the browser, and an optional shared top 10 uses Supabase. Everything else is planned in [DESIGN.md](DESIGN.md).
+Early prototype, but the core loop is complete. You pick a hero on the title screen (Swordsman and Magician are free, Gunman is bought with coins) and a run-start buff, then steer a chain of characters around a 20x20 grid. Your hero attacks automatically. Enemy snakes arrive in waves. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a stronger fusion follower. Hits drop characters from the tail (rings). Dying starts a 10 second revive countdown that costs coins, which you earn from kills and waves. Coins also unlock heroes. Best score, best combo, best wave and coins are saved in the browser, and an optional shared top 10 uses Supabase. Retention hooks are built: high-score pressure, a frustration meter with a pity boost, coin payout tiers and boast lines on the game-over screen. Everything else is planned in [DESIGN.md](DESIGN.md).
 
 ## Run it
 
 No install needed. Open `src/index.html` in any browser (desktop or phone). Sprites load from `assets/images/`, so keep the folder structure as is.
 
 - Desktop: arrow keys or WASD
-- Phone: swipe
+- Phone: swipe, or just tap. A tap steers: the screen is split into four zones by an X (top, bottom, left, right), and the X sits a bit below the middle so a thumb near the bottom reaches every direction. There is no on-screen feedback, and text on the page cannot be selected
 - Hero select (the title screen): tap a card, or press its number, or use the arrows and Enter. Tapping a locked hero buys it with coins
 - Mute: M (or the speaker icon on the hero select screen). Sound starts after your first tap or key press
 - Pause: P or Escape (also pauses when the tab loses focus); tap to resume
@@ -29,6 +29,7 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 - Three identical followers anywhere in the chain merge into one fusion follower with completely different abilities (you lose 2 characters, so merging is a choice).
 - Enemy snakes arrive in waves and get tougher.
 - Runs are short. Coins from kills and waves buy revives and hero unlocks.
+- Near your best score the game leans on you a little harder. After a rough streak it gives you a free boost.
 
 Full details, build order and open questions are in [DESIGN.md](DESIGN.md). Sprite formats are in [ART_SPEC.md](ART_SPEC.md). A status note for the next session is in [Handover.md](Handover.md).
 
@@ -60,7 +61,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `sprites.js` | Loads the shared sprite sheets |
 | `followers.js` | Followers and fusions, their sheets, `newSlot()` |
 | `state.js` | The `S` object holding all mutable game state, and `newRun()` |
-| `storage.js` | Saves best score, best combo, coins and unlocks in the browser |
+| `storage.js` | Saves best score, best combo, best wave, coins, unlocks and the retention meter in the browser |
 | `unlocks.js` | Click-to-buy unlocks (heroes now), prices from config.js |
 | `audio.js` | Sound effects and music: synthesized placeholders, real files can replace them |
 | `world.js` | Keys, the hazard, free-tile checks, drop effects |
@@ -76,10 +77,11 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `buffs.js` | Run-start buffs and the pick screen |
 | `revive.js` | Death: the revive countdown, revive cost, game-over lockout |
 | `leaderboard.js` | Shared online top 10 (Supabase) and the initials box |
+| `retention.js` | Retention hooks: high-score pressure, frustration meter and pity boost, coin tiers |
 | `enemies.js` | Enemy snakes, their AI, waves |
 | `render.js` | All drawing, including the title screen and the on-canvas score, wave and coins (reads `S`, never changes it) |
 | `panel.js` | The info bar |
-| `input.js` | Keyboard, touch, pause |
+| `input.js` | Keyboard, touch (swipe and tap zones), pause |
 | `main.js` | One world tick (`step`), one hero move (`heroStep`), the frame loop, start-up |
 
 Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goes in `render.js`. If the game code throws, it shows an error screen (details in the browser console) instead of freezing.

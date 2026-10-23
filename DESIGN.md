@@ -15,6 +15,12 @@ Wording: the playable head is a **hero** everywhere the player can see it.
 
 Pick a hero and a starting buff, steer the chain around the grid, eat keys, recruit characters, merge them, fight enemy snakes in waves, die (or pay to revive), bank coins and score, repeat.
 
+## Controls
+
+- Desktop: arrows or WASD.
+- Phone: swipe, or tap. The canvas is split into four zones by an X (top, bottom, left, right); a tap steers toward its zone. The X is centred below the middle (`TAP_CENTER_Y`, 0.62 of the height) so a thumb near the bottom reaches every direction. Taps give no on-screen feedback. A tap that turns into a swipe is a swipe. A tap that only resumes from pause does not steer.
+- Page text is not selectable, so long-presses never pop up menus. The initials box stays typable.
+
 ## The chain
 
 - The snake is a chain of anime characters following each other on a grid. Slot 0 is the hero, every other slot is a follower.
@@ -60,8 +66,8 @@ Speed and slowdown change the hero only, not enemies or skill timers. The hero h
 - **Mines:** explode when any snake head steps on one. The blast is a plus shape; arm length grows with Miners, and a Bomber makes it reach the map edge. Careful: it hurts you too if you stand in line with it.
 - Hitting an enemy segment breaks it and cuts off everything behind it. Hitting its head costs hit points; at zero the whole snake dies.
 - **Head-on collision:** both snakes take damage, short stun.
-- **Waves:** the first wave starts after about 3 seconds. A wave is 1 + wave/3 enemy snakes (max 5), spawned along the edges 10 ticks apart. The next wave starts 16 ticks after the last enemy dies.
-- Enemies chase the hero 60% of the time (more with Magnetos), never reverse, and flip around if boxed in.
+- **Waves:** the first wave starts after about 3 seconds. A wave is 1 + wave/3 enemy snakes (max 5), spawned along the edges 10 ticks apart. The next wave starts 16 ticks after the last enemy dies. High-score pressure (see Retention) can add one more snake.
+- Enemies chase the hero 60% of the time (more with Magnetos and under pressure), never reverse, and flip around if boxed in.
 
 ### Enemy head toughness (hits to kill)
 
@@ -77,7 +83,7 @@ Speed and slowdown change the hero only, not enemies or skill timers. The hero h
 
 - The title screen IS the hero select screen. The game opens on it, and so does every new run (death, revive countdown, game-over screen, tap, hero select). There is no separate menu.
 - The only title element is the game name, floating at the top: "animeSnake", or "Snake-lite" about half the time. A Minecraft-style splash line (a random joke, or a dig at the player or the dev) sits tilted beside it. Both are rolled each time the screen appears (`TITLE_*` and `SPLASHES` in config.js).
-- Swordsman and Magician are free. Every other hero is locked until bought with coins (Gunman costs 40). Clicking or tapping a locked card buys it on the spot if you can pay. If you cannot, the card says how many more coins you need and nothing is spent. A bought hero is picked with another click. Your coin total is shown on the screen. There is no shop screen.
+- Swordsman and Magician are free. Every other hero is locked until bought with coins (Gunman costs 40). Clicking or tapping a locked card buys it on the spot if you can pay. If you cannot, the card says how many more coins you need and nothing is spent. A bought hero is picked with another click. Your coin total is shown on the screen (with a small "coin payout" note when your payout tier is not x1). There is no shop screen.
 - Unlocks are saved by hero id, so adding heroes never breaks old saves. A new hero is locked by default.
 - Up to 3 heroes show as big cards. 4 to 8 show as a compact grid, with the focused hero's description under it.
 - The unlock logic (`unlocks.js`) is generic. Planned, not built: more sections on this screen, such as Followers (choose which can appear in your run) and Upgrades, with locked items bought by clicking them, like heroes.
@@ -85,19 +91,21 @@ Speed and slowdown change the hero only, not enemies or skill timers. The hero h
 ## Run start
 
 - First pick the hero (see above), then one of 3 random buffs (10 exist): Extra follower, +10% score, Thick skin, Quick hands, Combo keeper, Skill haste, Bounty hunter, Second wind, Welcome party, Minefield.
+- If the frustration meter is high (see Retention), the run also starts with a pity boost: a free extra follower on top of your buff.
 
 ## Score and coins
 
 - Kills, keys and cut segments give points. Kill points are 20 x the combo count (capped at x5), plus bonuses. A kill must land within 3 seconds of the last one.
-- **Coins** are earned in-game: 3 per kill and 5 per wave started, kept between runs. They pay for revives and hero unlocks.
+- **Coins** are earned in-game: 3 per kill and 5 per wave started, times your coin payout tier (see Retention). They are kept between runs and pay for revives and hero unlocks.
 - **Revive:** on death a 10 second countdown offers a revive for coins (15, then 30, 45... within a run). A revive adds 10% of the score and brings back just the hero with 3 seconds of immunity. If you cannot afford it, the run ends at once. The game-over screen ignores restart input briefly.
-- Best score, best combo and coins are saved in the browser. A shared online top 10 (initials) is optional.
+- Best score, best combo, best wave and coins are saved in the browser. A shared online top 10 (initials) is optional.
 
 ## In-game display
 
-- Score, wave and coins are drawn on the canvas in a fixed row at the top (score left, wave centre, coins right). While a combo runs it shows under the score.
+- Score, wave and coins are drawn on the canvas in a fixed row at the top (score left, wave centre, coins right). While a combo runs it shows under the score. Once your score passes 60% of the best you had when the run began, a "N to beat best" line shows under that (it turns into "New best!" when you pass it).
 - Nothing sits above the canvas, so no number can ever move or resize the game.
-- Chain length and the run's buff are on the info bar's muted line. Best score and best combo are on the game-over screen.
+- Chain length, the run's buff, a pity boost and a coin payout other than x1 are on the info bar's muted line.
+- The game-over screen shows score, best score, best combo, best wave and coins, plus a boast line (your previous best if you just beat it, otherwise how many points short of your best you were).
 
 ## Audio
 
@@ -106,15 +114,14 @@ Speed and slowdown change the hero only, not enemies or skill timers. The hero h
 - Music has four moods that crossfade: title (hero and buff pick), run (calm), battle (enemies about; lingers 2.5 s after the last one dies), tense (revive countdown). The game-over screen is silent apart from its sting. Music gets quieter while paused.
 - Mute with M anywhere, or the speaker icon on the hero select screen. The choice is saved. Sound starts at the player's first tap or key press (a browser rule).
 
-## Retention systems (hook design, not built yet)
+## Retention systems (built, `retention.js`)
 
-These are deliberate. Tune them so deaths feel like near-misses, not cheats.
+These are deliberate. Tune them so deaths feel like near-misses, not cheats. Every number is a `RET_*` constant in config.js, and `RETENTION_ON = false` switches all of them off. The player can see each one at work (nothing is hidden).
 
-- **High-score pressure:** from about 85% of the player's best score, enemy pressure ramps up, capped and gradual. Show "X pts to beat your best".
-- **Frustration meter:** score from short runs, death streaks and fast restarts. When high, the next run gives a pity upgrade early.
-- **Coin tiers:** payout multiplier between about 0.7x and 1.5x based on recent revive spending.
-- **Boast hooks:** previous high score, best combo and best wave on the death screen.
-- **Shared leaderboard:** done (Supabase, best 50 stored, 10 shown).
+- **High-score pressure:** from 85% of the best score you had when the run began (`S.bestAtStart`) up to 100%, pressure ramps from 0 to 1 and then stays there. At full pressure enemies chase 15% more often and each wave gets one extra snake (the extra snake appears from half pressure). Not active until your best is at least 200, so new players are left alone. The HUD shows "N to beat best" from 60% of the best.
+- **Frustration meter (0-100, saved):** a finished run adds 15 if it lasted under 45 s, 10 if it scored under 40% of your best, and 10 if it is the 3rd or later run in a row without a new best. Starting a run within 12 s of the last run ending adds 10. A new best, or a run longer than 150 s, takes 25 off. At 50 or more, the next run starts with a pity boost (a free extra follower) and the meter drops to 10.
+- **Coin tiers:** coins earned from kills and waves are multiplied by a tier based on the revive coins you spent over your last 5 runs: 0 spent = x0.7, 15 or more = x1, 45 or more = x1.25, 90 or more = x1.5. Neutral (x1) for your first 3 runs. Rolled once per run. `RET_COIN_TIERS_ON = false` turns only this hook off.
+- **Boast hooks:** the game-over screen shows best wave, your previous best and how short of your best you were ("So close!" within 15%).
 
 Note: all coins are earned in-game. If real-money purchases are ever considered, revisit this section first.
 
@@ -133,7 +140,7 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 2. Rings and damage, one hazard. (done)
 3. Sword, enemy snakes and waves, mines. (done)
 4. Score and combos. (done)
-5. Coins and revive cost. (done, minimal) Retention systems. (pending)
+5. Coins and revive cost. Retention systems. (done, needs play-testing and tuning)
 6. Recruitment, 3 heroes, 5 followers, 10 buffs, run-start picks. (done)
 7. Merging into fusions: all five families (Miner, Keysman, Magneto, Raiden, Gorgon) plus the hero speed system. (done)
 8. Coin-gated hero unlocks, title screen as hero select, on-canvas display. (done)
@@ -146,3 +153,5 @@ Note: all coins are earned in-game. If real-money purchases are ever considered,
 - How should keys spawn once they become specific per character?
 - Rooms: how do the player and enemies move between them, and what carries over?
 - Followers and Upgrades sections on the title screen: what do they unlock, and what do they cost?
+- Retention tuning: is x0.7 for a player who never revives too harsh (it also slows saving for hero unlocks)? Is the pity boost too easy to trigger with a few quick deaths?
+- Tap controls: is `TAP_CENTER_Y` 0.62 right on a real phone?

@@ -1,13 +1,11 @@
 html, body { margin: 0; height: 100%; background: #14101f; color: #f3e9ff; font-family: system-ui, sans-serif; overflow: hidden; touch-action: none; }
-body { --chrome: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
-body.panel-closed { --chrome: 60px; }   /* space kept for the HUD, info bar and hint: the canvas grows when the bar is hidden */
+body { --chrome: 80px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+body.panel-closed { --chrome: 40px; }   /* space kept for the HUD, info bar and hint: the canvas grows when the bar is hidden */
 canvas {
   background: #1d1730; border: 2px solid #3a2d5c;
   width: min(96vw, calc(100vh - var(--chrome)), 640px); height: auto; aspect-ratio: 1 / 1;
   image-rendering: pixelated; /* keep pixel art crisp when the canvas is scaled */
 }
-#hint { font-size: 12px; opacity: .6; text-align: center; max-width: 96vw; }
-@media (max-height: 520px) { #hint { display: none; } }
 
 /* ---- Info bar (panel.js): small portraits with a count and a thin skill bar ---- */
 #dock { width: min(96vw, calc(100vh - var(--chrome)), 640px); display: flex; flex-direction: column; align-items: center; gap: 2px; }
@@ -32,3 +30,8 @@ body.panel-closed #panel { display: none; }
 #panelHandle::before { right: 10px; background: #3a2d5c; }
 #panelHandle::after { width: 0; background: #ffd36b; }
 #panelHandle.holding::after { width: calc(100% - 20px); transition: width var(--hold, 400ms) linear; }
+
+/* Nothing on the page is selectable, so long-presses never pop up selection handles. The initials box stays typable. */
+html, body, canvas, #hint, #dock, #panel { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea { -webkit-user-select: text; user-select: text; }
+.pline, .ccnt { opacity: .5; } /* gameplay text is half opaque */

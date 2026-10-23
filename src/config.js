@@ -8,6 +8,16 @@ const FRAMES = 4;    // frames per animation row in a directional sheet
 // Info bar (panel.js)
 const PANEL_HOLD_MS = 400;   // hold the little handle under the info bar this long to show or hide it
 
+// On-canvas text (render.js). All gameplay text is drawn at TEXT_ALPHA. Nothing spawns on the tiles in TEXT_ZONES
+// (world.js inTextZone), so text never sits on top of a key, mine, hazard, recruit or new enemy. Tiles: x, y, w, h.
+const TEXT_ALPHA = 0.5;
+const TEXT_ZONES = [
+  { x: 0,  y: 0,  w: 5, h: 3 },  // score, combo, "to beat best" (top left)
+  { x: 8,  y: 0,  w: 4, h: 1 },  // wave (top centre)
+  { x: 16, y: 0,  w: 4, h: 1 },  // coins (top right)
+  { x: 6,  y: 18, w: 8, h: 2 },  // "Choose a direction" (bottom centre)
+];
+
 // Rings and damage
 const INVULN_TICKS = 8;            // ticks of immunity after a hit (the chain blinks)
 const DROP_TICKS = 4;              // length of the drop fade, in ticks
@@ -30,7 +40,7 @@ function waveSize(w) { return Math.min(1 + Math.floor(w / 3), 5); }
 function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 
 // Followers, skills and mines
-const START_FOLLOWERS = ['raiden', 'raiden']; // who follows the head at the start of a run (ids from followers.js)
+const START_FOLLOWERS = []; // who follows the head at the start of a run (ids from followers.js)
 const MINE_COOLDOWN = 64;   // ticks (8 s) between mines dropped by each Miner in the chain
 const MINE_MAX = 8;         // most mines allowed on the map at once
 const MINE_DAMAGE = 1;      // hit points a mine blast takes off an enemy head (body segments are cut off)
@@ -181,6 +191,33 @@ const LEADERBOARD = {
   timeoutMs: 6000,    // give up on a slow request after this long
   entryY: 490,        // canvas y (0-640) where the initials box sits on the game-over screen
 };
+
+// Touch controls (input.js): a tap steers by four zones split by an X. The X is centred this far down the canvas
+// (0.5 = the middle). Lower = a bigger "up" zone, so a thumb near the bottom still reaches every direction.
+const TAP_CENTER_Y = 0.62;
+
+// Retention systems (retention.js, design in DESIGN.md). RETENTION_ON = false switches all of them off.
+const RETENTION_ON = true;
+// 1. High-score pressure: near the best you had when the run began, enemies ramp up. Capped.
+const RET_PRESSURE_MIN_BEST = 200;  // no pressure until your best is at least this (new players are left alone)
+const RET_PRESSURE_FROM = 0.85;     // starts at this fraction of your best, full at 100%
+const RET_PRESSURE_CHASE = 0.15;    // extra chance an enemy move heads for you, at full pressure
+const RET_PRESSURE_EXTRA = 1;       // extra enemy snakes per wave at full pressure (rounded, so 1 from half pressure)
+const RET_SHOW_FROM = 0.6;          // the "N to beat best" line shows from this fraction of your best
+// 2. Frustration meter (0-100). A high meter gives a pity boost at the start of the next run.
+const RET_SHORT_RUN_SECONDS = 45;   const RET_F_SHORT = 15;     // a run shorter than this
+const RET_LOW_SCORE_FRAC = 0.4;     const RET_F_LOW = 10;       // a run scoring under this fraction of your best
+const RET_STREAK_LEN = 3;           const RET_F_STREAK = 10;    // this many runs in a row without a new best
+const RET_FAST_RESTART_MS = 12000;  const RET_F_FAST = 10;      // a run started this soon after the last one ended
+const RET_LONG_RUN_SECONDS = 150;   const RET_F_RELIEF = 25;    // a long run, or a new best, cools the meter
+const RET_PITY_AT = 50;             // meter at or above this: the next run gets a pity boost
+const RET_PITY_RESET = 10;          // meter after a pity boost
+const RET_PITY_BUFF = 'extraFollower'; // id from BUFFS
+// 3. Coin tiers: kill and wave coins are multiplied by a tier based on revive coins spent over your last runs.
+const RET_COIN_TIERS_ON = true;     // false = only the coin tiers off
+const RET_COIN_HISTORY = 5;         // runs looked at
+const RET_COIN_MIN_RUNS = 3;        // neutral (x1) until you have this many runs of history
+const RET_COIN_TIERS = [{ min: 0, mult: 0.7 }, { min: 15, mult: 1 }, { min: 45, mult: 1.25 }, { min: 90, mult: 1.5 }];
 
 // Score and combos
 const POINTS = { food: 10, kill: 20, segment: 5 };  // base points (a kill is multiplied by the combo)

@@ -9,6 +9,13 @@ function cleanUnlocked(u) {
     if (Array.isArray(u[k])) out[k] = u[k].filter(x => typeof x === 'string');
   return out;
 }
+// The retention meter: anything odd (or missing, in old saves) becomes a clean default.
+function cleanRet(r) {
+  r = r && typeof r === 'object' ? r : {};
+  const num = (v, max) => Math.max(0, Math.min(max, Number(v) || 0));
+  return { frustration: num(r.frustration, 100), deathStreak: num(r.deathStreak, 999), runs: num(r.runs, 1e6),
+           spendHist: Array.isArray(r.spendHist) ? r.spendHist.map(x => num(x, 1e6)).slice(-RET_COIN_HISTORY) : [] };
+}
 function loadProgress() {
   try {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
@@ -17,10 +24,12 @@ function loadProgress() {
     S.coins = Number(d.coins) || 0;
     S.unlocked = cleanUnlocked(d.unlocked);
     S.muted = !!d.muted;
+    S.bestWave = Number(d.bestWave) || 0;
+    S.ret = cleanRet(d.ret);
   } catch (err) { console.warn('Could not load saved progress:', err); }
 }
 function saveProgress() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted })); }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted, bestWave: S.bestWave, ret: S.ret })); }
   catch (err) { console.warn('Could not save progress:', err); }
 }
 addEventListener('pagehide', saveProgress);

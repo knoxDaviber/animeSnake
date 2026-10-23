@@ -14,7 +14,7 @@ function killBonus() { return S.bounty; }
 function keyDoubleChance() { return Math.min(KEYSMAN_MAX_CHANCE, KEYSMAN_DOUBLE_CHANCE * countFollower('keysman')); }
 
 // Enemies chase you more for every Magneto in the chain.
-function enemyChase() { return Math.min(0.95, ENEMY_CHASE + MAGNETO_CHASE_BONUS * countFollower('magneto')); }
+function enemyChase() { return Math.min(0.95, ENEMY_CHASE + MAGNETO_CHASE_BONUS * countFollower('magneto') + RET_PRESSURE_CHASE * pressure()); }
 
 // Magneto: keys near your head are pulled one tile closer each tick (range 3, +1 per extra Magneto, max 4).
 // Mr.X: pulls from the max range and eats any key within the 3x3 around your head.

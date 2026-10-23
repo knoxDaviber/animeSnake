@@ -12,7 +12,7 @@ function addScore(points, x, y, suffix = '') {
 }
 function registerKill(x, y) {
   S.combo++;
-  S.coins += COIN_PER_KILL;
+  S.coins += coinReward(COIN_PER_KILL);
   S.comboTimer = S.comboWindow;
   if (S.combo > S.bestCombo) S.bestCombo = S.combo;
   const m = comboMult();
