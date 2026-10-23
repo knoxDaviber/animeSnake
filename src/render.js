@@ -9,6 +9,7 @@ function hud() {
   document.getElementById('wave').textContent = S.wave || 1;
   document.getElementById('combo').textContent = S.combo ? `${S.combo} (x${comboMult()})` : '-';
   document.getElementById('best').textContent = S.best;
+  document.getElementById('coins').textContent = S.coins;
   document.getElementById('bestcombo').textContent = S.bestCombo;
   const b = BUFFS.find(x => x.id === S.buff);
   document.getElementById('buff').textContent = b ? b.name : '-';
@@ -83,12 +84,13 @@ function drawHazard() {
     ctx.fill();
   }
 }
-function drawFood() { // the recruit key (still the food sprite until it gets its own art)
-  if (!S.food) return; // no key while enough characters are already waiting
-  const x = S.food.x * CELL, y = S.food.y * CELL;
-  if (SPRITES.food.ready) return drawItem(SPRITES.food, S.tick, x, y);
-  ctx.fillStyle = '#ff4d4d';
-  ctx.fillRect(x + 6, y + 6, CELL - 12, CELL - 12);
+function drawFood() { // the recruit keys (still the food sprite until it gets its own art)
+  S.keys.forEach(k => {
+    const x = k.x * CELL, y = k.y * CELL;
+    if (SPRITES.food.ready) return drawItem(SPRITES.food, S.tick, x, y);
+    ctx.fillStyle = '#ff4d4d';
+    ctx.fillRect(x + 6, y + 6, CELL - 12, CELL - 12);
+  });
 }
 function drawMines() {
   S.mines.forEach(m => {
@@ -162,7 +164,7 @@ function drawHeadPick() { // first pick screen: one card per head
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
-  ctx.fillText('Choose your head', cv.width / 2, 100);
+  ctx.fillText('Choose your hero', cv.width / 2, 100);
   HEAD_DEFS.forEach((h, i) => {
     const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
     ctx.fillStyle = sel ? '#2c2250' : '#211a3b'; ctx.fillRect(c.x, c.y, c.w, c.h);
@@ -213,7 +215,7 @@ function drawEnemies() {
   });
 }
 function drawPlayer() {
-  if (S.invuln > 0 && S.tick % 2 === 0) return; // chain blinks while invulnerable
+  if (S.invuln > 0 && !S.quietHit && S.tick % 2 === 0) return; // chain blinks while invulnerable
   S.snake.forEach((s, i) => {
     const p = lerpPos(S.prev, i, s);
     drawSegment(S.roster[i], p.x, p.y, i === 0);
@@ -294,9 +296,9 @@ function drawRevive() { // after dying: a countdown to revive (any key or tap) o
   ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 120, cy, 240, 8);
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 120, cy, Math.round(240 * left / (REVIVE_SECONDS * 1000)), 8);
   ctx.fillStyle = live ? '#fff' : '#8a8aa3'; ctx.font = '20px system-ui';
-  ctx.fillText(`Press any key or tap to revive (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
+  ctx.fillText(`Any key or tap: revive for ${reviveCost()} coins (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
   ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
-  ctx.fillText(`Score ${S.score}   Best ${S.best}`, cx, cy + 75);
+  ctx.fillText(`Score ${S.score}   Best ${S.best}   Coins ${S.coins}`, cx, cy + 75);
   const b = giveUpRect();
   ctx.fillStyle = '#211a3b'; ctx.fillRect(b.x, b.y, b.w, b.h);
   ctx.lineWidth = 2; ctx.strokeStyle = '#3a2d5c'; ctx.strokeRect(b.x, b.y, b.w, b.h);
@@ -310,7 +312,7 @@ function drawGameOver() {
   ctx.font = '20px system-ui';
   ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, 82);
   ctx.fillStyle = '#c9bde6'; ctx.font = '16px system-ui';
-  ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}`, cx, 108);
+  ctx.fillText(`Best ${S.best}   Best combo ${S.bestCombo}   Coins ${S.coins}`, cx, 108);
   drawBoard();
   ctx.fillStyle = performance.now() >= S.restartAfter ? '#fff' : '#8a8aa3'; // greyed out during the short lockout
   ctx.font = '20px system-ui';

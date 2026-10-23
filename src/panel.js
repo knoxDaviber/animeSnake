@@ -6,14 +6,17 @@
 // It starts hidden on phones and very short screens. The choice is remembered.
 // A new follower shows up by itself; give a new skill a name in SKILL_NAMES and a new follower a line in FOLLOWER_NOTES.
 
-const SKILL_NAMES = { mine: 'Mine', lightning: 'Lightning', gaze: 'Gaze' };
+const SKILL_NAMES = { mine: 'Mine', lightning: 'Lightning', gaze: 'Gaze', bomb: 'Mine' };
 // One short line per follower for the hover text: what it is doing for you right now (n = how many are in the chain).
 const FOLLOWER_NOTES = {
   miner:   () => `mines on map ${S.mines.length}/${MINE_MAX}`,
   raiden:  () => `kills worth +${killBonus()} pts`,
-  keysman: n => `${Math.round(Math.min(1, KEYSMAN_DOUBLE_CHANCE * n) * 100)}% chance of a 2nd recruit`,
-  magneto: n => `pulls keys within ${MAGNETO_RANGE + n - 1} tiles`,
+  keysman: () => `${Math.round(keyDoubleChance() * 100)}% chance of a 2nd recruit`,
+  magneto: () => `pulls keys within ${magnetRange()} tiles`,
   medusa:  n => `sword stuns +${MEDUSA_STUN_BONUS * n} ticks`,
+  bomber:   () => 'mine blasts cross the whole map',
+  kingsman: () => 'bounty: 1-3 keys, Keysman +40% likely',
+  mrx:      () => 'eats keys near you, shoots recruits',
 };
 const PANEL_KEY = 'animeSnake.panel';
 const PANEL = { built: false };

@@ -9,6 +9,8 @@ const SKILLS = {
   lightning: { cooldown: LIGHTNING_COOLDOWN, fire: castLightning },
   // Medusa: freezes every enemy in the line ahead of the head.
   gaze:      { cooldown: GAZE_COOLDOWN, fire: castGaze },
+  // Bomber (3 Miners fused): same mine drop, shorter cooldown
+  bomb:      { cooldown: BOMBER_COOLDOWN, fire: dropMine },
 };
 
 function dropMine() {

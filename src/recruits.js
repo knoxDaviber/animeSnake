@@ -11,11 +11,11 @@
 // walk, tx/ty = where it will stop, ready = arrived and free to be recruited, age = ticks since it was summoned.
 
 function recruitAt(x, y) { return S.recruits.find(r => r.x === x && r.y === y) || null; }
-function readyRecruitAt(x, y) { return S.recruits.find(r => r.ready && r.x === x && r.y === y) || null; }
+function touchableRecruitAt(x, y) { return S.recruits.find(r => inBounds(r.x, r.y) && r.x === x && r.y === y) || null; }
 
 // Puts the next key on the map, unless enough characters are already waiting. Called every tick.
 function refreshKey() {
-  if (!S.food && S.recruits.length < RECRUIT_MAX) placeFood();
+  if (!S.keys.length && S.recruits.length < RECRUIT_MAX) placeFood();
 }
 
 // Picks a random edge, a random lane, and a walking distance, and starts a character walking in.
@@ -44,11 +44,19 @@ function summonRecruit() {
 // Called once per tick: walks recruits in, and marks them ready once they have arrived (and none of your
 // segments is standing on their tile).
 function updateRecruits() {
+  const h = S.snake[0], touched = [];
   for (const r of S.recruits) {
     r.px = r.x; r.py = r.y; r.age++;
     if (r.left > 0) { r.x += r.dx; r.y += r.dy; r.left--; }
+    if (r.x === h.x && r.y === h.y) touched.push(r);   // it walked into your hero: counts as touching it
     r.ready = r.ready || (r.left === 0 && !S.snake.some(s => s.x === r.x && s.y === r.y));
   }
+  touched.forEach(r => {
+    if (countFollower('mrx') > 0) return shootRecruit(r, h.x, h.y);
+    S.recruits = S.recruits.filter(q => q !== r);
+    S.growQueue.push(r.c);                              // joins on the next move (playerMove)
+    S.popups.push({ x: h.x, y: h.y, text: FOLLOWERS[r.c].name + '!', age: 0 });
+  });
 }
 
 // An enemy stepped on it: it is gone, and so is the key that summoned it.
@@ -56,4 +64,28 @@ function killRecruit(r) {
   S.recruits = S.recruits.filter(x => x !== r);
   const c = r.c;
   dropFx(r.x, r.y, (px, py) => drawSegment({ c, fx: 0, fy: 1 }, px, py, false));
+}
+
+// Eats key k (the head stepped on it, or Mr.X pulled it in): points, a summoned character, Keysman bonus.
+function eatKey(k) {
+  S.keys = S.keys.filter(x => x !== k);
+  addScore(POINTS.food, k.x, k.y);
+  summonRecruit();
+  if (S.recruits.length < RECRUIT_MAX && Math.random() < keyDoubleChance()) summonRecruit(); // Keysman bonus
+}
+
+// Mr.X: a recruit you touch is not added to the chain. It is shot at the nearest enemy segment (2-5 damage) and dies.
+function shootRecruit(r, x, y) {
+  S.recruits = S.recruits.filter(q => q !== r);
+  const c = r.c;
+  dropFx(r.x, r.y, (px, py) => drawSegment({ c, fx: 0, fy: 1 }, px, py, false));
+  let best = null, bestD = Infinity;
+  for (const e of S.enemies) for (const s of e.segs) {
+    const d = Math.abs(s.x - x) + Math.abs(s.y - y);
+    if (d < bestD) { best = s; bestD = d; }
+  }
+  if (!best) return;
+  const dmg = MRX_SHOT_MIN + Math.floor(Math.random() * (MRX_SHOT_MAX - MRX_SHOT_MIN + 1));
+  S.zaps.push({ kind: 'bolt', x1: x, y1: y, x2: best.x, y2: best.y, age: 0, jig: range(3).map(() => (Math.random() - 0.5) * 24) });
+  strikeEnemyAt(best.x, best.y, dmg);
 }

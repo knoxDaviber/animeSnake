@@ -26,8 +26,8 @@ function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 
 // Followers, skills and mines
 const START_FOLLOWERS = ['miner', 'raiden']; // who follows the head at the start of a run (ids from followers.js)
-const MINE_COOLDOWN = 40;   // ticks (5 s) between mines dropped by each Miner in the chain
-const MINE_MAX = 3;         // most mines allowed on the map at once
+const MINE_COOLDOWN = 64;   // ticks (8 s) between mines dropped by each Miner in the chain
+const MINE_MAX = 8;         // most mines allowed on the map at once
 const MINE_DAMAGE = 1;      // hit points a mine blast takes off an enemy head (body segments are cut off)
 const BLAST_TICKS = 4;      // how long the explosion flash stays on screen
 
@@ -39,21 +39,30 @@ const GAZE_STUN = 4;            // ticks every enemy in the line stays frozen
 const ZAP_TICKS = 3;            // how long the bolt / gaze flash stays on screen
 
 // Heads (heads.js)
-const SWORD_COOLDOWN = 16;      // ticks (2 s) between Swordsman swings
+const SWORD_COOLDOWN = 8;      // ticks (1 s) between Swordsman swings
 const SWORD_DAMAGE = 3;         // hit points a sword hit takes off an enemy head
 const SHIELD_RECHARGE = 40;     // ticks (5 s) until the Swordsman's block is ready again after it blocks a hit
-const SHOCK_COOLDOWN = 80;      // ticks (10 s) between Magician shockwaves
+const SHOCK_COOLDOWN = 40;      // ticks (5 s) between Magician shockwaves
 const SHOCK_DAMAGE = 1;         // hit points a shockwave takes off an enemy head
 const SHOCK_REACH = 2;          // the 3x3 area is centred this many tiles ahead of the head (0 = around the head)
-const GUNMAN_COOLDOWN = 48;     // ticks (6 s) between volleys (one bullet each way)
+const GUNMAN_COOLDOWN = 24;     // ticks (3 s) between volleys (one bullet each way)
 const BULLET_DAMAGE = 1;
 const BULLET_SPEED = 2;         // tiles per tick
 
 // Follower passives (passives.js)
 const RAIDEN_KILL_BONUS = 5;        // extra base points per kill for each Raiden in the chain (before the combo multiplier)
-const KEYSMAN_DOUBLE_CHANCE = 0.3;  // per Keysman: chance that eating a key summons a second character
+const KEYSMAN_DOUBLE_CHANCE = 0.1;  // per Keysman: chance that eating a key summons a second character
 const MAGNETO_RANGE = 3;            // tiles: a key this close to your head is pulled one tile closer per tick (+1 per extra Magneto)
 const MEDUSA_STUN_BONUS = 2;        // extra stun ticks per Medusa on an enemy hit by your sword
+
+const KEYSMAN_MAX_CHANCE = 0.7;     // cap on the double-summon chance
+const MAGNETO_MAX_RANGE = 4;        // most tiles a key can be pulled from
+const MAGNETO_CHASE_BONUS = 0.1;    // per Magneto: extra chance each enemy move heads for you
+const MINER_BLAST_BONUS = 1;        // per Miner: mine blast arms are this many tiles longer
+const BOMBER_COOLDOWN = 40;         // ticks (5 s) between mines dropped by a Bomber
+const KINGSMAN_BOUNTY_MAX = 3;      // with a Kingsman, a key drop is 1 to this many keys
+const KINGSMAN_SUMMON_BONUS = 0.4;  // Keysman is this much more likely to be summoned
+const MRX_SHOT_MIN = 2, MRX_SHOT_MAX = 5; // damage of a rejected recruit shot by Mr.X
 
 // Run-start buffs (buffs.js)
 const PICK_LOCKOUT_MS = 350;   // the pick screen ignores input this long after it appears
@@ -76,12 +85,18 @@ const RECRUIT_MAX = 3;              // no new key appears while this many charac
 const RECRUIT_THREAT_DIST = 6;      // a chasing enemy goes for a recruit instead of you when one is this close
 const RECRUIT_JUMP = [0, 6, 10, 6]; // jump height in px per animation tick while a recruit waits, ready
 
-// Death and revive (no coins yet, so a revive is free for now)
+// Death and revive
 const REVIVE_SECONDS = 10;          // countdown after dying: any key or tap revives; Q, Backspace or timeout ends the run
 const REVIVE_LOCKOUT_MS = 700;      // input is ignored this long after dying so a steering key cannot revive by accident
 const REVIVE_SCORE_BONUS = 0.10;    // a revive adds this fraction of the current score on top of it
 const REVIVE_INVULN_TICKS = 24;     // immunity after a revive (3 s)
 const DEATH_LOCKOUT_MS = 1000;      // the game-over screen ignores restart input this long
+
+// Coins: earned during a run, kept between runs, spent on revives
+const COIN_PER_KILL = 3;            // coins for every enemy snake killed
+const COIN_PER_WAVE = 5;            // coins each time a wave starts
+const REVIVE_COST_BASE = 15;        // coins for the first revive in a run
+const REVIVE_COST_STEP = 15;        // each further revive in the same run costs this much more
 
 // Shared leaderboard (Supabase, see leaderboard.js and tools/supabase_setup.sql)
 // Paste your PUBLISHABLE key (or the legacy "anon" key) below. It is meant to be public. NEVER paste the secret or

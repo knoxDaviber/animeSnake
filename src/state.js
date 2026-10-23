@@ -31,7 +31,7 @@
 //   combo          kills chained inside COMBO_WINDOW; comboTimer counts the window down
 //   popups         floating score text
 //   best / bestCombo   saved across runs (storage.js); survive newRun()
-const S = { best: 0, bestCombo: 0 };
+const S = { best: 0, bestCombo: 0, coins: 0 };
 
 function newLeaderboardState() {
   return { status: 'idle', rows: [], qualifies: false, submitting: false, submitted: false, submitError: false,
@@ -54,11 +54,11 @@ function newRun() {
     shield: true, shieldTimer: 0, bullets: [],  // Swordsman block ready / ticks until it is back; Gunman bullets
     invulnBonus: 0, swingMult: 1, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false,
-    food: null, recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
+    keys: [], growQueue: [], recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
     tick: 0, alpha: 1, last: performance.now(),
-    invuln: 0, newBest: false,
+    invuln: 0, quietHit: false, newBest: false,
     combo: 0, comboTimer: 0, popups: [],
     attacks: [], lastSwing: 0, drops: [],
     enemies: [], wave: 0, toSpawn: 0, spawnTimer: 0, waveTimer: START_DELAY,

@@ -9,6 +9,7 @@ function step() {
   ageZaps();
   playerMove();
   if (S.alive) {
+    mergeCheck();       // three identical followers in a row fuse (merge.js)
     updateCombo();
     updateSkills();
     updatePassives();   // Magneto pulls the key toward you

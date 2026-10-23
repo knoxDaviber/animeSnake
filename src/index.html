@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="hud"><span>Score <b id="score">0</b></span><span>Chain <b id="len">3</b></span><span>Wave <b id="wave">1</b></span><span>Combo <b id="combo">-</b></span><span>Best <b id="best">0</b></span><span>Best combo <b id="bestcombo">0</b></span><span>Buff <b id="buff">-</b></span></div>
+<div id="hud"><span>Score <b id="score">0</b></span><span>Chain <b id="len">3</b></span><span>Wave <b id="wave">1</b></span><span>Combo <b id="combo">-</b></span><span>Coins <b id="coins">0</b></span><span>Best <b id="best">0</b></span><span>Best combo <b id="bestcombo">0</b></span><span>Buff <b id="buff">-</b></span></div>
 <canvas id="c" width="640" height="640"></canvas>
 <div id="dock">
   <div id="panel"></div>
@@ -31,6 +31,7 @@
 <script src="mines.js"></script>    <!-- mines on the map and their explosions -->
 <script src="passives.js"></script> <!-- follower passives (Raiden, Keysman, Magneto, Medusa) -->
 <script src="recruits.js"></script>  <!-- keys summon characters that walk in and wait to be recruited -->
+<script src="merge.js"></script>
 <script src="buffs.js"></script>    <!-- run-start buffs, the pick screen layout, startRun() -->
 <script src="revive.js"></script>   <!-- death: revive countdown, game-over lockout -->
 <script src="leaderboard.js"></script><!-- shared top-10 leaderboard (Supabase), initials box -->

@@ -10,13 +10,14 @@ const BUFFS = [
       const t = { x: tail.x - 1, y: tail.y };            // one more tile behind the tail
       S.snake.push(t); S.prev.push({ ...t });
       S.roster.push(newSlot(randomFollower(), slot.fx, slot.fy));
-      if (S.food && S.food.x === t.x && S.food.y === t.y) placeFood();
+      S.keys = S.keys.filter(k => !(k.x === t.x && k.y === t.y));
+      if (!S.keys.length) placeFood();
     } },
   { id: 'bonusScore', name: '+10% score', desc: 'Everything you score this run is worth 10% more.',
     apply() { S.scoreMult = BONUS_SCORE_MULT; } },
   { id: 'thickSkin', name: 'Thick skin', desc: `After a hit you stay immune ${THICK_SKIN_TICKS} ticks longer.`,
     apply() { S.invulnBonus = THICK_SKIN_TICKS; } },
-    { id: 'quickHands', name: 'Quick hands', desc: `Your head's weapon recharges ${Math.round((1 - QUICK_HANDS_MULT) * 100)}% faster.`,
+    { id: 'quickHands', name: 'Quick hands', desc: `Your hero's weapon recharges ${Math.round((1 - QUICK_HANDS_MULT) * 100)}% faster.`,
     apply() { S.swingMult = QUICK_HANDS_MULT; } },
   { id: 'comboKeeper', name: 'Combo keeper', desc: `Combos last ${COMBO_KEEPER_TICKS} ticks longer.`,
     apply() { S.comboWindow = COMBO_WINDOW + COMBO_KEEPER_TICKS; } },

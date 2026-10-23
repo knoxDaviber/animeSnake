@@ -23,7 +23,8 @@ function faceSegments() {
 // source = 'enemyHead' when an enemy head caused the hit (the Swordsman can block that).
 function takeHit(source) {
   S.invuln = INVULN_TICKS + S.invulnBonus;
-  if (source === 'enemyHead' && shieldAbsorbs()) return;
+  if (source === 'enemyHead' && shieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // blocked: no blink
+  S.quietHit = false;
   if (S.snake.length === 1) { S.alive = false; return; } // last character lost
   const t = S.snake.pop(), r = S.roster.pop();           // the tail character is the one dropped
   dropFx(t.x, t.y, (px, py) => drawSegment(r, px, py, false));
@@ -33,7 +34,7 @@ function playerMove() {
   S.tailLeft = null;
   S.prev = S.snake.map(s => ({ ...s }));
   const wasInvuln = S.invuln > 0;
-  if (S.invuln > 0) S.invuln--;
+  if (S.invuln > 0) S.invuln--; else S.quietHit = false;
   if (S.waitDir) return;               // stalled: stand still until the player steers (enemies keep moving)
   S.dir = S.nextDir;
   const h = S.snake[0], tail = S.snake[S.snake.length - 1];
@@ -62,8 +63,8 @@ function playerMove() {
     }
     return;
   }
-  const ate = S.food && nx === S.food.x && ny === S.food.y;   // the key
-  const rec = readyRecruitAt(nx, ny);                          // a character that is jumping, ready
+  const key = S.keys.find(k => k.x === nx && k.y === ny);   // the key
+  let rec = touchableRecruitAt(nx, ny); if (rec && countFollower('mrx') > 0) { shootRecruit(rec, nx, ny); rec = null; }                          // a character that is jumping, ready
   S.snake.unshift({ x: nx, y: ny });
   if (portal) S.zaps.push({ kind: 'portal', ...portal, age: 0 });
   if (rec) {
@@ -72,14 +73,12 @@ function playerMove() {
     S.roster.push(newSlot(rec.c, last.fx, last.fy));
     S.recruits = S.recruits.filter(r => r !== rec);
     S.popups.push({ x: nx, y: ny, text: FOLLOWERS[rec.c].name + '!', age: 0 });
+  } else if (S.growQueue.length) {
+    // A recruit that walked into your hero joins now: the snake grows instead of shedding its tail.
+    const last = S.roster[S.roster.length - 1];
+    S.roster.push(newSlot(S.growQueue.shift(), last.fx, last.fy));
   } else S.tailLeft = S.snake.pop();
-  if (ate) {
-    // Key picked up: it summons a character right away (it still has to walk in). Eating no longer grows the chain.
-    addScore(POINTS.food, nx, ny);
-    summonRecruit();
-    if (S.recruits.length < RECRUIT_MAX && Math.random() < keyDoubleChance()) summonRecruit(); // Keysman bonus
-    S.food = null;                     // step() puts the next key down (refreshKey in recruits.js)
-  }
+  if (key) eatKey(key);
   faceSegments();
   const mine = mineAt(nx, ny);
   if (mine) detonateMine(mine); // stepped on a mine

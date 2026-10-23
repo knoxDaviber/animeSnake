@@ -7,10 +7,11 @@ function loadProgress() {
     const d = JSON.parse(localStorage.getItem(SAVE_KEY) || '{}');
     S.best = Number(d.best) || 0;
     S.bestCombo = Number(d.bestCombo) || 0;
+    S.coins = Number(d.coins) || 0;
   } catch (err) { console.warn('Could not load saved progress:', err); }
 }
 function saveProgress() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo })); }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins })); }
   catch (err) { console.warn('Could not save progress:', err); }
 }
 addEventListener('pagehide', saveProgress);

@@ -58,11 +58,11 @@ function stepEnemy(e) {
     if (d.x === -e.dir.x && d.y === -e.dir.y) continue;
     const x = head.x + d.x, y = head.y + d.y;
     if (x === ph.x && y === ph.y) opts.push({ d, x, y, headOn: true });
-    else if (enemyCanEnter(x, y)) opts.push({ d, x, y });
+    else if (enemyCanEnter(x, y) || isOwnTail(e, x, y)) opts.push({ d, x, y });
   }
-  if (!opts.length) return; // boxed in: wait a tick
+  if (!opts.length) { turnAround(e); return; } // boxed in: flip the snake so its tail becomes the head
   let pick;
-  if (Math.random() < ENEMY_CHASE) {
+  if (Math.random() < enemyChase()) {
     const tgt = chaseTarget(head, ph);          // usually the player's head, sometimes a nearby recruit
     const dist = o => Math.abs(o.x - tgt.x) + Math.abs(o.y - tgt.y);
     pick = opts.reduce((a, b) => dist(b) < dist(a) ? b : a);
@@ -79,6 +79,14 @@ function stepEnemy(e) {
   S.recruits.filter(r => r.x === pick.x && r.y === pick.y).forEach(killRecruit); // stepping on a recruit kills it
   const mine = mineAt(pick.x, pick.y);
   if (mine) detonateMine(mine);               // enemies do not avoid mines: lure them in
+}
+function isOwnTail(e, x, y) { const t = e.segs[e.segs.length - 1]; return e.segs.length > 1 && t.x === x && t.y === y; }
+// Boxed in: the snake reverses end for end, so its tail becomes the head and it can leave the other way.
+function turnAround(e) {
+  if (e.segs.length < 2) return;
+  e.segs.reverse();
+  e.prev = e.segs.map(s => ({ ...s }));
+  e.dir = { x: e.segs[0].x - e.segs[1].x, y: e.segs[0].y - e.segs[1].y };
 }
 function stepEnemies() {
   [...S.enemies].forEach(e => { if (S.alive && S.enemies.includes(e)) stepEnemy(e); });
@@ -118,6 +126,6 @@ function updateWaves() {
   if (S.toSpawn > 0) {
     if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = SPAWN_GAP; }
   } else if (S.enemies.length === 0) {
-    if (--S.waveTimer <= 0) { S.wave++; S.toSpawn = waveSize(S.wave); S.spawnTimer = 0; S.waveTimer = WAVE_DELAY; }
+    if (--S.waveTimer <= 0) { S.wave++; S.coins += COIN_PER_WAVE; S.toSpawn = waveSize(S.wave); S.spawnTimer = 0; S.waveTimer = WAVE_DELAY; }
   }
 }
