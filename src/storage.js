@@ -29,10 +29,13 @@ function loadProgress() {
     S.adStep = Math.max(0, Math.min(AD_PAYOUTS.length - 1, Number(d.adStep) || 0));
     S.adLastAt = Number(d.adLastAt) || 0;
     S.adsOff = !!d.adsOff;
+    S.buffLv = {};
+    if (d.buffLv && typeof d.buffLv === 'object') for (const k of Object.keys(d.buffLv)) S.buffLv[k] = Math.max(0, Math.min(99, Number(d.buffLv[k]) || 0));
+    S.startPick = typeof d.startPick === 'string' ? d.startPick : null;
   } catch (err) { console.warn('Could not load saved progress:', err); }
 }
 function saveProgress() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted, bestWave: S.bestWave, ret: S.ret, adStep: S.adStep, adLastAt: S.adLastAt, adsOff: S.adsOff })); }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted, bestWave: S.bestWave, ret: S.ret, adStep: S.adStep, adLastAt: S.adLastAt, adsOff: S.adsOff, buffLv: S.buffLv, startPick: S.startPick })); }
   catch (err) { console.warn('Could not save progress:', err); }
 }
 addEventListener('pagehide', saveProgress);

@@ -164,7 +164,7 @@ function spawnEnemy() {
 function wavesPaused() { return !!S.boss; }
 
 function startWave() {
-  S.wave++; S.giftCharges = GIFT_PORTALS_PER_WAVE;
+  S.wave++; S.giftCharges = S.giftPerWave;
   const h = S.snake[0], bonus = WAVE_COINS[S.wave];
   if (bonus) {
     const c = coinReward(bonus); S.coins += c;

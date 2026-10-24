@@ -42,6 +42,6 @@ function ageBlasts() {
 }
 // Everything is a bomb: a contact (wall, hazard, body, enemy, key, recruit) has a BOMB_CHANCE to blow up like a mine.
 function bombContact(x, y) {
-  if (!S.bombAll || !S.alive || Math.random() >= BOMB_CHANCE) return;
+  if (!S.bombAll || !S.alive || Math.random() >= S.bombChance) return;
   detonateMine({ x, y });
 }

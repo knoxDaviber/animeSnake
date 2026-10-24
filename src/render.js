@@ -214,11 +214,12 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
   const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
   drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
   ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
-  if (S.coinMult !== 1) { ctx.fillStyle = '#9a8cc4'; ctx.font = '12px system-ui'; ctx.fillText(`Dev sad. Earning x${S.coinMult} less coin`, cv.width - 16, 48); }
+  if (S.coinMult !== 1) { ctx.fillStyle = '#9a8cc4'; ctx.font = '12px system-ui'; ctx.fillText(S.coinMult < 1 ? 'The dev seems a little sad...' : 'The dev seems oddly cheerful.', cv.width - 16, 48); }
   ctx.textAlign = 'center';
 
   drawSpeaker();
   drawDetailButton();
+  drawShopButton();
   drawAdButtons();
   HEAD_DEFS.forEach((h, i) => {
     const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
@@ -392,6 +393,11 @@ function drawOverlay() {
     ctx.fillText('Paused', cv.width / 2, cv.height / 2 - 30);
     ctx.font = '20px system-ui';
     ctx.fillText('Tap or press P to resume', cv.width / 2, cv.height / 2 + 20);
+    const g = pauseGiveUpRect(), ask = performance.now() < S.giveAskUntil;   // Give up button
+    ctx.fillStyle = '#211a3b'; ctx.fillRect(g.x, g.y, g.w, g.h);
+    ctx.lineWidth = 2; ctx.strokeStyle = ask ? '#ff8a8a' : '#3a2d5c'; ctx.strokeRect(g.x, g.y, g.w, g.h);
+    ctx.fillStyle = ask ? '#ff8a8a' : '#f3e9ff'; ctx.font = '16px system-ui';
+    ctx.fillText(ask ? 'Sure? Press Q / tap again to give up' : 'Give up  (Q)', cv.width / 2, g.y + 26);
   } else if (S.reviving) drawRevive();
   else drawGameOver();
 }
@@ -468,6 +474,7 @@ function wrapText(text, maxW) { // split text into lines that fit maxW pixels in
 }
 function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Enter'
   if (!S.picking) return;
+  if (S.shopping) return drawShop();
   if (S.headPicking) return drawHeadPick();
   const now = performance.now();
   ctx.save();
@@ -526,26 +533,91 @@ function drawAdButtons() { // hero select, bottom: watch an ad for coins, and th
   btn(n, nN ? note.text : owned ? (S.adsOff ? 'Ads: OFF (tap)' : 'Ads: ON (tap)') : `No ads: ${AD_FREE_PRICE} coins`,
       nN ? (note.ok ? '#8dff6b' : '#ff8a8a') : owned ? '#c9bde6' : S.coins >= AD_FREE_PRICE ? '#ffd36b' : '#8a8aa3', '#3a2d5c');
 }
-function drawAd() { // the fake ad, on top of everything: a fast-forwarded, unskippable joke
+function drawAd() { // the fake ad, on top of everything. Hold the button to fast-forward it.
   const a = S.ad;
   if (!a) return;
-  const now = performance.now(), p = Math.min(1, (now - a.start) / (a.end - a.start)), cx = cv.width / 2, ad = ADS[a.idx % ADS.length];
+  const now = performance.now(), p = a.p, cx = cv.width / 2, ad = a.ad, fast = a.holding;
   ctx.save();
   ctx.fillStyle = '#0d0a18'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.fillStyle = '#1b1530';
-  for (let i = 0; i < 12; i++) ctx.fillRect(((i * 70 + now / 3) % 840) - 100, 0, 30, cv.height); // stripes whizzing past
+  for (let i = 0; i < 12; i++) ctx.fillRect(((i * 70 + now / (fast ? 0.8 : 3)) % 840) - 100, 0, 30, cv.height); // stripes whizz faster while held
   ctx.textAlign = 'center';
-  ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 44px system-ui';
-  ctx.fillText(ad.name, cx, 250 + Math.sin(now / 150) * 4);
-  ctx.fillStyle = '#f3e9ff'; ctx.font = '20px system-ui';
-  ctx.fillText(ad.line, cx, 295);
+  const im = ad.image;
+  if (im && im.complete && im.naturalWidth) {            // png, jpg or gif (a gif shows its first frame for now)
+    const s = Math.min(240 / im.naturalWidth, 130 / im.naturalHeight);
+    ctx.drawImage(im, cx - im.naturalWidth * s / 2, 90, im.naturalWidth * s, im.naturalHeight * s);
+  }
+  ctx.fillStyle = '#ffd36b'; fitText(ad.name, cx, 250 + Math.sin(now / 150) * 4, 600, 44, true);
+  ctx.fillStyle = '#f3e9ff'; fitText(ad.line, cx, 295, 600, 20, false);
+  if (p > 0.33 && ad.review) { ctx.fillStyle = '#c9bde6'; fitText(ad.review, cx, 340, 600, 17, false); }
+  if (p > 0.66 && ad.fine) { ctx.fillStyle = '#8a8aa3'; fitText(ad.fine, cx, 372, 600, 13, false); }
+  const hb = adHoldRect(), down = S.adHold || S.adKey;   // the hold button
+  ctx.fillStyle = fast ? '#3a2d5c' : '#211a3b'; ctx.fillRect(hb.x, hb.y, hb.w, hb.h);
+  ctx.lineWidth = down ? 4 : 2; ctx.strokeStyle = '#ffd36b'; ctx.strokeRect(hb.x, hb.y, hb.w, hb.h);
+  ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 20px system-ui';
+  ctx.fillText(fast ? `>> Fast-forwarding x${AD_HOLD_SPEED} >>` : 'HOLD to fast-forward', cx, hb.y + 30);
+  ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
+  ctx.fillText('Hold this button (or Space). Let go and the ad slows down again.', cx, hb.y + 52);
+  const left = Math.ceil(AD_SECONDS * (1 - p) / (fast ? AD_HOLD_SPEED : 1));
   ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
-  ctx.fillText(`Ad  ${Math.ceil(AD_FAKE_SECONDS * (1 - p))}s left  >> x${Math.round(AD_FAKE_SECONDS / AD_SECONDS)}`, cx, 520);
+  ctx.fillText(`Ad  ${left}s left`, cx, 520);
   ctx.fillText(a.kind === 'revive' ? 'Your revive is on its way' : `Reward: ${adPayout()} coins`, cx, 545);
   ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 160, 560, 320, 8);
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 160, 560, Math.round(320 * p), 8);
   ctx.fillStyle = '#ff4d4d'; ctx.fillRect(14, 14, 44, 24);
   ctx.fillStyle = '#fff'; ctx.font = 'bold 16px system-ui'; ctx.fillText('AD', 36, 32);
+  ctx.restore();
+}
+function drawShopButton() { // hero select, top left next to the "i" button
+  const b = shopButtonRect();
+  ctx.save();
+  ctx.fillStyle = '#211a3b'; ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.lineWidth = 2; ctx.strokeStyle = '#ffd36b'; ctx.strokeRect(b.x, b.y, b.w, b.h);
+  ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 15px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('Shop', b.x + b.w / 2, b.y + b.h / 2 + 5);
+  ctx.restore();
+}
+function drawShop() { // the scrolling shop (shop.js has the rows and the buying)
+  const now = performance.now(), mid = cv.width / 2, L = shopLayout(), vh = SHOP_BOTTOM - SHOP_TOP;
+  ctx.save();
+  ctx.fillStyle = '#14101f'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.textAlign = 'center'; ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 32px system-ui'; ctx.fillText('Shop', mid, 40);
+  const bk = shopBackRect();
+  ctx.fillStyle = '#211a3b'; ctx.fillRect(bk.x, bk.y, bk.w, bk.h);
+  ctx.lineWidth = 2; ctx.strokeStyle = '#3a2d5c'; ctx.strokeRect(bk.x, bk.y, bk.w, bk.h);
+  ctx.fillStyle = '#f3e9ff'; ctx.font = 'bold 15px system-ui'; ctx.fillText('< Back', bk.x + bk.w / 2, bk.y + 23);
+  ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'right';
+  const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
+  drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
+  ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
+  ctx.save(); ctx.beginPath(); ctx.rect(0, SHOP_TOP, cv.width, vh); ctx.clip();
+  L.forEach((o, n) => {
+    const y = SHOP_TOP + o.y - S.shopScroll;
+    if (y + o.h < SHOP_TOP || y > SHOP_BOTTOM) return;
+    if (o.r.head) { ctx.textAlign = 'left'; ctx.fillStyle = '#9a8cc4'; ctx.font = 'bold 14px system-ui'; ctx.fillText(o.r.head, 24, y + 24); return; }
+    const info = shopInfo(o.r), sel = n === S.shopIndex, x = 20, w = 600, h = o.h - 6;
+    const note = S.shopNote && S.shopNote.i === n && now < S.shopNote.until ? S.shopNote : null;
+    ctx.fillStyle = info.owned ? (sel ? '#2c2250' : '#211a3b') : (sel ? '#251e3d' : '#1a1530');
+    ctx.fillRect(x, y, w, h);
+    ctx.lineWidth = 3; ctx.strokeStyle = info.selected ? '#8dff6b' : sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(x, y, w, h);
+    ctx.textAlign = 'left'; ctx.fillStyle = info.owned ? '#ffd36b' : '#c9bde6';
+    fitText(info.name, x + 14, y + 24, 400, 18, true);
+    ctx.fillStyle = '#f3e9ff'; ctx.font = '12px system-ui';
+    wrapText(info.desc, 410).slice(0, 2).forEach((line, k) => ctx.fillText(line, x + 14, y + 42 + k * 15));
+    const rx = x + w - 14; ctx.textAlign = 'right';
+    if (note) { ctx.fillStyle = note.ok ? '#8dff6b' : '#ff8a8a'; fitText(note.text, rx, y + 38, 150, 16, true); }
+    else if (info.price != null) {
+      ctx.font = 'bold 18px system-ui';
+      const tw = ctx.measureText(String(info.price)).width;
+      drawCoinIcon(rx - tw - 12, y + 32, 7);
+      ctx.fillStyle = S.coins >= info.price ? '#ffd36b' : '#8a8aa3'; ctx.fillText(String(info.price), rx, y + 38);
+    } else { ctx.fillStyle = info.selected ? '#8dff6b' : '#c9bde6'; fitText(info.status, rx, y + 38, 150, 16, true); }
+  });
+  ctx.restore();
+  const last = L[L.length - 1], total = last.y + last.h;
+  if (total > vh) { ctx.fillStyle = '#3a2d5c'; ctx.fillRect(632, SHOP_TOP + vh * S.shopScroll / total, 4, vh * vh / total); }
+  ctx.textAlign = 'center'; ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
+  ctx.fillText('Tap a row to pick it, tap again to buy. Drag or scroll for more. Esc = back', mid, 626);
   ctx.restore();
 }
 function draw() {

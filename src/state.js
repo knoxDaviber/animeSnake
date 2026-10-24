@@ -38,6 +38,7 @@
 //   runStart / deathAt / lastEndAt   ms stamps: run began / last death / last run ended. pity = got the pity boost
 const S = { best: 0, bestCombo: 0, bestWave: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false, heroDetail: false,
             adStep: 0, adLastAt: 0, adsOff: false, ad: null, adNote: null,
+            buffLv: {}, startPick: null, shopScroll: 0, shopIndex: 1, shopNote: null, adHold: false, adKey: false,
             ret: { frustration: 0, deathStreak: 0, spendHist: [], runs: 0 }, lastEndAt: 0, coinMult: 1 };
 
 function newLeaderboardState() {
@@ -65,6 +66,7 @@ function newRun() {
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false,
     dirQueue: [], graceUsed: 0, devMode: false, devStep: false, glass: false, dmgMult: 1, bombAll: false,
     gift: false, giftCharges: 0, freeRevive: false, thirdUnlocked: false, pickNote: null,
+    giftPerWave: 1, bombChance: BOMB_CHANCE, shopping: false, giveAskUntil: 0,
     challenge: false, pacifist: false, won: false, winCoins: 0, stuckTicks: 0, pentaPaid: false, ad: null,
     keys: [], growQueue: [], recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,

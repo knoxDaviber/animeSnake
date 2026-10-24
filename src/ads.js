@@ -17,7 +17,8 @@ function adPayout() { return AD_PAYOUTS[Math.min(adStepNow(), AD_PAYOUTS.length 
 function startAd(kind) {
   if (S.ad || !adsActive()) return;
   const now = performance.now();
-  S.ad = { kind, start: now, end: now + AD_SECONDS * 1000, idx: Math.floor(Math.random() * ADS.length) };
+  S.ad = { kind, start: now, last: now, p: 0, holding: false, ad: generateAd() };
+  S.adHold = false; S.adKey = false;
   playSfx('pause');
 }
 
@@ -26,7 +27,12 @@ function adNote(which, ok, text) { S.adNote = { which, ok, text, until: performa
 // Runs every frame (loop in main.js): when the ad ends, give the reward.
 function updateAd() {
   const a = S.ad;
-  if (!a || performance.now() < a.end) return;
+  if (!a) return;
+  const now = performance.now(), dt = Math.min(100, now - a.last); a.last = now;
+  a.holding = now - a.start > AD_HOLD_DELAY_MS && (S.adHold || S.adKey);   // the player has to HOLD the button
+  a.p = Math.min(1, a.p + dt / (AD_SECONDS * 1000) * (a.holding ? AD_HOLD_SPEED : 1));
+  if (a.p < 1) return;
+  S.adHold = false; S.adKey = false;
   S.ad = null;
   if (a.kind === 'revive') { doRevive(); return; }
   const step = adStepNow(), pay = AD_PAYOUTS[Math.min(step, AD_PAYOUTS.length - 1)];
@@ -62,3 +68,30 @@ function tapAdButtons(p) {
   }
   return false;
 }
+// ---- Madlib ads: parts come from assets/ads/ads_data.js (AD_DATA), see assets/ads/README.md. Falls back to ADS in config.js ----
+const AD_IMG = {};
+function pickOf(a) { return a[Math.floor(Math.random() * a.length)]; }
+function adHoldRect() { return { x: 140, y: 410, w: 360, h: 66 }; } // the hold-to-fast-forward button (render.js draws it, input.js reads it)
+function fillAd(t, vars, depth = 0) { // replaces {word} with a random entry of AD_DATA.parts.word (or a value in vars, like {name})
+  const parts = AD_DATA.parts || {};
+  return String(t).replace(/\{(\w+)\}/g, (m, k) => {
+    if (vars[k]) return vars[k];
+    return parts[k] && parts[k].length && depth < 4 ? fillAd(pickOf(parts[k]), vars, depth + 1) : m;
+  });
+}
+function loadAdImage(file) {
+  if (!AD_IMG[file]) { const im = new Image(); im.onerror = () => console.warn('Missing ad image:', file); im.src = '../assets/ads/' + file; AD_IMG[file] = im; }
+  return AD_IMG[file];
+}
+function generateAd() { // { name, line, review, fine, image }
+  if (typeof AD_DATA === 'undefined' || !AD_DATA.names || !AD_DATA.names.length) {
+    const f = pickOf(ADS);
+    return { name: f.name, line: f.line, review: '', fine: '', image: null };
+  }
+  const D = AD_DATA, vars = {};
+  vars.name = fillAd(pickOf(D.names), vars);
+  const make = list => list && list.length ? fillAd(pickOf(list), vars) : '';
+  return { name: vars.name, line: make(D.lines), review: make(D.reviews), fine: make(D.fine),
+           image: D.images && D.images.length ? loadAdImage(pickOf(D.images)) : null };
+}
+if (typeof AD_DATA !== 'undefined' && AD_DATA.images) AD_DATA.images.forEach(loadAdImage);

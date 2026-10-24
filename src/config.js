@@ -150,6 +150,21 @@ const THIRD_CARD = 2;            // index of the card that starts locked on the 
 const THIRD_CARD_COST = 1;       // coins to reveal the third card
 const MULLIGAN_COST = 5;         // coins to reroll the buff cards
 
+// Shop (shop.js). A buff listed here is LOCKED until bought, then joins the buff pool. cost(l) = price of reaching level l.
+const SHOP_LOCKED = {
+  magiciansGift: { max: 3,  cost: l => [50, 200, 500][l - 1] },                    // level = portals per wave
+  bombAll:       { max: 50, cost: l => 100 + 50 * Math.floor(l / 10) + (l % 10) }, // level = explosion chance %: 101..109, 150..159, ... 350
+  pacifist:      { max: 1,  cost: () => 100 },
+  challenge:     { max: 1,  cost: () => 150 },
+  devMode:       { max: 1,  cost: () => 75 },
+  glassCannon:   { max: 1,  cost: () => 150 },
+  bonusScore:    { max: 1,  cost: () => 100 },
+};
+const BOMB_SCORE_PER_PCT = 0.0083;   // Everything is a bomb: score x = 1 + chance% x this (30% = x1.25, 1% = x1.01)
+const SHOP_RANDOM_PRICE = 150;       // permanent: every run starts with one random follower. Unlocks the follower rows
+const SHOP_PICK_PRICE = 200;         // per base follower: unlock it, then select ONE to also start every run with
+const GIVE_UP_CONFIRM_MS = 3000;     // pause screen: press Q (or tap Give up) twice within this time to quit the run
+
 // Recruitment. The food is now a KEY: eating it summons a character that starts off the grid, walks in,
 // then jumps on the spot when it is ready. Touch it with your head to recruit it onto the tail of the chain.
 const RECRUIT_WALK_MIN = 6;         // tiles a summoned character walks in from outside the grid (1 tile per tick)
@@ -173,8 +188,10 @@ const WAVE_COINS = { 5: 3, 10: 10, 15: 5, 20: 20 }; // wave number -> coins when
 const PENTAKILL_AT = 5;             // the Nth kill in one chain pays the coins below, once per chain
 const PENTAKILL_COINS = 5;
 const ADS_ENABLED = true;          // false = normal coin-priced revives, no ads. true = fake joke ads (ads.js)
-const AD_SECONDS = 5;               // how long an ad really takes
-const AD_FAKE_SECONDS = 30;         // how long the ad claims to be (it "fast-forwards", and cannot be skipped)
+const AD_SECONDS = 20;              // how long an ad lasts if you do NOT hold the fast-forward button
+const AD_HOLD_SPEED = 4;            // holding the button runs the ad this many times faster (20 s -> 5 s)
+const AD_HOLD_DELAY_MS = 300;       // a hold only counts this long after the ad starts (the tap that began it cannot hold)               // how long an ad really takes
+const AD_FAKE_SECONDS = 60;         // how long the ad claims to be (it "fast-forwards", and cannot be skipped)
 const AD_PAYOUTS = [10, 5, 2, 1];   // hero-select ad button: each ad pays the next number
 const AD_RESET_MS = 60 * 60 * 1000; // an hour after the last coin ad, payouts start again at 10
 const AD_FREE_PRICE = 1000;         // coins for the "No ads" toggle on the hero select screen

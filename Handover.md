@@ -225,4 +225,10 @@ Hero levelling built (untested): levels.js (new). Kills give XP (LEVEL_XP_KILL),
 (weaponPower in heads.js), every 5 levels a pause screen offers a branch (Gatling, Ricochet, Nova, Thunder) that adds an
 auto-weapon. Older weapons gain LEVEL_OLD_SHARE of a level per level-up. The branch pick reuses S.picking with
 S.branchPicking = true and S.pickChoices (indexes into BRANCHES). Bullets can have bounce/col (attacks.js, render.js).
-Next: title-screen shop (lock cool buffs like Magician's gift, permanent start-with-follower buffs, more buffs), then the 60x60 scrolling camera (each world = a "room").
+Levelling, shop, ads and give-up built (untested). New: levels.js, shop.js, assets/ads/ads_data.js + README.md.
+Shop (S.shopping, opened by Shop button or B on the hero select screen): SHOP_LOCKED in config.js locks buffs until bought
+(S.buffLv[id] = level, saved). Gift level = portals per wave; Everything is a bomb level = % chance (S.bombChance, score x via
+BOMB_SCORE_PER_PCT). Permanent starts: perk 'startRandom' (150) unlocks follower rows (200 each); S.startPick = the one chosen.
+applyPermanentStart() runs in startRun. Ads: S.ad.p progress, hold button (S.adHold / S.adKey) = AD_HOLD_SPEED; generateAd()
+fills madlibs from AD_DATA (assets/ads). gifs show first frame only. Give up: P then Q twice (askGiveUp in revive.js).
+Next: scrolling camera (60x60 world = one "room", view adapts to device, starts zoomed in on the hero).

@@ -100,3 +100,17 @@ function giveUpRect() {
   const w = COLS * CELL, h = ROWS * CELL;
   return { x: w / 2 - 100, y: h / 2 + 115, w: 200, h: 40 };
 }
+// ---- Give up mid-run: P to pause, then Q (or Backspace, or the Give up button) twice within GIVE_UP_CONFIRM_MS ----
+function pauseGiveUpRect() { const w = COLS * CELL, h = ROWS * CELL; return { x: w / 2 - 130, y: h / 2 + 60, w: 260, h: 40 }; }
+function askGiveUp() {
+  if (!S.alive || !S.paused || S.picking) return;
+  const now = performance.now();
+  if (now < S.giveAskUntil) return giveUpRun();    // second press: really quit
+  S.giveAskUntil = now + GIVE_UP_CONFIRM_MS; playSfx('deny');
+}
+function giveUpRun() { // straight to game over, no revive countdown
+  S.giveAskUntil = 0; S.paused = false; S.alive = false; S.alpha = 1; S.heroAlpha = 1;
+  S.deathAt = performance.now();
+  saveProgress();
+  endRevive();
+}

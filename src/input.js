@@ -1,6 +1,6 @@
 // input.js: keyboard, touch and pause.
 
-function pause() { if (S.alive && !S.picking) S.paused = true; }
+function pause() { if (S.alive && !S.picking) { S.paused = true; S.giveAskUntil = 0; } }
 function resume() {
   if (!S.paused) return;
   S.paused = false;
@@ -39,6 +39,7 @@ addEventListener('keydown', e => {
   }
   if (S.picking) {                       // pick screens: 1/2/3 choose, arrows move, Enter/Space confirm
     if (e.repeat) return;
+    if (S.shopping) return;   // the shop has its own keys (bottom of this file)
     if (k === 'i' && S.headPicking) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
     if (k === 'r' && !S.headPicking) return mulligan();
     const n = Number(k), count = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
@@ -51,6 +52,7 @@ addEventListener('keydown', e => {
     else if (k === 'enter' || k === ' ') chooseCard(S.pickIndex);
     return;
   }
+  if (S.paused && (k === 'q' || k === 'backspace')) return askGiveUp();   // P, then Q twice = give up
   if (k === 'p' || k === 'escape') return S.paused ? resume() : pause();
   if (S.paused) return;
   if (KEY_DIRS[k] && !HELD.includes(k)) HELD.push(k);
@@ -74,12 +76,15 @@ function pickAtPoint(clientX, clientY) {
 function chooseCard(i) { return S.headPicking ? chooseHead(i) : S.branchPicking ? chooseBranch(i) : startRun(i); }
 // Tap on the hero select screen: the speaker icon mutes, anything else is a card.
 function tapPick(clientX, clientY) {
+  if (S.shopping) return;   // the shop handles its own taps (bottom of this file)
   if (S.headPicking) {
     const p = canvasPoint(clientX, clientY), b = muteButtonRect();
     if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return toggleMute();
     const d = detailButtonRect();
     if (p.x >= d.x && p.x <= d.x + d.w && p.y >= d.y && p.y <= d.y + d.h) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
     if (tapAdButtons(p)) return;
+    const sb = shopButtonRect();
+    if (p.x >= sb.x && p.x <= sb.x + sb.w && p.y >= sb.y && p.y <= sb.y + sb.h) return openShop();
   }
   if (!S.headPicking) {                      // buff screen: the mulligan button
     const p = canvasPoint(clientX, clientY), m = mulliganRect();
@@ -119,6 +124,7 @@ addEventListener('touchstart', e => {
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
   if (S.picking) return tapPick(touchX, touchY);
+  if (S.paused && tapGiveUp(touchX, touchY)) return;   // the Give up button on the pause screen
   tapArmed = !S.paused;                // a tap that only resumes from pause must not also steer
   resume();
 });
@@ -144,10 +150,57 @@ addEventListener('mousedown', e => {
   if (performance.now() - S.lastTouchAt < 700) return; // the fake click that follows a touch
   if (!S.alive) tapWhileDead(e.clientX, e.clientY);
   else if (S.picking) tapPick(e.clientX, e.clientY);
-  else if (S.paused) resume();
+  else if (S.paused) { if (!tapGiveUp(e.clientX, e.clientY)) resume(); }
 });
 addEventListener('mousemove', e => {
-  if (!S.picking || inNameBox(e)) return;
+  if (!S.picking || S.shopping || inNameBox(e)) return;
   const i = pickAtPoint(e.clientX, e.clientY);
   if (i >= 0) S.pickIndex = i;
 });
+// ---- Pause give-up button, ad hold button, shop input (revive.js, ads.js, shop.js) ----
+function inRect(p, r) { return p.x >= r.x && p.x <= r.x + r.w && p.y >= r.y && p.y <= r.y + r.h; }
+function tapGiveUp(clientX, clientY) {
+  if (!inRect(canvasPoint(clientX, clientY), pauseGiveUpRect())) return false;
+  askGiveUp(); return true;
+}
+// Ad hold: finger, mouse or Space/Enter held down while an ad plays (ads.js reads S.adHold / S.adKey).
+function adHoldFromTouches(list) { S.adHold = S.ad ? Array.from(list).some(t => inRect(canvasPoint(t.clientX, t.clientY), adHoldRect())) : false; }
+addEventListener('touchstart', e => { if (S.ad) adHoldFromTouches(e.touches); }, { passive: true });
+addEventListener('touchmove', e => { if (S.ad) adHoldFromTouches(e.touches); }, { passive: true });
+addEventListener('touchend', e => { if (S.ad) adHoldFromTouches(e.touches); }, { passive: true });
+addEventListener('touchcancel', () => { S.adHold = false; });
+addEventListener('mousedown', e => { if (S.ad && performance.now() - S.lastTouchAt >= 700 && inRect(canvasPoint(e.clientX, e.clientY), adHoldRect())) S.adHold = true; });
+addEventListener('mouseup', () => { S.adHold = false; });
+addEventListener('keydown', e => { if (S.ad && (e.key === ' ' || e.key === 'Enter')) { S.adKey = true; e.preventDefault(); } });
+addEventListener('keyup', e => { if (e.key === ' ' || e.key === 'Enter') S.adKey = false; });
+
+// Shop: keys, tap or drag (touch), click, hover and wheel (mouse)
+addEventListener('keydown', e => {
+  if (inNameBox(e) || S.ad) return;
+  const k = e.key.toLowerCase();
+  if (S.picking && S.headPicking && !S.shopping && k === 'b' && !e.repeat) return openShop();
+  if (!S.shopping) return;
+  if (k === 'escape' || k === 'backspace' || k === 'b') { if (!e.repeat) closeShop(); }
+  else if (k === 'arrowdown' || k === 's') shopMove(1);
+  else if (k === 'arrowup' || k === 'w') shopMove(-1);
+  else if ((k === 'enter' || k === ' ') && !e.repeat) shopBuy(S.shopIndex);
+});
+let shopTouch = null; // a finger on the shop: a short touch is a tap, a drag scrolls
+addEventListener('touchstart', e => {
+  if (!S.shopping || S.ad || inNameBox(e)) return;
+  shopTouch = { y: e.touches[0].clientY, scroll: S.shopScroll, moved: false };
+}, { passive: true });
+addEventListener('touchmove', e => {
+  if (!shopTouch) return;
+  const dy = e.touches[0].clientY - shopTouch.y;
+  if (Math.abs(dy) > 10) shopTouch.moved = true;
+  if (shopTouch.moved) setShopScroll(shopTouch.scroll - dy * cv.height / cv.getBoundingClientRect().height);
+}, { passive: true });
+addEventListener('touchend', e => {
+  if (!shopTouch) return;
+  const t = shopTouch; shopTouch = null;
+  if (!t.moved && S.shopping) { const c = e.changedTouches[0]; shopTap(c.clientX, c.clientY); }
+}, { passive: true });
+addEventListener('mousedown', e => { if (S.shopping && !S.ad && !inNameBox(e) && performance.now() - S.lastTouchAt >= 700) shopTap(e.clientX, e.clientY); });
+addEventListener('mousemove', e => { if (!S.shopping) return; const i = shopRowAt(canvasPoint(e.clientX, e.clientY)); if (i >= 0) S.shopIndex = i; });
+addEventListener('wheel', e => { if (S.shopping) setShopScroll(S.shopScroll + e.deltaY); }, { passive: true });

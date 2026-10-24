@@ -39,14 +39,14 @@ const BUFFS = [
       }
     } },
   // ---- Flag buffs (modifier runs: each also changes the score multiplier) ----
-  { id: 'magiciansGift', name: "Magician's gift", desc: `Walls open a portal for you, ${GIFT_PORTALS_PER_WAVE} times per wave.`,
-    apply() { S.gift = true; S.giftCharges = GIFT_PORTALS_PER_WAVE; } },
+  { id: 'magiciansGift', name: "Magician's gift", get desc() { return `Walls open a portal for you, ${giftPerWave()} time${giftPerWave() === 1 ? '' : 's'} per wave.`; },
+    apply() { S.gift = true; S.giftPerWave = giftPerWave(); S.giftCharges = S.giftPerWave; } },
   { id: 'glassCannon', name: 'Glass cannon', desc: `Your weapon hits ${GLASS_DAMAGE_MULT}x as hard, but one hit kills you. Score x${GLASS_SCORE_MULT}.`,
     apply() { S.glass = true; S.dmgMult = GLASS_DAMAGE_MULT; S.scoreMult *= GLASS_SCORE_MULT; } },
   { id: 'devMode', name: 'Dev mode', desc: `The snake moves one tile per key press. Score x${DEV_SCORE_MULT}.`,
     apply() { S.devMode = true; S.scoreMult *= DEV_SCORE_MULT; } },
-  { id: 'bombAll', name: 'Everything is a bomb', desc: `Touching anything has a ${Math.round(BOMB_CHANCE * 100)}% chance to explode. Score x${BOMB_SCORE_MULT}.`,
-    apply() { S.bombAll = true; S.scoreMult *= BOMB_SCORE_MULT; } },
+  { id: 'bombAll', name: 'Everything is a bomb', get desc() { return `Touching anything has a ${bombPct()}% chance to explode. Score x${bombMult(bombPct()).toFixed(2)}.`; },
+    apply() { S.bombAll = true; S.bombChance = bombPct() / 100; S.scoreMult *= bombMult(bombPct()); } },
   { id: 'pacifist', name: 'Pacifist', desc: 'No weapons. Enemies cannot hurt you. Score from recruits, merges and waves.',
     apply() { S.pacifist = true; S.scoreMult *= PACIFIST_SCORE_MULT; } },
   { id: 'challenge', name: 'Challenge', desc: `Any hit costs ALL your followers. Reach wave ${CHALLENGE_WAVE} to win ${CHALLENGE_REWARD} coins.`,
@@ -56,7 +56,7 @@ const BUFFS = [
 // Which buffs this run offers: PICK_CHOICES random ones (or FORCE_BUFFS, for testing). Returns indexes into BUFFS.
 function rollPickChoices() {
   if (FORCE_BUFFS.length) return FORCE_BUFFS.map(id => BUFFS.findIndex(b => b.id === id)).filter(i => i >= 0);
-  const pool = range(BUFFS.length);
+  const pool = range(BUFFS.length).filter(i => buffAvailable(BUFFS[i].id));   // locked shop buffs stay out until bought
   for (let i = pool.length - 1; i > 0; i--) {          // shuffle
     const j = Math.floor(Math.random() * (i + 1));
     [pool[i], pool[j]] = [pool[j], pool[i]];
@@ -100,6 +100,7 @@ function startRun(i) {
   const buff = BUFFS[S.pickChoices[i]];
   if (!buff) return;
   buff.apply();
+  applyPermanentStart();   // shop: permanent starting followers (shop.js)
   S.buff = buff.id;
   S.picking = false;
   retentionRunStart(); // run timer, fast-restart check and the pity boost (retention.js)
