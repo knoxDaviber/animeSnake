@@ -20,7 +20,7 @@ function refreshKey() {
 
 // Picks a random edge, a random lane, and a walking distance, and starts a character walking in.
 // Returns false (the key is wasted) only if no valid lane is found after many tries.
-function summonRecruit() {
+function summonRecruit(exceptId) {
   for (let tries = 0; tries < 60; tries++) {
     const side = Math.floor(Math.random() * 4);
     const d = DIRS[side];                  // inward heading: 0 = from the left edge, 1 = right, 2 = top, 3 = bottom
@@ -34,7 +34,7 @@ function summonRecruit() {
     let clear = true;                      // do not walk across the hazard
     for (let k = 1; k <= len; k++) if (sx + d.x * k === S.hazard.x && sy + d.y * k === S.hazard.y) clear = false;
     if (!clear) continue;
-    S.recruits.push({ c: randomFollower(), x: sx, y: sy, px: sx, py: sy, dx: d.x, dy: d.y,
+    S.recruits.push({ c: randomFollower(exceptId), x: sx, y: sy, px: sx, py: sy, dx: d.x, dy: d.y,
                       left: len, tx, ty, ready: false, age: 0 });
                       playSfx('summon');
     return true;
@@ -55,13 +55,17 @@ function updateRecruits() {
   touched.forEach(r => {
     if (countFollower('mrx') > 0) return shootRecruit(r, h.x, h.y);
     S.recruits = S.recruits.filter(q => q !== r);
-    S.growQueue.push(r.c);                              // joins on the next move (playerMove)
+    S.growQueue.push(r.c); onRecruited(r.c);                              // joins on the next move (playerMove)
     S.popups.push({ x: h.x, y: h.y, text: FOLLOWERS[r.c].name + '!', age: 0 });
     playSfx('recruit');
+    bombContact(h.x, h.y);
   });
 }
 
-// An enemy stepped on it: it is gone, and so is the key that summoned it.
+// Recruiting a Keysman summons one more character (never another Keysman). The old double-summon chance still exists.
+function onRecruited(c) {
+  if (FOLLOWERS[c].id === 'keysman' && S.recruits.length < RECRUIT_MAX) summonRecruit('keysman');
+}
 function killRecruit(r) {
   playSfx('recruitLost');
   S.recruits = S.recruits.filter(x => x !== r);

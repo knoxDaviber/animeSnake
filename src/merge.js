@@ -11,6 +11,13 @@ function mergeCheck() { // called once per tick (step in main.js)
     if (seen[c].length === 3) { mergeAt(seen[c]); return; }
   }
 }
+// Run modifiers a fusion leaves behind for the rest of the run (kept in S, reset by newRun). They stay even if the fusion dies.
+function applyFusionBonus(id) {
+  if (id === 'bomber') S.mineMaxBonus++;                       // +1 max mine
+  else if (id === 'kingsman') S.damageBonus++;                 // +1 hero weapon damage
+  else if (id === 'shogun') S.speedBonus += SHOGUN_PERMA_SPEED; // +10% hero speed
+  else if (id === 'medusa') { if (S.medMerges === 0) S.medShieldCd = 0; S.medMerges++; } // a shield, see medusaShieldAbsorbs
+}
 function mergeAt(idx) { // idx = the three slot numbers, lowest first
   const first = idx[0], fusionC = followerIndex(FOLLOWERS[S.roster[first].c].merge);
   const at = S.snake[first];
@@ -23,4 +30,5 @@ function mergeAt(idx) { // idx = the three slot numbers, lowest first
   });
   S.roster[first].c = fusionC;
   S.roster[first].cd = 0;
+  applyFusionBonus(FOLLOWERS[fusionC].id);
 }

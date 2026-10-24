@@ -54,10 +54,17 @@ const GAZE_STUN = 4;            // ticks every enemy in the line stays frozen
 const ZAP_TICKS = 3;            // how long the bolt / gaze flash stays on screen
 
 // Heads (heads.js)
+const SHOCK_MAX_CHARGES = 2;     // Magician: most shockwave charges held at once
+const SHOCK_GAP = 4;             // ticks (0.5 s) between two shockwaves, so both charges do not dump on the same enemy
+const SHOGUN_PERMA_SPEED = 0.10; // run modifier left by each Raiden Shogun fusion: hero speed +10%
+const MEDUSA_SHIELD_COOLDOWN = 480; // ticks (60 s): recharge of the shield each Medusa fusion leaves behind
+const MEDUSA_SHIELD_STEP = 120;     // ticks (15 s) shorter recharge for every later Medusa merge
+const MEDUSA_SHIELD_MIN = 120;      // the recharge never gets shorter than this
+const RAIDEN_DETONATE_COOLDOWN = 80; // ticks (10 s) between Raiden setting off your oldest mine
 const SWORD_COOLDOWN = 8;      // ticks (1 s) between Swordsman swings
 const SWORD_DAMAGE = 3;         // hit points a sword hit takes off an enemy head
 const SHIELD_RECHARGE = 40;     // ticks (5 s) until the Swordsman's block is ready again after it blocks a hit
-const SHOCK_COOLDOWN = 40;      // ticks (5 s) between Magician shockwaves
+const SHOCK_COOLDOWN = 40;      // ticks (5 s) for the Magician to regain one shockwave charge
 const SHOCK_DAMAGE = 1;         // hit points a shockwave takes off an enemy head
 const SHOCK_REACH = 2;          // the 3x3 area is centred this many tiles ahead of the head (0 = around the head)
 const GUNMAN_COOLDOWN = 16;     // ticks (2 s) between volleys (one bullet each way)
@@ -101,6 +108,17 @@ const SKILL_HASTE_MULT = 0.7;  // follower skill cooldowns are multiplied by thi
 const BOUNTY_POINTS = 10;      // extra base points per kill (before the combo multiplier)
 const SECOND_WIND_BONUS = 0.25;// revive bonus instead of REVIVE_SCORE_BONUS
 const MINEFIELD_COUNT = 2;     // mines placed at the start (MINE_MAX is 3, so a Miner can still add one)
+
+// Batch B: movement feel, flag buffs, buff-screen coins
+const INPUT_BUFFER = 2;          // steering inputs that can queue between two hero moves
+const GRACE_TICKS = 1;           // 0 or 1: hero moves a wall/body hit is forgiven (the snake waits a beat for a turn)
+const GIFT_PORTALS_PER_WAVE = 2; // Magician's gift: wall portals per wave on any hero
+const GLASS_DAMAGE_MULT = 2;     // Glass cannon: weapon damage multiplier (and one hit kills you)
+const BOMB_CHANCE = 0.3;         // Everything is a bomb: chance that a contact explodes
+const GLASS_SCORE_MULT = 1.5, DEV_SCORE_MULT = 0.5, BOMB_SCORE_MULT = 1.25; // modifier score multipliers (tune)
+const THIRD_CARD = 2;            // index of the card that starts locked on the buff screen
+const THIRD_CARD_COST = 1;       // coins to reveal the third card
+const MULLIGAN_COST = 5;         // coins to reroll the buff cards
 
 // Recruitment. The food is now a KEY: eating it summons a character that starts off the grid, walks in,
 // then jumps on the spot when it is ready. Touch it with your head to recruit it onto the tail of the chain.

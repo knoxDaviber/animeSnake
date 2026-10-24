@@ -398,7 +398,7 @@ function drawRevive() { // after dying: a countdown to revive (any key or tap) o
   ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 120, cy, 240, 8);
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 120, cy, Math.round(240 * left / (REVIVE_SECONDS * 1000)), 8);
   ctx.fillStyle = live ? '#fff' : '#8a8aa3'; ctx.font = '20px system-ui';
-  ctx.fillText(`Any key or tap: revive for ${reviveCost()} coins (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
+   ctx.fillText(S.freeRevive ? `Any key or tap: free revive (+${Math.round(S.reviveBonus * 100)}% score)` : `Any key or tap: revive for ${reviveCost()} coins (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
   ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
   ctx.fillText(`Score ${S.score}   Best ${S.best}   Coins ${S.coins}`, cx, cy + 75);
   const b = giveUpRect();
@@ -457,22 +457,45 @@ function wrapText(text, maxW) { // split text into lines that fit maxW pixels in
   if (line) lines.push(line);
   return lines;
 }
-function drawPick() { //'Tap a card, press 1 / 2 / 3, or use the arrows and Enter'
+function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Enter'
   if (!S.picking) return;
   if (S.headPicking) return drawHeadPick();
+  const now = performance.now();
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
   ctx.fillText('Pick a buff', cv.width / 2, 150);
+  ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'right';      // your coins, top right
+  const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
+  drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
+  ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
+  ctx.textAlign = 'center';
   S.pickChoices.forEach((k, i) => {
-    const b = BUFFS[k];
-    const c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
-    ctx.fillStyle = sel ? '#2c2250' : '#211a3b'; ctx.fillRect(c.x, c.y, c.w, c.h);
+    const b = BUFFS[k], c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
+    const locked = i === THIRD_CARD && thirdCardLocked();
+    ctx.fillStyle = locked ? (sel ? '#251e3d' : '#1a1530') : (sel ? '#2c2250' : '#211a3b'); ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.lineWidth = 3; ctx.strokeStyle = sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(c.x, c.y, c.w, c.h);
-    ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 22px system-ui'; ctx.fillText(b.name, cx, c.y + 50);
+    if (locked) {
+      drawLock(cx, c.y + 90, 44, '#c9bde6');
+      ctx.font = 'bold 18px system-ui';
+      const tw = ctx.measureText(String(THIRD_CARD_COST)).width, x0 = cx - (tw + 18) / 2, afford = S.coins >= THIRD_CARD_COST;
+      drawCoinIcon(x0 + 7, c.y + 168, 6);
+      ctx.fillStyle = afford ? '#ffd36b' : '#8a8aa3'; ctx.textAlign = 'left';
+      ctx.fillText(String(THIRD_CARD_COST), x0 + 18, c.y + 174); ctx.textAlign = 'center';
+      ctx.fillStyle = '#9a8cc4'; ctx.font = '14px system-ui'; ctx.fillText('Tap to reveal', cx, c.y + 205);
+      return;
+    }
+    ctx.fillStyle = '#ffd36b'; fitText(b.name, cx, c.y + 50, c.w - 16, 22, true);
     ctx.fillStyle = '#f3e9ff'; ctx.font = '16px system-ui';
-    wrapText(b.desc, c.w - 30).forEach((line, k) => ctx.fillText(line, cx, c.y + 90 + k * 22));
+    wrapText(b.desc, c.w - 30).forEach((line, n) => ctx.fillText(line, cx, c.y + 90 + n * 22));
   });
+  const m = mulliganRect(), afford = S.coins >= MULLIGAN_COST;      // the mulligan button
+  ctx.fillStyle = '#211a3b'; ctx.fillRect(m.x, m.y, m.w, m.h);
+  ctx.lineWidth = 2; ctx.strokeStyle = afford ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(m.x, m.y, m.w, m.h);
+  ctx.fillStyle = afford ? '#f3e9ff' : '#8a8aa3'; ctx.font = '16px system-ui';
+  ctx.fillText(`Mulligan (R): new cards, ${MULLIGAN_COST} coins`, m.x + m.w / 2, m.y + 27);
+  const note = S.pickNote && now < S.pickNote.until ? S.pickNote : null;
+  if (note) { ctx.fillStyle = note.ok ? '#8dff6b' : '#ff8a8a'; ctx.font = 'bold 16px system-ui'; ctx.fillText(note.text, cv.width / 2, m.y + m.h + 30); }
   ctx.restore();
 }
 function draw() {

@@ -37,7 +37,7 @@ Pick a hero and a starting buff, steer the chain around the grid, eat keys, recr
 | Hero      | Weapon                                                                                                     | Passive                                                                          |
 | --------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Swordsman | Sword on the tile ahead, 3 damage, about once a second (tunable)                                           | Blocks the first enemy-head hit, recharges after 5 s                             |
-| Magician  | Piercing fireball in the facing direction, replacing the shockwave; reuses bullet logic with a pierce flag | Walls open a portal to the other side                                            |
+| Magician  | Magician keeps the 3x3 shockwave, now charge-based (2 charges, 5 s per charge, fires by itself when an enemy is in range). | Walls open a portal to the other side                                            |
 | Gunman    | A bullet out of each side every 16 ticks, with a front bullet added                                        | None yet                                                                         |
 | Goliath   | No normal follower body; the player protects him by facing threats                                         | Back/side contacts hurt; front contact is harmless under the Goliath rules below |
 | Summoner  | Planned autonomous-follower hero; summons and fusion summons have timed lifetimes and context AI           | Planned                                                                          |
@@ -358,7 +358,7 @@ The existing generic unlock architecture can support later sections such as Foll
 10. Fusion permanent buffs: Bomber +1 max mines, Kingsman +1 damage, Shogun +10% speed, Medusa's 60 s shield with a shorter cooldown on later merges. Store these as run modifiers in `S`.
 11. Raiden detonates mines remotely every 10 s, oldest first (`S.mines[0]`).
 12. Keysman recruiting one summons a non-Keysman follower; keep the existing +10% double-summon chance for now.
-13. Magician's piercing fireball replaces the shockwave; reuse bullet code with a pierce flag.
+13. Magician keeps the 3x3 shockwave, now charge-based (2 charges, 5 s per charge, fires by itself when an enemy is in range).
 14. Mostly-flag buffs: Magician's gift, Second wind as a free revive, Glass cannon, Dev mode (one WASD step per press), Everything is a bomb.
 15. Buff screen: 1 coin to unlock the third card, 5 coins for a mulligan.
 

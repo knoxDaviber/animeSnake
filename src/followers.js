@@ -10,9 +10,9 @@ const FOLLOWERS = [
   { id: 'miner',   name: 'Miner',   color: '#ffb36b', skill: 'mine',
     merge: 'bomber',
     passive: 'Each Miner adds +1 to the mine blast range. Drops a mine every 8 s (max 5 on the map).' },
-  { id: 'raiden',  name: 'Raiden',  color: '#6bc5ff', skill: null,
+  { id: 'raiden',  name: 'Raiden',  color: '#6bc5ff', skill: 'remote',
     merge: 'shogun',
-    passive: 'Each Raiden: +10% hero speed (max +50%).' },
+    passive: 'Each Raiden: +10% hero speed (max +50%). Every 10 s sets off your oldest mine from afar.' },
   { id: 'keysman', name: 'Keysman', color: '#ffd36b', skill: null,
     merge: 'kingsman',
     passive: 'Each Keysman: +10% chance (max 50%) that eating a key summons a second character.' },
@@ -40,8 +40,8 @@ function followerIndex(id) {
   if (i < 0) throw new Error('Unknown follower: ' + id);
   return i;
 }
-function randomFollower() { // never a fusion; a Kingsman makes Keysman more likely
-  const w = FOLLOWERS.map(f => f.fusion ? 0 : (f.id === 'keysman' && countFollower('kingsman') > 0 ? 1 + KINGSMAN_SUMMON_BONUS : 1));
+function randomFollower(exceptId) { // never a fusion; a Kingsman makes Keysman more likely
+  const w = FOLLOWERS.map(f => f.fusion || f.id === exceptId ? 0 : (f.id === 'keysman' && countFollower('kingsman') > 0 ? 1 + KINGSMAN_SUMMON_BONUS : 1));
   let r = Math.random() * w.reduce((a, b) => a + b, 0);
   for (let i = 0; i < w.length; i++) if ((r -= w[i]) < 0) return i;
   return 0;

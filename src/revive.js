@@ -6,7 +6,7 @@
 // Revives are free for now (coins come later). A revive adds REVIVE_SCORE_BONUS of your score on top of it and
 // brings back just your head, with a few seconds of immunity. The snake waits for you to pick a direction.
 
-function reviveCost() { return REVIVE_COST_BASE + REVIVE_COST_STEP * S.revives; }
+function reviveCost() { return S.freeRevive ? 0 : REVIVE_COST_BASE + REVIVE_COST_STEP * S.revives; }
 
 function beginRevive() { // called once, on the tick you die
   S.deathAt = performance.now();
@@ -22,6 +22,7 @@ function revive() {
   const cost = reviveCost();
   if (S.coins < cost) return;
   S.coins -= cost; S.runSpend += cost; saveProgress();
+  S.freeRevive = false; S.dirQueue = [];
   S.reviving = false; S.revives++;
   const bonus = Math.round(	S.score * S.reviveBonus);
   S.score += bonus;

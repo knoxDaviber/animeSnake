@@ -13,7 +13,7 @@ const HEAD_DEFS = [
     detail: `Sword hits for ${SWORD_DAMAGE} every ${secs(SWORD_COOLDOWN)} s. Blocks the first enemy-head hit, ready again after ${secs(SHIELD_RECHARGE)} s.` },
   { id: 'magician', name: 'Magician', update: updateMagician, weapon: 'Shockwave', cd: SHOCK_COOLDOWN,
     desc: 'Walls are just suggestions.',
-    detail: `Walls open a portal to the other side instead of hurting. A 3x3 shockwave every ${secs(SHOCK_COOLDOWN)} s.` },
+    detail: `Walls open a portal. A 3x3 shockwave fires itself at enemies in range: ${SHOCK_MAX_CHARGES} charges, 1 back per ${secs(SHOCK_COOLDOWN)} s.` },
   { id: 'gunman', name: 'Gunman', update: updateGunman, weapon: 'Bullets', cd: GUNMAN_COOLDOWN,
     desc: 'Why aim when you can spray?',
     detail: `Bullets fly out ahead and to each side every ${secs(GUNMAN_COOLDOWN)} s.` },
@@ -27,6 +27,7 @@ function headId() { return HEAD_DEFS[S.roster[0].c].id; }
 // Weapon timing: S.lastSwing is the tick the head's weapon last fired; S.swingMult comes from the Quick hands buff.
 function weaponCooldown(base) { return Math.max(2, Math.round(base * S.swingMult)); }
 function weaponReady(base) { return S.tick - S.lastSwing >= weaponCooldown(base); }
+function weaponDamage(base) { return Math.round((base + S.damageBonus) * S.dmgMult); } // Kingsman bonus, then Glass cannon
 
 // Called once per tick, after the player has moved.
 function updateHead() { HEAD_DEFS[S.roster[0].c].update(); }
@@ -37,7 +38,7 @@ function updateSwordsman() {
   if (!weaponReady(SWORD_COOLDOWN)) return;
   const h = S.snake[0], tx = h.x + S.dir.x, ty = h.y + S.dir.y;
   if (!inBounds(tx, ty)) return;
-  fireAttack(ATTACKS.sword, tx, ty, S.dir, SWORD_DAMAGE);
+  fireAttack(ATTACKS.sword, tx, ty, S.dir, weaponDamage(SWORD_DAMAGE));
   playSfx('sword');
   S.lastSwing = S.tick;
 }
@@ -52,13 +53,17 @@ function shieldAbsorbs() {
 
 // ---- Magician ------------------------------------------------------------------
 function updateMagician() {
-  if (!weaponReady(SHOCK_COOLDOWN)) return;
+  const need = weaponCooldown(SHOCK_COOLDOWN);   // ticks per charge (Quick hands makes it shorter)
+  if (S.shockCharges < SHOCK_MAX_CHARGES) { if (++S.shockTimer >= need) { S.shockCharges++; S.shockTimer = 0; } } else S.shockTimer = 0;
+  if (S.shockCharges <= 0 || S.tick - S.lastSwing < SHOCK_GAP) return;
   const h = S.snake[0], cx = h.x + S.dir.x * SHOCK_REACH, cy = h.y + S.dir.y * SHOCK_REACH, tiles = [];
   for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++)
     if (inBounds(cx + dx, cy + dy)) tiles.push({ x: cx + dx, y: cy + dy });
+  if (!tiles.some(t => enemyAt(t.x, t.y))) return;   // only fires when it can hit something
+  S.shockCharges--;
   S.zaps.push({ kind: 'wave', tiles, age: 0 });
   playSfx('shock');
-  tiles.forEach(t => strikeEnemyAt(t.x, t.y, SHOCK_DAMAGE)); // each tile is looked up fresh: an earlier hit can cut or kill a snake
+  tiles.forEach(t => strikeEnemyAt(t.x, t.y, weaponDamage(SHOCK_DAMAGE))); // each tile is looked up fresh: an earlier hit can cut or kill a snake
   S.lastSwing = S.tick;
 }
 
@@ -67,9 +72,9 @@ function updateGunman() {
   if (!weaponReady(GUNMAN_COOLDOWN)) return;
   const h = S.snake[0], d = S.dir;
   playSfx('shoot');
-  S.bullets.push({ x: h.x, y: h.y, px: h.x, py: h.y, dx: d.x, dy: d.y, dmg: BULLET_DAMAGE, dead: false }); // front bullet
+  S.bullets.push({ x: h.x, y: h.y, px: h.x, py: h.y, dx: d.x, dy: d.y, dmg: weaponDamage(BULLET_DAMAGE), dead: false }); // front bullet
   for (const side of [-1, 1]) {                    // the two sides of the heading
-    S.bullets.push({ x: h.x, y: h.y, px: h.x, py: h.y, dx: -d.y * side, dy: d.x * side, dmg: BULLET_DAMAGE, dead: false });
+    S.bullets.push({ x: h.x, y: h.y, px: h.x, py: h.y, dx: -d.y * side, dy: d.x * side, dmg: weaponDamage(BULLET_DAMAGE), dead: false });
   }
   S.lastSwing = S.tick;
 }

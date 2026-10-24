@@ -6,10 +6,10 @@
 // It starts hidden on phones and very short screens. The choice is remembered.
 // A new follower shows up by itself; give a new skill a name in SKILL_NAMES and a new follower a line in FOLLOWER_NOTES.
 
-const SKILL_NAMES = { mine: 'Mine', shogun: 'Lightning', gaze: 'Gaze', bomb: 'Mine' };
+const SKILL_NAMES = { mine: 'Mine', shogun: 'Lightning', gaze: 'Gaze', bomb: 'Mine', remote: 'Detonate' };
 // One short line per follower for the hover text: what it is doing for you right now (n = how many are in the chain).
 const FOLLOWER_NOTES = {
-  miner:   () => `mines on map ${S.mines.length}/${MINE_MAX}`,
+  miner:   () => `mines on map ${S.mines.length}/${mineMax()}`,
   raiden:  n => `hero speed +${Math.round(Math.min(RAIDEN_MAX_BONUS, RAIDEN_SPEED_BONUS * n) * 100)}%`,
   keysman: () => `${Math.round(keyDoubleChance() * 100)}% chance of a 2nd recruit`,
   magneto: () => `pulls keys within ${magnetRange()} tiles`,
@@ -73,10 +73,11 @@ function updatePanel() {
     h.pic.style.backgroundColor = COLORS[c % COLORS.length];
   }
   const cd = weaponCooldown(def.cd), since = S.tick - S.lastSwing, sword = def.id === 'swordsman';
-  panelFill(h, since / cd, false);
+  const mage = def.id === 'magician', frac = mage ? (S.shockCharges >= SHOCK_MAX_CHARGES ? 1 : S.shockTimer / cd) : since / cd;
+  panelFill(h, frac, false);
   h.cnt.style.display = 'none';
   h.box.classList.toggle('shielded', sword && S.shield);
-  panelTip(h, `${def.name} \u00b7 ${def.weapon} ${since >= cd ? 'ready' : 'recharging'}` + (sword ? ` \u00b7 block ${S.shield ? 'ready' : 'recharging'}` : ''));
+  panelTip(h, `${def.name} \u00b7 ${def.weapon} ${mage ? 'charges ' + S.shockCharges + '/' + SHOCK_MAX_CHARGES : since >= cd ? 'ready' : 'recharging'}` + (sword ? ` \u00b7 block ${S.shield ? 'ready' : 'recharging'}` : ''));
 
   // Followers: count, skill bar (the copy that will be ready soonest), hover text
   FOLLOWERS.forEach((f, k) => {
@@ -101,7 +102,7 @@ function updatePanel() {
     : left > 0 ? `wave ${S.wave} \u00b7 ${left} left`
     : `next wave ${panelTime(S.waveTimer)}`;
   const buff = BUFFS.find(x => x.id === S.buff);
-  PANEL.line.textContent = wave;
+    PANEL.line.textContent = wave + (S.gift ? ` \u00b7 portals ${S.giftCharges}` : '') + (S.devMode ? ' \u00b7 dev' : '');
 }
 
 // ---- Show / hide ------------------------------------------------------------------

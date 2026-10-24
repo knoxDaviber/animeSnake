@@ -12,6 +12,12 @@ addEventListener('blur', pause);
 
 // Keys that do not count as "any key" on the revive screen (so shortcuts like Ctrl+R do not revive you).
 const MODIFIER_KEYS = ['shift', 'control', 'alt', 'meta', 'capslock', 'altgraph'];
+// Dev mode: movement keys that are currently held, newest last. While one is held the snake keeps stepping.
+const HELD = [];
+const KEY_DIRS = { arrowup: [0, -1], w: [0, -1], arrowdown: [0, 1], s: [0, 1], arrowleft: [-1, 0], a: [-1, 0], arrowright: [1, 0], d: [1, 0] };
+function heldDir() { const k = HELD[HELD.length - 1]; return k ? { x: KEY_DIRS[k][0], y: KEY_DIRS[k][1] } : null; }
+addEventListener('keyup', e => { const i = HELD.indexOf(e.key.toLowerCase()); if (i >= 0) HELD.splice(i, 1); });
+addEventListener('blur', () => { HELD.length = 0; });
 
 // True for events aimed at the initials box (leaderboard.js) or the info bar (panel.js). The game must not react to
 // them: typing, Enter and taps there belong to those, and a tap on Save or the bar must not restart, revive or steer.
@@ -32,6 +38,7 @@ addEventListener('keydown', e => {
   if (S.picking) {                       // pick screens: 1/2/3 choose, arrows move, Enter/Space confirm
     if (e.repeat) return;
     if (k === 'i' && S.headPicking) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
+    if (k === 'r' && !S.headPicking) return mulligan();
     const n = Number(k), count = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
     if (n >= 1 && n <= count) return chooseCard(n - 1);   // on a locked hero this unlocks it (if affordable)
     const cols = S.headPicking ? headLayout().cols : count;
@@ -45,6 +52,7 @@ addEventListener('keydown', e => {
   if (k === 'i') return togglePanel();   // show or hide the info bar (works while paused too)
   if (k === 'p' || k === 'escape') return S.paused ? resume() : pause();
   if (S.paused) return;
+  if (KEY_DIRS[k] && !HELD.includes(k)) HELD.push(k);
   if (k === 'arrowup' || k === 'w') setDir(0, -1);
   else if (k === 'arrowdown' || k === 's') setDir(0, 1);
   else if (k === 'arrowleft' || k === 'a') setDir(-1, 0);
@@ -70,6 +78,10 @@ function tapPick(clientX, clientY) {
     if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return toggleMute();
     const d = detailButtonRect();
     if (p.x >= d.x && p.x <= d.x + d.w && p.y >= d.y && p.y <= d.y + d.h) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
+  }
+  if (!S.headPicking) {                      // buff screen: the mulligan button
+    const p = canvasPoint(clientX, clientY), m = mulliganRect();
+    if (p.x >= m.x && p.x <= m.x + m.w && p.y >= m.y && p.y <= m.y + m.h) return mulligan();
   }
   tapCard(pickAtPoint(clientX, clientY));
 }

@@ -74,6 +74,7 @@ function stepEnemy(e) {
     if (S.invuln > 0) return;                 // player is immune: the enemy just waits
         takeHit('enemyHead');                     // head-on: both snakes take damage, short stun                                // head-on: both snakes take damage, short stun
     if (damageEnemyHead(e, 1)) e.stun = 4;
+    bombContact(ph.x, ph.y);
     return;
   }
   e.dir = pick.d;
@@ -129,6 +130,6 @@ function updateWaves() {
   if (S.toSpawn > 0) {
     if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = SPAWN_GAP; }
   } else if (S.enemies.length === 0) {
-    if (--S.waveTimer <= 0) { S.wave++; S.coins += coinReward(COIN_PER_WAVE); S.toSpawn = waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()); S.spawnTimer = 0; S.waveTimer = WAVE_DELAY; }
+    if (--S.waveTimer <= 0) { S.wave++; S.giftCharges = GIFT_PORTALS_PER_WAVE; S.coins += coinReward(COIN_PER_WAVE); S.toSpawn = waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()); S.spawnTimer = 0; S.waveTimer = WAVE_DELAY; }
   }
 }

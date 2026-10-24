@@ -7,18 +7,20 @@ const SKILLS = {
   mine:      { cooldown: MINE_COOLDOWN, fire: dropMine },
   // Raiden Shogun (3 Raidens fused): a bolt hits the closest enemy tile.
   shogun:    { cooldown: SHOGUN_COOLDOWN, fire: castShogun },
+  // Raiden: sets off your oldest mine from afar, every RAIDEN_DETONATE_COOLDOWN ticks.
+  remote:    { cooldown: RAIDEN_DETONATE_COOLDOWN, fire: detonateOldest },
   // Bomber (3 Miners fused): same mine drop, shorter cooldown
   bomb:      { cooldown: BOMBER_COOLDOWN, fire: dropMine },
 };
 
 function dropMine() {
   const t = S.tailLeft;                         // null when the snake grew or did not move this tick
-  if (!t || S.mines.length >= MINE_MAX || !tileFree(t.x, t.y)) return false;
+  if (!t || S.mines.length >= mineMax() || !tileFree(t.x, t.y)) return false;
   S.mines.push({ x: t.x, y: t.y });
   playSfx('mineDrop');
   return true;
 }
-
+function detonateOldest() { if (S.mines.length) detonateMine(S.mines[0]); return true; } // free-running timer: no mine = nothing happens this cycle
 function castShogun(r, i) {
   const h = S.snake[0];
   let best = null, bestD = Infinity;

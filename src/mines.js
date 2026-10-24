@@ -2,7 +2,7 @@
 // steps on one sets it off. Enemies do not avoid mines, so the player can lure them in.
 // Blast = the mine's tile plus the four tiles around it. Enemy heads lose MINE_DAMAGE hit points, enemy body
 // segments are cut off (like the sword), and the player's head loses a character if it is inside the blast.
-
+function mineMax() { return MINE_MAX + S.mineMaxBonus; }
 function mineAt(x, y) { return S.mines.find(m => m.x === x && m.y === y) || null; }
 
 // Blast = the mine's tile plus an arm in each of the 4 directions. Arm length is 1 + MINER_BLAST_BONUS per Miner;
@@ -39,4 +39,9 @@ function detonateMine(m) {
 function ageBlasts() {
   S.blasts.forEach(b => b.age++);
   S.blasts = S.blasts.filter(b => b.age < BLAST_TICKS);
+}
+// Everything is a bomb: a contact (wall, hazard, body, enemy, key, recruit) has a BOMB_CHANCE to blow up like a mine.
+function bombContact(x, y) {
+  if (!S.bombAll || !S.alive || Math.random() >= BOMB_CHANCE) return;
+  detonateMine({ x, y });
 }

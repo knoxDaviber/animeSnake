@@ -44,7 +44,7 @@ function magnetPull() {
 function heroSpeed() {
   const raiden = Math.min(RAIDEN_MAX_BONUS, RAIDEN_SPEED_BONUS * countFollower('raiden'));
   const gorgon = Math.min(GORGON_MAX_SLOW, GORGON_SLOW * countFollower('gorgon'));
-  const m = HERO_SPEED_TEST * (1 + raiden + SHOGUN_SPEED_BONUS * countFollower('shogun') - gorgon - MEDUSA_SLOW * countFollower('medusa'));
+  const m = HERO_SPEED_TEST * (1 + raiden + S.speedBonus + SHOGUN_SPEED_BONUS * countFollower('shogun') - gorgon - MEDUSA_SLOW * countFollower('medusa'));
   return Math.min(HERO_SPEED_MAX, Math.max(HERO_SPEED_MIN, m));
 }
 function heroInterval() { return TICK_MS / heroSpeed(); } // ms between hero moves
@@ -69,7 +69,14 @@ function updateGorgons() {
   for (let i = 1; i < S.roster.length; i++)
     if (FOLLOWERS[S.roster[i].c].id === 'gorgon' && S.roster[i].cd > 0) S.roster[i].cd--;
 }
-
+// Each Medusa fusion leaves one 1-hit shield for the run. Recharge: MEDUSA_SHIELD_COOLDOWN, MEDUSA_SHIELD_STEP shorter per later merge.
+function medusaShieldAbsorbs() {
+  if (S.medMerges <= 0 || S.medShieldCd > 0) return false;
+  S.medShieldCd = Math.max(MEDUSA_SHIELD_MIN, MEDUSA_SHIELD_COOLDOWN - MEDUSA_SHIELD_STEP * (S.medMerges - 1));
+  S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Shielded!', age: 0 });
+  playSfx('shield');
+  return true;
+}
 // Medusa: every enemy HEAD in the line you face stays frozen while it is in that line. A green flash shows when one first freezes.
 function medusaGaze() {
   if (!countFollower('medusa')) return;
@@ -83,4 +90,4 @@ function medusaGaze() {
   if (fresh) { S.zaps.push({ kind: 'gaze', tiles, age: 0 }); playSfx('gaze'); }
 }
 // Called once per tick, after the player has moved.
-function updatePassives() { magnetPull(); updateGorgons(); medusaGaze(); }
+function updatePassives() { magnetPull(); updateGorgons(); medusaGaze(); if (S.medShieldCd > 0) S.medShieldCd--; }

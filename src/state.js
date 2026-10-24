@@ -59,9 +59,11 @@ function newRun() {
     titleText: Math.random() < TITLE_ALT_CHANCE ? TITLE_ALT : TITLE_MAIN,
     splashText: SPLASHES[Math.floor(Math.random() * SPLASHES.length)],
     headPicking: true,                          // first pick screen: choose the head. The buff pick follows
-    shield: true, shieldTimer: 0, bullets: [],  // Swordsman block ready / ticks until it is back; Gunman bullets
+    shield: true, shieldTimer: 0, bullets: [], shockCharges: SHOCK_MAX_CHARGES, shockTimer: 0, mineMaxBonus: 0, damageBonus: 0, speedBonus: 0, medMerges: 0, medShieldCd: 0,  // Swordsman block ready / ticks until it is back; Gunman bullets
     invulnBonus: 0, swingMult: 1, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, richBonus: 0, coinsStart: 0, richPaid: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false,
+    dirQueue: [], graceUsed: 0, devMode: false, devStep: false, glass: false, dmgMult: 1, bombAll: false,
+    gift: false, giftCharges: 0, freeRevive: false, thirdUnlocked: false, pickNote: null,
     keys: [], growQueue: [], recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
