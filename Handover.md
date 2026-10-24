@@ -221,4 +221,8 @@ Tiers 1 and 2 and Batch C are done (untested). Remaining:
 
 ## Last session
 
-Batch C (items 17, 18, 19: speed rework, timed waves, enemies eating) was written, then the info bar was removed and the next-wave timer moved onto the canvas (shown only in the last 10 s). Nothing is play-tested yet. Next: play-test and commit, then Batch D (economy).
+Hero levelling built (untested): levels.js (new). Kills give XP (LEVEL_XP_KILL), every level boosts the newest weapon
+(weaponPower in heads.js), every 5 levels a pause screen offers a branch (Gatling, Ricochet, Nova, Thunder) that adds an
+auto-weapon. Older weapons gain LEVEL_OLD_SHARE of a level per level-up. The branch pick reuses S.picking with
+S.branchPicking = true and S.pickChoices (indexes into BRANCHES). Bullets can have bounce/col (attacks.js, render.js).
+Next: title-screen shop (lock cool buffs like Magician's gift, permanent start-with-follower buffs, more buffs), then the 60x60 scrolling camera (each world = a "room").

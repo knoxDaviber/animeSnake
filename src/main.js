@@ -33,7 +33,7 @@ function step() {
     S.tailLeft = null;  // the Miner only gets the tile the tail left since the last tick
     updatePassives();   // Magneto pulls the key toward you
     updateAttacks();
-    if (!S.pacifist) updateHead();   // the head's weapon (heads.js)
+    if (!S.pacifist) { updateHead(); updateBranches(); }   // the hero's weapon (heads.js) and level branches (levels.js)
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
     stepEnemies();
     refreshKey();       // puts the next key down unless enough characters are already waiting
@@ -66,6 +66,7 @@ function loop(t) {
         step();
       }
       if (S.alive) stepEnemyTimers(t);   // enemies move on their own timers (enemies.js)
+      if (S.alive) openBranchPick();     // a level-5 weapon branch pick (levels.js)
       if (S.alive) {
         S.alpha = Math.min(1, Math.max(0, (t - S.last) / TICK_MS));
         S.heroAlpha = Math.min(1, Math.max(0, (t - S.heroLast) / iv));

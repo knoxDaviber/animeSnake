@@ -10,9 +10,10 @@ const FRAMES = 4;    // frames per animation row in a directional sheet
 const TEXT_ALPHA = 0.5;
 const TEXT_ZONES = [
   { x: 0,  y: 0,  w: 5, h: 3 },  // score, combo, "to beat best" (top left)
-    { x: 8,  y: 0,  w: 4, h: 2 },  // wave and "next wave" timer (top centre)
+  { x: 8,  y: 0,  w: 4, h: 2 },  // wave and "next wave" timer (top centre)
   { x: 16, y: 0,  w: 4, h: 1 },  // coins (top right)
   { x: 6,  y: 18, w: 8, h: 2 },  // "Choose a direction" (bottom centre)
+  { x: 0,  y: 19, w: 2, h: 1 },  // "Lv N" (bottom left)
 ];
 
 // Rings and damage
@@ -108,6 +109,21 @@ const RAIDEN_MAX_BONUS = 0.50;      // cap on the Raiden speed bonus (5 Raidens)
 const SHOGUN_SPEED_BONUS = 0.30;    // per Raiden Shogun: hero speed +30%
 const SHOGUN_COOLDOWN = 40;         // ticks (5 s) between Shogun lightning strikes
 const SHOGUN_DMG_MIN = 1, SHOGUN_DMG_MAX = 3; // lightning damage to the closest enemy tile
+
+// Hero levelling (levels.js)
+const LEVEL_XP_KILL = 2;         // XP per enemy kill
+const LEVEL_XP_BASE = 2, LEVEL_XP_STEP = 2; // XP to leave level l = BASE + STEP * l
+function xpNeed(l) { return LEVEL_XP_BASE + LEVEL_XP_STEP * l; }
+const LEVEL_BRANCH_EVERY = 5;    // every Nth level you pick a weapon branch
+const BRANCH_CHOICES = 3;        // cards offered on a branch pick
+const BRANCH_LOCKOUT_MS = 600;   // the branch pick ignores input this long after it appears
+const LEVEL_STEP = 0.15;         // each weapon level: +15% damage
+const LEVEL_SPEED_SHARE = 0.5;   // ...and half that much faster firing
+const LEVEL_OLD_SHARE = 0.3;     // older weapons gain this fraction of a level each time you level up
+const GATLING_COOLDOWN = 4,  GATLING_DAMAGE = 1;
+const RICOCHET_COOLDOWN = 12, RICOCHET_DAMAGE = 2, RICOCHET_BOUNCES = 2; // +1 bounce per 3 weapon levels
+const NOVA_COOLDOWN = 24,    NOVA_DAMAGE = 1;      // radius 1, +1 per 5 weapon levels
+const THUNDER_COOLDOWN = 20, THUNDER_DAMAGE = 1;   // +1 target per 4 weapon levels
 
 // Run-start buffs (buffs.js)
 const RICH_BONUS = 0.1; // Rich buff: extra coins at the end of the run, as a fraction of the coins earned in it

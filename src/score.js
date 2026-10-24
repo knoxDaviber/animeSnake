@@ -16,6 +16,7 @@ function registerKill(x, y) {
   if (S.combo > S.bestCombo) S.bestCombo = S.combo;
   const m = comboMult();
   playSfx('kill', S.combo - 1);
+  addXp(LEVEL_XP_KILL);
   addScore((POINTS.kill + killBonus()) * m, x, y, m > 1 ? ' x' + m : '');
   if (S.combo >= PENTAKILL_AT && !S.pentaPaid) {      // hidden side quest: coins once per chain
     S.pentaPaid = true;

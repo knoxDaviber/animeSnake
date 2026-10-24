@@ -137,7 +137,7 @@ function drawBullets() { // the Gunman's bullets, interpolated between ticks
     const x = Math.round((b.px + (b.x - b.px) * S.alpha) * CELL + CELL / 2);
     const y = Math.round((b.py + (b.y - b.py) * S.alpha) * CELL + CELL / 2);
     const w = b.dx ? 12 : 4, h = b.dx ? 4 : 12;
-    ctx.fillStyle = '#ffd36b'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
+    ctx.fillStyle = b.col || '#ffd36b'; ctx.fillRect(x - w / 2, y - h / 2, w, h);
     ctx.fillStyle = '#fff6d0'; ctx.fillRect(x - w / 4, y - h / 4, w / 2, h / 2);
   });
 }
@@ -343,6 +343,10 @@ function drawHud() { // score (left), wave (centre) and coins (right), drawn on 
   const w = ctx.measureText(label).width;
   drawCoinIcon(cv.width - 8 - w - 12, 17, 6);
   text(label, cv.width - 8, 22, 'right', '#ffd36b');
+  if (!S.pacifist) {                                   // level and XP bar (levels.js)
+    text(`Lv ${S.level}`, 8, cv.height - 12, 'left', '#6bc5ff');
+    ctx.fillStyle = '#6bc5ff'; ctx.fillRect(0, cv.height - 4, Math.round(cv.width * S.xp / xpNeed(S.level)), 4);
+  }
   ctx.restore();
 }
 function drawComboBar() { // thin bar along the top: time left to chain the next kill
@@ -469,14 +473,14 @@ function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Ent
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
-  ctx.fillText('Pick a buff', cv.width / 2, 150);
+  ctx.fillText(S.branchPicking ? `Level ${S.level}: pick a weapon branch` : 'Pick a buff', cv.width / 2, 150);
   ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'right';      // your coins, top right
   const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
   drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
   ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
   ctx.textAlign = 'center';
   S.pickChoices.forEach((k, i) => {
-    const b = BUFFS[k], c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
+    const b = S.branchPicking ? BRANCHES[k] : BUFFS[k], c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
     const locked = i === THIRD_CARD && thirdCardLocked();
     ctx.fillStyle = locked ? (sel ? '#251e3d' : '#1a1530') : (sel ? '#2c2250' : '#211a3b'); ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.lineWidth = 3; ctx.strokeStyle = sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(c.x, c.y, c.w, c.h);
@@ -494,6 +498,7 @@ function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Ent
     ctx.fillStyle = '#f3e9ff'; ctx.font = '16px system-ui';
     wrapText(b.desc, c.w - 30).forEach((line, n) => ctx.fillText(line, cx, c.y + 90 + n * 22));
   });
+  if (S.branchPicking) { ctx.restore(); return; }   // no mulligan on a weapon branch pick
   const m = mulliganRect(), afford = S.coins >= MULLIGAN_COST;      // the mulligan button
   ctx.fillStyle = '#211a3b'; ctx.fillRect(m.x, m.y, m.w, m.h);
   ctx.lineWidth = 2; ctx.strokeStyle = afford ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(m.x, m.y, m.w, m.h);

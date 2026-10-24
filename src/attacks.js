@@ -50,7 +50,10 @@ function updateBullets() {
     b.px = b.x; b.py = b.y;
     for (let k = 0; k < BULLET_SPEED && !b.dead; k++) {
       const nx = b.x + b.dx, ny = b.y + b.dy;
-      if (!inBounds(nx, ny)) { b.dead = true; break; }
+      if (!inBounds(nx, ny)) {
+        if (b.bounce > 0) { b.bounce--; b.dx = -b.dx; b.dy = -b.dy; continue; } // Ricochet: turn around at the wall
+        b.dead = true; break;
+      }
       b.x = nx; b.y = ny;
       if (strikeEnemyAt(nx, ny, b.dmg)) b.dead = true;
     }
