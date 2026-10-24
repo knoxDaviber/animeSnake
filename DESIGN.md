@@ -19,9 +19,19 @@ Pick a hero and a starting buff, steer the chain around the grid, eat keys, recr
 
 - Desktop: arrows or WASD.
 - Phone: swipe, or tap. The canvas is split into four zones by an X (top, bottom, left, right); a tap steers toward its zone. The X is centred below the middle (`TAP_CENTER_Y`, 0.62 of the height) so a thumb near the bottom reaches every direction. Taps give no on-screen feedback. A tap that turns into a swipe is a swipe. A tap that only resumes from pause does not steer.
-- Planned movement-feel fixes: a two-entry input buffer and a configurable 0/1-tick coyote/grace window (`GRACE_TICKS`) for moves that would otherwise hit a wall or body. These are meant to soften trapping without removing the snake feel.
+- Movement-feel fixes (built): a two-entry input buffer and a configurable 0/1-tick coyote/grace window (`GRACE_TICKS`) for moves that would otherwise hit a wall or body. These soften trapping without removing the snake feel.
 - A reverse action may be tested later for one-segment heroes; the broader enemy U-turn behaviour remains separate.
 - Page text is not selectable, so long-presses never pop up menus. The initials box stays typable.
+
+## On-screen text and UI
+
+The game is the main attraction, so there is **no info bar and nothing outside the canvas** (the initials box on the game-over screen is the only exception).
+
+- All gameplay text is drawn on the canvas at `TEXT_ALPHA` (half opacity): score, combo, "N to beat best", wave and coins.
+- The **next-wave timer** ("Next wave 7s") appears under the wave number only when `WAVE_SHOW_MS` (10 s) or less is left before the next wave, in the same faded style. It is hidden otherwise and while a boss pauses the waves.
+- Nothing spawns on the tiles where static text sits (`TEXT_ZONES`).
+- Instructions live only on the hero select screen and stay short.
+- Follower counts and skill cooldown bars are no longer shown anywhere. If they are missed in play-testing, bring them back on the canvas at the same opacity rather than as a separate bar.
 
 ## The chain
 
@@ -37,7 +47,7 @@ Pick a hero and a starting buff, steer the chain around the grid, eat keys, recr
 | Hero      | Weapon                                                                                                     | Passive                                                                          |
 | --------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | Swordsman | Sword on the tile ahead, 3 damage, about once a second (tunable)                                           | Blocks the first enemy-head hit, recharges after 5 s                             |
-| Magician  | Magician keeps the 3x3 shockwave, now charge-based (2 charges, 5 s per charge, fires by itself when an enemy is in range). | Walls open a portal to the other side                                            |
+| Magician  | Magician keeps the 3x3 shockwave, charge-based (2 charges, 5 s per charge, fires by itself when an enemy is in range). | Walls open a portal to the other side                                            |
 | Gunman    | A bullet out of each side every 16 ticks, with a front bullet added                                        | None yet                                                                         |
 | Goliath   | No normal follower body; the player protects him by facing threats                                         | Back/side contacts hurt; front contact is harmless under the Goliath rules below |
 | Summoner  | Planned autonomous-follower hero; summons and fusion summons have timed lifetimes and context AI           | Planned                                                                          |
@@ -59,7 +69,7 @@ Goliath is tied to the kickable-projectile system.
 - Mines kill him regardless of facing.
 - The intended rule is "he is looking at the thing that hit him", not a literal follower-defined back.
 - Because a lone hero has no body to reverse into, an instant reverse can be allowed when the chain is one segment long.
-- Goliath moves at **0.75x** the halved base speed.
+- Goliath moves at **0.75x** the halved base speed (the lowered `HERO_SPEED_MIN` already allows this).
 - His merged-follower walking rule, food shields, wall-kick fusion reversion and every-5-kicks merge behaviour depend on the kickable-projectile system.
 
 ## Followers and fusions
@@ -70,24 +80,36 @@ Followers form the body and give passives, and some have active skills.
 | -------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Miner    | +1 mine blast arm length each; mine every 8 s each, max 5 mines | **Bomber**: blast reaches the whole row and column of the mine; mine every 5 s; fusion gives +1 max mine as a permanent run modifier                                      |
 | Keysman  | +10% each (max 50%) that a key summons 2 characters             | **Kingsman**: key drops are 1-3 keys; Keysman are 40% likelier to be summoned                                                                                             |
-| Magneto  | Pulls keys up to 4 tiles; enemies chase you more                | **Mr.X**: eats keys within 3x3 of your hero; recruits are rejected and shot at the nearest snake for 2-5 damage                                                           |
-| Raiden   | +10% hero speed each (max +50%)                                 | **Raiden Shogun**: +30% hero speed, every 5 s 1-3 lightning damage to the closest enemy tile; fusion gives +10% speed as a permanent run modifier                         |
+| Magneto  | Pulls keys up to 4 tiles; enemies chase you more               | **Mr.X**: eats keys within 3x3 of your hero; recruits are rejected and shot at the nearest snake for 2-5 damage                                                           |
+| Raiden   | +10% hero speed each (max +50%); every 10 s sets off your oldest mine | **Raiden Shogun**: +30% hero speed, every 5 s 1-3 lightning damage to the closest enemy tile; fusion gives +10% speed as a permanent run modifier                  |
 | Gorgon   | 1-hit shield each (max 5); slows the hero 5% each (max 50%)     | **Medusa**: enemy heads in the line you face freeze, any head you touch dies at once; hero slowed 10%; fusion gives a 60 s shield with a shorter cooldown on later merges |
 
-**Fusion permanent buffs:** Bomber +1 max mines, Kingsman +1 damage, Shogun +10% speed, and Medusa's 60 s shield/shorter later cooldown are **run modifiers** stored in `S`. They persist for the current run, not across runs. Exact implementation/tuning belongs with the fusion work.
+**Fusion permanent buffs:** Bomber +1 max mines, Kingsman +1 damage, Shogun +10% speed, and Medusa's 60 s shield/shorter later cooldown are **run modifiers** stored in `S`. They persist for the current run, not across runs.
 
-**Keysman overlap:** the new rule is that recruiting a Keysman summons a non-Keysman follower. The existing "+10% double summon" passive stays for now. Both remain unless play-testing shows that the overlap is too strong.
+**Keysman overlap:** the rule is that recruiting a Keysman summons a non-Keysman follower. The existing "+10% double summon" passive stays for now. Both remain unless play-testing shows that the overlap is too strong.
 
-Speed and slowdown change the hero only, not enemies or skill timers. The hero has its own move timer, separate from the 125 ms world tick.
+Speed and slowdown change the hero only, not enemies or skill timers.
 
 ## Recruitment
 
 - The old food is a **key**: eating it no longer grows the chain. You grow by recruiting a character, which needs a key plus a character.
 - Eating a key summons a random follower (never a fusion). It starts outside the grid, walks in, then jumps on the spot. The hero can recruit it from the moment it is on the grid, walking or jumping.
-- Enemy snakes can kill recruits. If the character dies before you reach it, the key is wasted.
+- **Enemy snakes can eat keys and recruits** (see Enemies). If a character is eaten before you reach it, or an enemy eats the key first, that key is wasted.
 - Up to 3 can wait at once. A new key drops once every key is gone and fewer than 3 characters wait.
 - For now there is one generic key. Later, each character may need its own key.
 - In the larger-map version, recruits should spawn near the player rather than at a far world edge, so their walk-in remains meaningful.
+
+## Speed and clocks
+
+Built in Batch C.
+
+- **Hero speed is halved.** `HERO_BASE_SPEED = 0.5`. At base speed the hero moves one tile every 250 ms. Modifiers (Raiden +10% each, Shogun +30%, Gorgon -5%, Medusa -10%, fusion speed bonus) multiply the base. `HERO_SPEED_MAX` is 2 and `HERO_SPEED_MIN` is 0.15, both in the old-speed scale.
+- **Enemies have their own move timers**, separate from the world tick, using the same base speed (`ENEMY_BASE_SPEED = 0.5`). Each enemy has its own speed multiplier.
+- **Enemy speed-ups:** +2% per wave after the first (capped at +40%, `enemyWaveSpeed`), and +10% for each key or recruit it eats (total multiplier capped at x1.8).
+- **The world tick stays 125 ms.** Skills, attacks, cooldowns, combos, stun and the wave timer are all counted in world ticks and are unaffected by speed changes.
+- **Stun** counts in world ticks. A stunned enemy moves again the moment the stun ends, so a stun or a Medusa freeze lasts as long in real time as before the rework.
+- Speed changes the hero only unless an explicit enemy-speed rule says otherwise.
+- Open tuning point: Raiden's per-follower bonus may need to be larger than +10% for its cap to matter at the new base speed.
 
 ## Combat
 
@@ -98,8 +120,12 @@ Speed and slowdown change the hero only, not enemies or skill timers. The hero h
 - **Kickable projectiles:** one kickable-projectile system will serve both the old mine-kick idea and Goliath. The exact kick physics are part of Tier 4.
 - Hitting an enemy segment breaks it and cuts off everything behind it. Hitting its head costs hit points; at zero the whole snake dies.
 - **Head-on collision:** both snakes take damage, short stun.
-- **Waves:** the first wave starts after about 3 seconds. The old fixed spawn timing is being replaced by timed waves: about 10 s early, 30 s by wave 10 and 60 s by wave 20. Waves need a cap on live enemies. During boss fights, no new regular snakes arrive and the wave timer is paused.
-- Enemies chase the hero, never reverse, and flip around if boxed in. Exact chase scaling remains tunable.
+
+### Enemies
+
+- Enemies chase the hero, never reverse, and flip around if boxed in. Chase chance grows with Magneto and high-score pressure.
+- **Eating:** an enemy that steps on a key or a recruit removes it, grows by one segment (up to 10) and gets 10% faster. A chasing enemy also heads for a key within 4 tiles (and for a recruit within 6, as before).
+- Spawned snakes start at the edge heading inward, at least 6 tiles from your hero and never on a text zone.
 
 ### Enemy head toughness
 
@@ -118,31 +144,20 @@ Planned enemy variants are introduced in wave bands:
 - Fast thin snakes.
 - Armored heads.
 - Spitters that fire back.
-- Room templates can favour certain enemy types.
-
-## Speed rework
-
-The old hero-speed values are being replaced.
-
-- Base hero speed is **halved** for everyone.
-- `HERO_SPEED_MAX` becomes 2.0, expressed in the old-speed scale/range rather than as "2x the new base".
-- `HERO_SPEED_MIN` is lowered because Goliath at 0.75x the halved base would otherwise fall below the current 0.4 floor.
-- Enemy snakes get their own movement timers, analogous to the hero's move timer, rather than moving only on the shared world tick.
-- Wave scaling and food-eating speed-ups (+0.1) hang off the new speed system.
-- Raiden/Shogun bonuses should be treated as additive in old-speed units during implementation; exact values need play-testing. The current tuning idea is that Raiden may need a larger per-follower bonus than +0.1 to make its cap meaningful.
-- Speed changes still affect the hero only unless an explicit enemy-speed rule says otherwise.
+- Room templates can favour certain types.
 
 ## Waves and bosses
 
-### Timed waves
+### Timed waves (built)
 
-Wave duration grows with progression:
+The wave timer counts down on its own, so a new wave starts even if the last one is still alive.
 
-- About 10 seconds in the early game.
-- About 30 seconds by wave 10.
-- About 60 seconds by wave 20.
-
-There is a cap on live enemies. During a boss fight, regular spawning stops and the wave timer pauses.
+- About 10 seconds at wave 1, about 30 seconds at wave 10, and about 60 seconds from wave 20 (`waveDuration`, in world ticks). The first wave comes after 3 seconds.
+- **Early clear:** if the field is completely clear (nothing alive, nothing waiting to spawn), the timer jumps ahead to 2 seconds (`WAVE_CLEAR_SKIP`, 0 turns it off). Good players are not left waiting, and the cleared-wave sound still plays.
+- **Cap:** at most 6 enemies are alive at once (`ENEMY_CAP`). Extra spawns wait in a queue of at most 8 (`ENEMY_QUEUE_MAX`) and walk in as space frees up.
+- Wave size is `waveSize` plus the high-score-pressure extra snake.
+- **Boss hook:** while a boss fight is running (`S.boss` set), the wave timer is paused and no regular snakes spawn (`wavesPaused()`).
+- The player sees the timer only in the last 10 seconds (see On-screen text).
 
 ### Wave 10 boss: giant snake
 
@@ -182,6 +197,7 @@ The first larger-map implementation should use a scrolling camera.
 - Text/hud-covered screen zones become camera-relative spawn exclusions.
 - A faint edge arrow for nearby keys is intentionally **not** included initially; searching is part of the intended tension.
 - A larger map is also a trapping-feel solution: the player can no longer see the entire field, so finding food and tracking threats takes more work.
+- With enemies now eating keys, a bigger map also makes key races between you and the enemies more interesting.
 
 ### Room snap later
 
@@ -207,7 +223,7 @@ Curated rooms are preferred over purely procedural floors.
 
 ## Temporary buffs
 
-Enemy snakes can drop temporary buff blocks when they die. They are deliberately short-lived and shown as icons with timer bars.
+Enemy snakes can drop temporary buff blocks when they die. They are deliberately short-lived and shown as icons with timer bars (on the canvas, in the same faded style).
 
 Candidate drops:
 
@@ -221,20 +237,17 @@ Enemy types may have preferred drops, such as an armored snake dropping Bubble.
 
 ## Buffs
 
-The old buff list is being cleaned up.
+The buff list after cleanup:
 
-- Extra follower → **Starting follower**.
-- +10% score → **+20% score**.
-- Bounty hunter → **removed**.
-- Get Rich Quick → **added** (the intended name is "Rich").
-- Second wind → free revive.
-- Glass cannon → flag-style modifier.
-- Dev mode → flag-style modifier; one WASD step per press.
-- Everything is a bomb → flag-style modifier.
-- Magician's gift → flag-style modifier.
-- Other existing buffs remain unless removed by implementation/testing.
+- Starting follower (was Extra follower).
+- +20% score.
+- Thick skin, Quick hands, Combo keeper, Skill haste, Welcome party, Minefield.
+- Second wind: a free revive.
+- Rich: 10% more coins at the end of the run.
+- Flag modifiers: Magician's gift, Glass cannon, Dev mode (one WASD step per press), Everything is a bomb.
+- Bounty hunter is removed.
 
-The pity boost still matters because heroes now start with no followers.
+The pity boost still matters because heroes start with no followers.
 
 ### Buff screen economy
 
@@ -249,6 +262,7 @@ The pity boost still matters because heroes now start with no followers.
 - A wave 10 boss may pay about 10 coins and a wave 20 boss about 20 coins; these are tuning targets, not final balance.
 - Challenge's 100-coin reward is intentionally hard relative to the 50/100/200 hero prices. It can be made harder later if necessary.
 - Coins are kept between runs and are used for hero unlocks, buff-screen choices and the new ad/revive economy.
+- Until the economy batch, the old per-kill and per-wave coins and the coin-priced revive are still in the code.
 
 ### Ads and revives
 
@@ -331,17 +345,17 @@ The title screen **is** the hero select screen.
 - The only title element is the game name, floating at the top: "animeSnake", or "Snake-lite" about half the time.
 - A Minecraft-style splash line (a random joke, or a dig at the player or the dev) sits tilted beside it.
 - Up to 3 heroes show as big cards. 4 to 8 show as a compact grid, with the focused hero's description under it.
-- Hero cards get a **detail toggle**. The old stat text becomes a `detail` field; flavour text remains the default view.
+- Hero cards get a **detail toggle** (the "i" button or the I key). The old stat text is the `detail` field; flavour text is the default view.
 - The future title-screen shop is scrolling, with small per-hero buffs, rising costs and locked buffs. `unlocks.js` is already generic enough for the unlock side; the hard part is scroll vs tap vs tap steering.
 - The title screen also gets an ad button for the economy system.
 
 ## More title-screen sections
 
-The existing generic unlock architecture can support later sections such as Followers and Upgrades. They are now part of the planned title-screen/shop work rather than a separate menu.
+The existing generic unlock architecture can support later sections such as Followers and Upgrades. They are part of the planned title-screen/shop work rather than a separate menu.
 
 ## Build order
 
-### Tier 1: config and text only
+### Tier 1: config and text only (done)
 
 1. Magician locked at the start; new prices: Magician 50, Gunman 100, Goliath 200, Summoner 200. Old saves that already own Gunman keep it.
 2. Buff cleanup: remove Bounty hunter, rename Extra follower to Starting follower, score buff to +20%, add Get Rich Quick.
@@ -352,10 +366,10 @@ The existing generic unlock architecture can support later sections such as Foll
 7. Detail toggle on hero cards; old stat text becomes `detail`, flavour remains default.
 8. Raise `HERO_SPEED_MAX` to 2.0 and lower `HERO_SPEED_MIN`.
 
-### Tier 2: small logic
+### Tier 2: small logic (done)
 
 9. Movement-feel fixes: two-entry input buffer and configurable coyote/grace tick.
-10. Fusion permanent buffs: Bomber +1 max mines, Kingsman +1 damage, Shogun +10% speed, Medusa's 60 s shield with a shorter cooldown on later merges. Store these as run modifiers in `S`.
+10. Fusion permanent buffs: Bomber +1 max mines, Kingsman +1 damage, Shogun +10% speed, Medusa's 60 s shield with a shorter cooldown on later merges. Stored as run modifiers in `S`.
 11. Raiden detonates mines remotely every 10 s, oldest first (`S.mines[0]`).
 12. Keysman recruiting one summons a non-Keysman follower; keep the existing +10% double-summon chance for now.
 13. Magician keeps the 3x3 shockwave, now charge-based (2 charges, 5 s per charge, fires by itself when an enemy is in range).
@@ -364,10 +378,15 @@ The existing generic unlock architecture can support later sections such as Foll
 
 ### Tier 3: medium
 
-16. Pacifist and Challenge. Challenge gets a new win screen; Pacifist gets a stuck detector and score/goal implementation.
-17. Speed rework: halve base speed, give enemies their own move timers, then attach wave scaling and food-eating speed-ups (+0.1).
-18. Timed waves: about 10 s early, 30 s by wave 10, 60 s by wave 20; cap live enemies; update wave-clear sound and the info-bar wave line.
+Batch C, pacing foundation (done, untested):
+
+17. Speed rework: halve base speed, give enemies their own move timers, wave scaling and eating speed-ups (+10%).
+18. Timed waves: about 10 s early, 30 s by wave 10, 60 s by wave 20; cap live enemies; boss pause hook. The info bar was removed and the next-wave timer now shows on the canvas in the last 10 s.
 19. Enemies eat keys and recruits, grow and speed up.
+
+Still to do:
+
+16. Pacifist and Challenge. Challenge gets a new win screen; Pacifist gets a stuck detector and score/goal implementation.
 20. Economy rework: scarce coins, fake ads for revives, hero-select ad button (10/5/2/1, back to 10 after an hour), dev toggle and 1000-coin player toggle. Ad screen is fast-forward-but-not-skip.
 21. Hero levelling: kills give XP; every 5 levels choose an upgrade (Gatling, ricochet); reuse the pick screen mid-run.
 22. Title-screen shop: scrolling, per-hero small buffs with rising cost, locked buffs.
@@ -386,7 +405,7 @@ The existing generic unlock architecture can support later sections such as Foll
 
 ## Suggested implementation sequence
 
-1. **Foundation:** Tier 1, movement feel, speed rework, timed waves and enemies eating.
+1. **Foundation:** Tier 1, movement feel, speed rework, timed waves and enemies eating (done, untested).
 2. **Map foundation:** scrolling camera and larger world; room structure remains compatible, with room snap later if desired.
 3. **Economy:** joke ads, scarce coins, Pentakill pay, buff-screen coins, shop and retention coin-tier changes.
 4. **Hero kits:** Gunman, Magician, follower/fusion changes and levelling.
@@ -400,9 +419,11 @@ The existing generic unlock architecture can support later sections such as Foll
 - **Coins:** the old per-kill/wave coin stream is too generous. Pentakill is a side quest capped at 5 coins, while milestones/bosses should provide the main economy.
 - **Retention coin tiers:** they stay; their input changes from revive coins spent to coins spent in runs.
 - **Timed waves plus boss:** no new snakes arrive during boss waves, and the timer pauses. The boss eats only the existing enemies.
+- **Timed waves with a clear field:** a long wave timer would leave a good player idle, so a cleared field skips ahead to 2 s.
 - **Challenge reward:** 100 coins is intentionally a hard reward relative to the hero prices.
 - **Modifier leaderboard:** modifiers remain on the leaderboard and are scored differently rather than excluded.
 - **Trapping feeling:** larger maps reduce total visibility and make food/threat searching harder. Temporary Ghost Body buffs can reduce self-trapping without permanently removing the snake feel. Input buffering and coyote ticks are cheap experiments. Halved speed should also improve reaction time.
+- **Info bar:** removed to keep the game the main attraction. Follower counts and skill bars are not shown for now; if they are missed, they come back on the canvas.
 
 ## Brainstorm additions
 
@@ -413,13 +434,14 @@ The existing generic unlock architecture can support later sections such as Foll
 
 ## Open questions / tuning notes
 
-1. **Speed:** 2.0x max is relative to the old speed range; the new base is half the old base.
+1. **Speed:** 2.0x max is relative to the old speed range; the new base is half the old base. Raiden's bonus may need to be larger than +10%.
 2. **Goliath back:** the tile behind his head / any non-facing contact is the damaging side.
 3. **Fusion buffs:** permanent for the current run, not across runs.
 4. **Pacifist:** normal Snake-style avoidance; avoid everything while scoring through keys, recruits, merges and waves.
 5. **Keysman:** both the new non-Keysman recruit summon and the old double-summon chance stay for now.
-6. Exact Pacifist score target, ad timings, boss payouts, speed bonus values, room templates and kick physics still need play-testing/tuning.
+6. **Enemy eating:** growth cap (10), speed-up (+10%, max x1.8) and the key-hunt distance (4) are first guesses.
+7. Exact Pacifist score target, ad timings, boss payouts, speed bonus values, wave durations, enemy cap, room templates and kick physics still need play-testing/tuning.
 
 ## Current status
 
-The original prototype has the core Snake loop, recruitment, merging, three heroes, five follower families, buffs, coins/revive, retention hooks, title-screen hero selection, touch controls, audio placeholders and the basic leaderboard. The next work is the foundation and economy rework above; rooms, kick physics, Goliath, Summoner and the later bosses are not built yet.
+The prototype has the core Snake loop, recruitment, merging, three heroes, five follower families, buffs, coins/revive, retention hooks, title-screen hero selection, touch controls, audio placeholders and the basic leaderboard. Batch C added halved hero speed, enemy move timers, timed waves with a cap, and enemies that eat keys and recruits; the info bar is gone and the HUD is entirely on the canvas. None of Tiers 1 and 2 or Batch C has been play-tested yet. The next work is play-testing, then the economy rework; rooms, kick physics, Goliath, Summoner and the later bosses are not built yet.

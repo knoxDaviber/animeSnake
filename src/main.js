@@ -60,6 +60,7 @@ function loop(t) {
         if (t - S.last >= TICK_MS) S.last = t;
         step();
       }
+      if (S.alive) stepEnemyTimers(t);   // enemies move on their own timers (enemies.js)
       if (S.alive) {
         S.alpha = Math.min(1, Math.max(0, (t - S.last) / TICK_MS));
         S.heroAlpha = Math.min(1, Math.max(0, (t - S.heroLast) / iv));

@@ -5,15 +5,12 @@ const COLS = 20, ROWS = 20, CELL = 32, TICK_MS = 125;
 const SPRITE = 32;   // size of one frame in a character / enemy / item sheet
 const FRAMES = 4;    // frames per animation row in a directional sheet
 
-// Info bar (panel.js)
-const PANEL_HOLD_MS = 400;   // hold the little handle under the info bar this long to show or hide it
-
 // On-canvas text (render.js). All gameplay text is drawn at TEXT_ALPHA. Nothing spawns on the tiles in TEXT_ZONES
 // (world.js inTextZone), so text never sits on top of a key, mine, hazard, recruit or new enemy. Tiles: x, y, w, h.
 const TEXT_ALPHA = 0.5;
 const TEXT_ZONES = [
   { x: 0,  y: 0,  w: 5, h: 3 },  // score, combo, "to beat best" (top left)
-  { x: 8,  y: 0,  w: 4, h: 1 },  // wave (top centre)
+    { x: 8,  y: 0,  w: 4, h: 2 },  // wave and "next wave" timer (top centre)
   { x: 16, y: 0,  w: 4, h: 1 },  // coins (top right)
   { x: 6,  y: 18, w: 8, h: 2 },  // "Choose a direction" (bottom centre)
 ];
@@ -25,17 +22,34 @@ const SELF_HIT_COSTS_RING = true;  // false = running into your own body is inst
 const HAZARD_MIN_DIST = 5;         // the hazard spawns at least this many tiles from the head
 
 // Hero speed (passives.js heroSpeed). 1 = normal. Only the hero changes speed, never enemies or skill timers.
-const HERO_SPEED_MIN = 0.25;        // slowest allowed (Gorgons slow you down)
-const HERO_SPEED_MAX = 2;        // fastest allowed (Raidens speed you up)
+const HERO_BASE_SPEED = 0.5;       // base hero speed, in old-speed units (halved: 1 tile per 2 world ticks)
+const HERO_SPEED_MIN = 0.15;       // slowest allowed (Gorgons, Goliath later)
+const HERO_SPEED_MAX = 2;          // fastest allowed, in old-speed units
 const HERO_SPEED_TEST = 1;         // for testing: try 1.5 (fast) or 0.6 (slow), then set back to 1
 
 // Enemies and waves
 const ENEMY_CHASE = 0.6;           // chance per move that an enemy heads toward the player instead of wandering
 const ENEMY_SPAWN_MIN_DIST = 6;    // enemies spawn at least this many tiles from the player's head
 const START_DELAY = 24;            // ticks before the first wave
-const WAVE_DELAY = 16;             // ticks between a cleared wave and the next
+const WAVE_SHOW_MS = 10000;        // the "Next wave" timer on screen appears only when this much time is left
+const WAVE_CLEAR_SKIP = 16;        // field fully cleared: the wave timer jumps ahead to this many ticks left (0 = off)
+const ENEMY_CAP = 6;               // most enemy snakes alive at once
+const ENEMY_QUEUE_MAX = 8;         // most snakes waiting to spawn (when the cap is full)
+const ENEMY_BASE_SPEED = 0.5;      // enemy speed, same scale as HERO_BASE_SPEED
+const ENEMY_WAVE_SPEED = 0.02;     // extra enemy speed (fraction) per wave after the first
+const ENEMY_WAVE_SPEED_MAX = 0.4;  // cap on that wave bonus
+const ENEMY_EAT_SPEED = 0.1;       // extra speed (fraction) for each key or recruit an enemy eats
+const ENEMY_SPEED_MAX = 1.8;       // enemy speed multiplier never goes above this
+const ENEMY_MAX_LEN = 10;          // an eating enemy stops growing at this length
+const ENEMY_KEY_HUNT_DIST = 4;     // a chasing enemy goes for a key this close (0 = never)
 const SPAWN_GAP = 10;              // ticks between enemies inside one wave
 function hitsToKill(w) { return w <= 5 ? 1 : w <= 9 ? 2 : w <= 13 ? 3 : w <= 17 ? 4 : 5; } // from DESIGN.md
+// Timed waves: a new wave starts this many ticks after the last one. ~10 s at wave 1, ~30 s at wave 10, ~60 s from wave 20.
+function waveDuration(w) {
+  const n = Math.min(Math.max(w, 1), 20);
+  return Math.round(n <= 10 ? 80 + 160 * (n - 1) / 9 : 240 + 240 * (n - 10) / 10);
+}
+function enemyWaveSpeed(w) { return 1 + Math.min(ENEMY_WAVE_SPEED_MAX, ENEMY_WAVE_SPEED * (w - 1)); }
 function waveSize(w) { return Math.min(1 + Math.floor(w / 3), 5); }
 function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 

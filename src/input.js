@@ -6,6 +6,7 @@ function resume() {
   S.paused = false;
   S.last = performance.now() - S.alpha * TICK_MS; // continue mid-tick instead of skipping ahead
   S.heroLast = performance.now() - S.heroAlpha * heroInterval();
+  resetEnemyClocks();
 }
 document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 addEventListener('blur', pause);
@@ -21,7 +22,7 @@ addEventListener('blur', () => { HELD.length = 0; });
 
 // True for events aimed at the initials box (leaderboard.js) or the info bar (panel.js). The game must not react to
 // them: typing, Enter and taps there belong to those, and a tap on Save or the bar must not restart, revive or steer.
-function inNameBox(e) { return !!(e.target && e.target.closest && e.target.closest('#nameEntry, #dock')); }
+function inNameBox(e) { return !!(e.target && e.target.closest && e.target.closest('#nameEntry')); }
 
 addEventListener('keydown', e => {
   if (inNameBox(e)) return;
@@ -49,7 +50,6 @@ addEventListener('keydown', e => {
     else if (k === 'enter' || k === ' ') chooseCard(S.pickIndex);
     return;
   }
-  if (k === 'i') return togglePanel();   // show or hide the info bar (works while paused too)
   if (k === 'p' || k === 'escape') return S.paused ? resume() : pause();
   if (S.paused) return;
   if (KEY_DIRS[k] && !HELD.includes(k)) HELD.push(k);

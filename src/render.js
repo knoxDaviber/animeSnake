@@ -3,7 +3,7 @@
 const cv = document.getElementById('c'), ctx = cv.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-function hud() { updatePanel(); } // the numbers now live on the canvas (drawHud); this only refreshes the info bar
+function hud() {} // nothing to refresh: the HUD is drawn on the canvas every frame (drawHud). Many files still call this. // the numbers now live on the canvas (drawHud); this only refreshes the info bar
 
 // Draws one frame of a directional sheet, scaled to fit one 32x32 tile. Sprites face right; left is mirrored.
 // The frame size comes from the sheet itself (width / 4), so 128x128 and 448x448 sheets both work.
@@ -289,7 +289,7 @@ function drawEnemies() {
   S.enemies.forEach(e => {
     if (e.stun > 0 && S.tick % 2 === 0) return; // blink while stunned
     e.segs.forEach((s, i) => {
-      const p = lerpPos(e.prev, i, s), f = faceOf(e, i);
+      const p = lerpPos(e.prev, i, s, e.alpha), f = faceOf(e, i);
       drawEnemySeg(i === 0, f.fx, f.fy, p.x, p.y);
     });
   });
@@ -335,6 +335,8 @@ function drawHud() { // score (left), wave (centre) and coins (right), drawn on 
     text(left > 0 ? `${left} to beat best` : 'New best!', 8, S.combo > 0 ? 62 : 42, 'left', left > 0 ? '#c9bde6' : '#8dff6b');
   }
   text(`Wave ${S.wave || 1}`, cv.width / 2, 22, 'center', '#fff');
+  if (!wavesPaused() && S.waveTimer > 0 && S.waveTimer * TICK_MS <= WAVE_SHOW_MS)
+    text(`Next wave ${Math.ceil(S.waveTimer * TICK_MS / 1000)}s`, cv.width / 2, 42, 'center', '#c9bde6');
   const label = String(S.coins);
   ctx.textAlign = 'right';
   const w = ctx.measureText(label).width;

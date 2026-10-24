@@ -53,7 +53,7 @@ function cutEnemy(e, i) {
 // and wanders otherwise. Moving into the player's head is a head-on collision.
 function stepEnemy(e) {
   e.prev = e.segs.map(s => ({ ...s }));
-  if (e.stun > 0) { e.stun--; return; }
+  if (e.stun > 0) return;                       // stun is counted down in world ticks (stepEnemies below)
   const head = e.segs[0], ph = S.snake[0];
   const opts = [];
   for (const d of DIRS) {
@@ -65,22 +65,27 @@ function stepEnemy(e) {
   if (!opts.length) { turnAround(e); return; } // boxed in: flip the snake so its tail becomes the head
   let pick;
   if (Math.random() < enemyChase()) {
-    const tgt = chaseTarget(head, ph);          // usually the player's head, sometimes a nearby recruit
+    const tgt = chaseTarget(head, ph);          // the player's head, or a nearby recruit or key
     const dist = o => Math.abs(o.x - tgt.x) + Math.abs(o.y - tgt.y);
     pick = opts.reduce((a, b) => dist(b) < dist(a) ? b : a);
   } else pick = opts[Math.floor(Math.random() * opts.length)];
   if (pick.headOn) {
     if (countFollower('medusa') > 0) { killEnemy(e); return; } // Medusa: an enemy head that touches you dies at once
-    if (S.invuln > 0) return;                 // player is immune: the enemy just waits
-        takeHit('enemyHead');                     // head-on: both snakes take damage, short stun                                // head-on: both snakes take damage, short stun
+    if (S.invuln > 0) return;                   // player is immune: the enemy just waits
+    takeHit('enemyHead');                       // head-on: both snakes take damage, short stun
     if (damageEnemyHead(e, 1)) e.stun = 4;
     bombContact(ph.x, ph.y);
     return;
   }
   e.dir = pick.d;
   e.segs.unshift({ x: pick.x, y: pick.y });
-  e.segs.pop();
-  S.recruits.filter(r => r.x === pick.x && r.y === pick.y).forEach(killRecruit); // stepping on a recruit kills it
+  // Eating: a key or a recruit on the tile is gone, and the snake grows and speeds up.
+  let ate = false;
+  const key = S.keys.find(k => k.x === pick.x && k.y === pick.y);
+  if (key) { S.keys = S.keys.filter(k => k !== key); ate = true; }
+  S.recruits.filter(r => r.x === pick.x && r.y === pick.y).forEach(r => { killRecruit(r); ate = true; });
+  if (ate) e.speed = Math.min(ENEMY_SPEED_MAX, e.speed + ENEMY_EAT_SPEED);
+  if (!(ate && e.segs.length <= ENEMY_MAX_LEN)) e.segs.pop(); // growing = keep the tail this move
   const mine = mineAt(pick.x, pick.y);
   if (mine) detonateMine(mine);               // enemies do not avoid mines: lure them in
 }
@@ -92,8 +97,32 @@ function turnAround(e) {
   e.prev = e.segs.map(s => ({ ...s }));
   e.dir = { x: e.segs[0].x - e.segs[1].x, y: e.segs[0].y - e.segs[1].y };
 }
+// Once per world tick: stun counts down in world ticks. The moving itself is on each enemy's own timer (stepEnemyTimers).
 function stepEnemies() {
-  [...S.enemies].forEach(e => { if (S.alive && S.enemies.includes(e)) stepEnemy(e); });
+  S.enemies.forEach(e => { if (e.stun > 0) e.stun--; });
+}
+function enemyInterval(e) { return TICK_MS / (ENEMY_BASE_SPEED * e.speed); } // ms between moves of this enemy
+// Runs every frame from loop() in main.js. Each enemy moves on its own timer, like the hero. A stunned enemy
+// keeps its timer "ready", so it moves the moment the stun ends.
+function stepEnemyTimers(t) {
+  for (const e of [...S.enemies]) {
+    if (!S.alive) break;
+    if (!S.enemies.includes(e)) continue;        // killed earlier this frame
+    const iv = enemyInterval(e);
+    if (e.stun > 0) { e.last = t - iv; e.alpha = 1; continue; }
+    if (t - e.last >= iv) {
+      e.last += iv;
+      if (t - e.last >= iv) e.last = t;          // fell far behind: don't fast-forward
+      stepEnemy(e);
+    }
+    e.alpha = Math.min(1, Math.max(0, (t - e.last) / iv));
+  }
+  checkDeath();                                  // an enemy may have killed you (main.js)
+}
+// After a pause or a revive: continue every enemy mid-move instead of letting it jump ahead.
+function resetEnemyClocks() {
+  const now = performance.now();
+  S.enemies.forEach(e => { e.last = now - e.alpha * enemyInterval(e); });
 }
 // What a chasing enemy heads for: the player's head, unless a recruit on the grid is both closer and within
 // RECRUIT_THREAT_DIST tiles, in which case it goes for the recruit.
@@ -103,6 +132,8 @@ function chaseTarget(head, ph) {
   for (const r of S.recruits) {
     if (inBounds(r.x, r.y) && d(r) <= RECRUIT_THREAT_DIST && d(r) < d(best)) best = r;
   }
+  if (ENEMY_KEY_HUNT_DIST > 0)
+    for (const k of S.keys) if (d(k) <= ENEMY_KEY_HUNT_DIST && d(k) < d(best)) best = k;
   return best;
 }
 
@@ -120,16 +151,28 @@ function spawnEnemy() {
     const head = S.snake[0];
     const far = Math.abs(segs[0].x - head.x) + Math.abs(segs[0].y - head.y) >= ENEMY_SPAWN_MIN_DIST;
     if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y) && !inTextZone(s.x, s.y))) {
-      S.enemies.push({ segs, prev: segs.map(s => ({ ...s })), dir: d, hp: hitsToKill(S.wave), stun: 0 });
+      S.enemies.push({ segs, prev: segs.map(s => ({ ...s })), dir: d, hp: hitsToKill(S.wave), stun: 0,
+                      speed: enemyWaveSpeed(S.wave), last: performance.now(), alpha: 1 });
       return true;
     }
   }
   return false;
 }
+// Boss hook: a boss fight (later) sets S.boss, which stops the wave timer.
+function wavesPaused() { return !!S.boss; }
+
+function startWave() {
+  S.wave++; S.giftCharges = GIFT_PORTALS_PER_WAVE; S.coins += coinReward(COIN_PER_WAVE);
+  S.toSpawn = Math.min(ENEMY_QUEUE_MAX, S.toSpawn + waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()));
+  S.spawnTimer = 0;
+  S.waveTimer = waveDuration(S.wave);            // ticks until the NEXT wave starts, whether or not this one is dead
+}
 function updateWaves() {
-  if (S.toSpawn > 0) {
+  if (S.toSpawn > 0 && S.enemies.length < ENEMY_CAP) {   // snakes of the queue walk in one by one, up to the cap
     if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = SPAWN_GAP; }
-  } else if (S.enemies.length === 0) {
-    if (--S.waveTimer <= 0) { S.wave++; S.giftCharges = GIFT_PORTALS_PER_WAVE; S.coins += coinReward(COIN_PER_WAVE); S.toSpawn = waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()); S.spawnTimer = 0; S.waveTimer = WAVE_DELAY; }
   }
+  if (wavesPaused()) return;
+  const clear = S.toSpawn === 0 && S.enemies.length === 0;
+  if (clear && S.wave > 0 && WAVE_CLEAR_SKIP > 0 && S.waveTimer > WAVE_CLEAR_SKIP) S.waveTimer = WAVE_CLEAR_SKIP;
+  if (--S.waveTimer <= 0) startWave();
 }
