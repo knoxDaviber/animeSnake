@@ -9,14 +9,20 @@ function secs(ticks) { return Math.round(ticks * TICK_MS / 100) / 10; }
 
 const HEAD_DEFS = [
   { id: 'swordsman', name: 'Swordsman', update: updateSwordsman, weapon: 'Sword', cd: SWORD_COOLDOWN,
-    desc: `Sword hits for ${SWORD_DAMAGE} every ${secs(SWORD_COOLDOWN)} s. Blocks the first enemy-head hit, ready again after ${secs(SHIELD_RECHARGE)} s.` },
+    desc: 'A blade, a shield, and zero chill.',
+    detail: `Sword hits for ${SWORD_DAMAGE} every ${secs(SWORD_COOLDOWN)} s. Blocks the first enemy-head hit, ready again after ${secs(SHIELD_RECHARGE)} s.` },
   { id: 'magician', name: 'Magician', update: updateMagician, weapon: 'Shockwave', cd: SHOCK_COOLDOWN,
-    desc: `Walls open a portal to the other side instead of hurting. A 3x3 shockwave every ${secs(SHOCK_COOLDOWN)} s.` },
+    desc: 'Walls are just suggestions.',
+    detail: `Walls open a portal to the other side instead of hurting. A 3x3 shockwave every ${secs(SHOCK_COOLDOWN)} s.` },
   { id: 'gunman', name: 'Gunman', update: updateGunman, weapon: 'Bullets', cd: GUNMAN_COOLDOWN,
-    desc: `A bullet flies out to each side every ${secs(GUNMAN_COOLDOWN)} s.` },
+    desc: 'Why aim when you can spray?',
+    detail: `Bullets fly out ahead and to each side every ${secs(GUNMAN_COOLDOWN)} s.` },
 ];
 
+function heroText(def) { return S.heroDetail ? def.detail : def.desc; } // hero select: flavour by default, stats when toggled
+function detailButtonRect() { return { x: 52, y: 8, w: 36, h: 36 }; }   // the "i" button next to the speaker icon
 function headId() { return HEAD_DEFS[S.roster[0].c].id; }
+
 
 // Weapon timing: S.lastSwing is the tick the head's weapon last fired; S.swingMult comes from the Quick hands buff.
 function weaponCooldown(base) { return Math.max(2, Math.round(base * S.swingMult)); }
@@ -61,6 +67,7 @@ function updateGunman() {
   if (!weaponReady(GUNMAN_COOLDOWN)) return;
   const h = S.snake[0], d = S.dir;
   playSfx('shoot');
+  S.bullets.push({ x: h.x, y: h.y, px: h.x, py: h.y, dx: d.x, dy: d.y, dmg: BULLET_DAMAGE, dead: false }); // front bullet
   for (const side of [-1, 1]) {                    // the two sides of the heading
     S.bullets.push({ x: h.x, y: h.y, px: h.x, py: h.y, dx: -d.y * side, dy: d.x * side, dmg: BULLET_DAMAGE, dead: false });
   }

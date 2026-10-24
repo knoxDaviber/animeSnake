@@ -25,8 +25,8 @@ const SELF_HIT_COSTS_RING = true;  // false = running into your own body is inst
 const HAZARD_MIN_DIST = 5;         // the hazard spawns at least this many tiles from the head
 
 // Hero speed (passives.js heroSpeed). 1 = normal. Only the hero changes speed, never enemies or skill timers.
-const HERO_SPEED_MIN = 0.4;        // slowest allowed (Gorgons slow you down)
-const HERO_SPEED_MAX = 1.8;        // fastest allowed (Raidens speed you up)
+const HERO_SPEED_MIN = 0.25;        // slowest allowed (Gorgons slow you down)
+const HERO_SPEED_MAX = 2;        // fastest allowed (Raidens speed you up)
 const HERO_SPEED_TEST = 1;         // for testing: try 1.5 (fast) or 0.6 (slow), then set back to 1
 
 // Enemies and waves
@@ -60,7 +60,7 @@ const SHIELD_RECHARGE = 40;     // ticks (5 s) until the Swordsman's block is re
 const SHOCK_COOLDOWN = 40;      // ticks (5 s) between Magician shockwaves
 const SHOCK_DAMAGE = 1;         // hit points a shockwave takes off an enemy head
 const SHOCK_REACH = 2;          // the 3x3 area is centred this many tiles ahead of the head (0 = around the head)
-const GUNMAN_COOLDOWN = 24;     // ticks (3 s) between volleys (one bullet each way)
+const GUNMAN_COOLDOWN = 16;     // ticks (2 s) between volleys (one bullet each way)
 const BULLET_DAMAGE = 1;
 const BULLET_SPEED = 2;         // tiles per tick
 
@@ -69,7 +69,7 @@ const KEYSMAN_DOUBLE_CHANCE = 0.1;  // per Keysman: chance that eating a key sum
 const MAGNETO_RANGE = 3;            // tiles: a key this close to your head is pulled one tile closer per tick (+1 per extra Magneto)
 const GORGON_SLOW = 0.05;           // per Gorgon: hero speed -5%
 const GORGON_MAX_SLOW = 0.50;       // cap on the Gorgon slowdown
-const GORGON_SHIELD_RECHARGE = 160; // ticks (20 s) until a used Gorgon shield is ready again
+const GORGON_SHIELD_RECHARGE = 0; // ticks until a used Gorgon shield is ready again. 0 = never (shields are one-use)
 const GORGON_MAX_SHIELDS = 5;       // most Gorgon shields that count
 const MEDUSA_SLOW = 0.10;           // per Medusa: hero speed -10%
 const MEDUSA_FREEZE_TICKS = 2;      // an enemy head in your facing line stays frozen this long (refreshed every tick)        // extra stun ticks per Medusa on an enemy hit by your sword
@@ -89,10 +89,11 @@ const SHOGUN_COOLDOWN = 40;         // ticks (5 s) between Shogun lightning stri
 const SHOGUN_DMG_MIN = 1, SHOGUN_DMG_MAX = 3; // lightning damage to the closest enemy tile
 
 // Run-start buffs (buffs.js)
+const RICH_BONUS = 0.1; // Rich buff: extra coins at the end of the run, as a fraction of the coins earned in it
 const PICK_LOCKOUT_MS = 350;   // the pick screen ignores input this long after it appears
 const PICK_CHOICES = 3;        // how many random buffs the pick screen offers
 const FORCE_BUFFS = [];        // for testing: buff ids to always offer, e.g. ['minefield', 'thickSkin']. Leave empty normally
-const BONUS_SCORE_MULT = 1.1;  // the '+10% score' buff
+const BONUS_SCORE_MULT = 1.2;  // the '+20% score' buff
 const THICK_SKIN_TICKS = 4;    // extra immunity ticks after a hit
 const QUICK_HANDS_MULT = 0.8;  // the 'Quick hands' buff: head weapon cooldown is multiplied by this
 const COMBO_KEEPER_TICKS = 12; // ticks added to the combo window
@@ -124,9 +125,9 @@ const REVIVE_COST_STEP = 15;        // each further revive in the same run costs
 
 // Hero unlocks (unlocks.js). A hero not in HERO_FREE costs HERO_PRICES[id] coins, or HERO_DEFAULT_PRICE if it has no entry.
 // So a new hero is locked automatically; add it to HERO_PRICES only to give it its own price.
-const HERO_FREE = ['swordsman', 'magician'];
-const HERO_PRICES = { gunman: 40 };
-const HERO_DEFAULT_PRICE = 80;
+const HERO_FREE = ['swordsman'];
+HERO_PRICES = { magician: 50, gunman: 100, goliath: 200, summoner: 200 }
+const HERO_DEFAULT_PRICE = 200;
 const HERO_GRID_COLS = 4;      // hero select: most cards per row once there are more than 3 heroes
 const CARD_NOTE_MS = 1800;     // how long "Need N more coins" / "Unlocked!" stays on a card
 
@@ -160,6 +161,15 @@ const SPLASHES = [
   'Free of nutritional value.',
 ];
 
+const ZERO_SCORE_LINES = [
+  'Zero. A bold strategy.',
+  'Did you even press anything?',
+  'The snake is filing a complaint.',
+  'Technically, you cannot go lower.',
+  'Even the hazard felt bad for you.',
+];
+
+// TEST ONLY, remove later. Leave at 0 / false for normal play.
 // TEST ONLY, remove later. Leave at 0 / false for normal play.
 const TEST_START_COINS = 0;    // above 0: coins are set to this on every page load (try 30, then 100)
 const TEST_RELOCK = false;     // true: all bought unlocks are forgotten on every page load
@@ -212,7 +222,7 @@ const RET_FAST_RESTART_MS = 12000;  const RET_F_FAST = 10;      // a run started
 const RET_LONG_RUN_SECONDS = 150;   const RET_F_RELIEF = 25;    // a long run, or a new best, cools the meter
 const RET_PITY_AT = 50;             // meter at or above this: the next run gets a pity boost
 const RET_PITY_RESET = 10;          // meter after a pity boost
-const RET_PITY_BUFF = 'extraFollower'; // id from BUFFS
+const RET_PITY_BUFF = 'startFollower'; // id from BUFFS
 // 3. Coin tiers: kill and wave coins are multiplied by a tier based on revive coins spent over your last runs.
 const RET_COIN_TIERS_ON = true;     // false = only the coin tiers off
 const RET_COIN_HISTORY = 5;         // runs looked at

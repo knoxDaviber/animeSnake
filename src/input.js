@@ -31,6 +31,7 @@ addEventListener('keydown', e => {
   }
   if (S.picking) {                       // pick screens: 1/2/3 choose, arrows move, Enter/Space confirm
     if (e.repeat) return;
+    if (k === 'i' && S.headPicking) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
     const n = Number(k), count = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
     if (n >= 1 && n <= count) return chooseCard(n - 1);   // on a locked hero this unlocks it (if affordable)
     const cols = S.headPicking ? headLayout().cols : count;
@@ -67,6 +68,8 @@ function tapPick(clientX, clientY) {
   if (S.headPicking) {
     const p = canvasPoint(clientX, clientY), b = muteButtonRect();
     if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return toggleMute();
+    const d = detailButtonRect();
+    if (p.x >= d.x && p.x <= d.x + d.w && p.y >= d.y && p.y <= d.y + d.h) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
   }
   tapCard(pickAtPoint(clientX, clientY));
 }

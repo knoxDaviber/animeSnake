@@ -4,7 +4,7 @@
 // after the pick, on the freshly built run. Buffs that change a number set a modifier field on S (see state.js).
 
 const BUFFS = [
-  { id: 'extraFollower', name: 'Extra follower', desc: 'Start the run with one more random follower in the chain.',
+  { id: 'startFollower', name: 'Starting follower', desc: 'Start the run with one random follower in the chain.',
     apply() {
       const tail = S.snake[S.snake.length - 1], slot = S.roster[S.roster.length - 1];
       const t = { x: tail.x - 1, y: tail.y };            // one more tile behind the tail
@@ -13,7 +13,7 @@ const BUFFS = [
       S.keys = S.keys.filter(k => !(k.x === t.x && k.y === t.y));
       if (!S.keys.length) placeFood();
     } },
-  { id: 'bonusScore', name: '+10% score', desc: 'Everything you score this run is worth 10% more.',
+  { id: 'bonusScore', name: '+20% score', desc: 'Everything you score this run is worth 20% more.',
     apply() { S.scoreMult = BONUS_SCORE_MULT; } },
   { id: 'thickSkin', name: 'Thick skin', desc: `After a hit you stay immune ${THICK_SKIN_TICKS} ticks longer.`,
     apply() { S.invulnBonus = THICK_SKIN_TICKS; } },
@@ -23,12 +23,12 @@ const BUFFS = [
     apply() { S.comboWindow = COMBO_WINDOW + COMBO_KEEPER_TICKS; } },
   { id: 'skillHaste', name: 'Skill haste', desc: `Follower skill cooldowns are ${Math.round((1 - SKILL_HASTE_MULT) * 100)}% shorter.`,
     apply() { S.cdMult = SKILL_HASTE_MULT; } },
-  { id: 'bounty', name: 'Bounty hunter', desc: `Every kill is worth ${BOUNTY_POINTS} more base points.`,
-    apply() { S.bounty = BOUNTY_POINTS; } },
   { id: 'secondWind', name: 'Second wind', desc: `Revives add ${Math.round(SECOND_WIND_BONUS * 100)}% of your score instead of ${Math.round(REVIVE_SCORE_BONUS * 100)}%.`,
     apply() { S.reviveBonus = SECOND_WIND_BONUS; } },
   { id: 'welcomeParty', name: 'Welcome party', desc: 'A character is already walking in when the run starts.',
     apply() { summonRecruit(); } },
+  { id: 'rich', name: 'Rich', desc: `Get ${Math.round(RICH_BONUS * 100)}% more coins at the end of the run.`,
+    apply() { S.richBonus = RICH_BONUS; S.coinsStart = S.coins; } },
   { id: 'minefield', name: 'Minefield', desc: `Start with ${MINEFIELD_COUNT} mines scattered on the map.`,
     apply() {
       const h = S.snake[0];

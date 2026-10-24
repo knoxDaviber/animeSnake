@@ -60,7 +60,7 @@ function gorgonReady() { return gorgonSlots().filter(i => S.roster[i].cd === 0).
 function gorgonAbsorbs() {
   const i = gorgonSlots().find(k => S.roster[k].cd === 0);
   if (i === undefined) return false;
-  S.roster[i].cd = GORGON_SHIELD_RECHARGE;
+  S.roster[i].cd = GORGON_SHIELD_RECHARGE > 0 ? GORGON_SHIELD_RECHARGE : -1; // -1 = used for good (0 would mean ready)
   S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Shielded!', age: 0 });
   playSfx('shield');
   return true;

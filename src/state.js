@@ -36,7 +36,7 @@
 //   ret            retention meter (saved): frustration 0-100, deathStreak, spendHist (revive coins per recent run), runs
 //   coinMult       this run's coin payout multiplier (coin tiers); runSpend = revive coins spent this run
 //   runStart / deathAt / lastEndAt   ms stamps: run began / last death / last run ended. pity = got the pity boost
-const S = { best: 0, bestCombo: 0, bestWave: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false,
+const S = { best: 0, bestCombo: 0, bestWave: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false, heroDetail: false,
             ret: { frustration: 0, deathStreak: 0, spendHist: [], runs: 0 }, lastEndAt: 0, coinMult: 1 };
 
 function newLeaderboardState() {
@@ -60,7 +60,7 @@ function newRun() {
     splashText: SPLASHES[Math.floor(Math.random() * SPLASHES.length)],
     headPicking: true,                          // first pick screen: choose the head. The buff pick follows
     shield: true, shieldTimer: 0, bullets: [],  // Swordsman block ready / ticks until it is back; Gunman bullets
-    invulnBonus: 0, swingMult: 1, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
+    invulnBonus: 0, swingMult: 1, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, richBonus: 0, coinsStart: 0, richPaid: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
     dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false,
     keys: [], growQueue: [], recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,

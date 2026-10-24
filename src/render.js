@@ -186,6 +186,15 @@ function drawSpeaker() { // hero select, top left: tap to mute or unmute (M does
   }
   ctx.restore();
 }
+function drawDetailButton() { // hero select, next to the speaker: flavour text <-> stat details on the cards
+  const b = detailButtonRect(), on = S.heroDetail;
+  ctx.save();
+  ctx.fillStyle = on ? '#2c2250' : '#211a3b'; ctx.fillRect(b.x, b.y, b.w, b.h);
+  ctx.lineWidth = 2; ctx.strokeStyle = on ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(b.x, b.y, b.w, b.h);
+  ctx.fillStyle = on ? '#ffd36b' : '#c9bde6'; ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('i', b.x + b.w / 2, b.y + b.h / 2 + 7);
+  ctx.restore();
+}
 function drawHeadPick() { // title screen = hero select: one card per hero. A locked hero is dimmed with its price; clicking buys it.
   const L = headLayout(), now = performance.now(), mid = cv.width / 2;
   ctx.save();
@@ -209,6 +218,7 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
   ctx.textAlign = 'center';
 
   drawSpeaker();
+  drawDetailButton();
   HEAD_DEFS.forEach((h, i) => {
     const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
     const price = heroPrice(h.id), locked = !isUnlocked('hero', h.id, price), afford = S.coins >= price;
@@ -227,7 +237,7 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
     fitText(h.name, cx, py + (L.big ? 100 : 86), c.w - 12, L.big ? 22 : 16, true);
     if (L.big) {
       ctx.fillStyle = locked ? '#9a8cc4' : '#f3e9ff'; ctx.font = '14px system-ui';
-      wrapText(h.desc, c.w - 24).forEach((line, k) => ctx.fillText(line, cx, c.y + 148 + k * 18));
+      wrapText(heroText(h), c.w - 24).forEach((line, k) => ctx.fillText(line, cx, c.y + 148 + k * 18));
     }
     const sy = L.big ? c.y + c.h - 40 : c.y + 124, sz = L.big ? 16 : 13;   // status line: a note, or the price
     if (note) {
@@ -245,11 +255,11 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
     const h = HEAD_DEFS[S.pickIndex];
     ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 18px system-ui'; ctx.fillText(h.name, mid, 476);
     ctx.fillStyle = '#f3e9ff'; ctx.font = '14px system-ui';
-    wrapText(h.desc, 560).slice(0, 3).forEach((line, k) => ctx.fillText(line, mid, 500 + k * 18));
+    wrapText(heroText(h), 560).slice(0, 3).forEach((line, k) => ctx.fillText(line, mid, 500 + k * 18));
   }
   ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
   ctx.fillText(L.big ? 'Tap a hero to start' : 'Tap a hero to look, tap again to start', mid, 592);
-  ctx.fillText('Steer with swipes, taps or arrow keys', mid, 614);
+  ctx.fillText('Steer with swipes, taps or arrow keys. Press I or tap i for details', mid, 614);
   ctx.restore();
 }
 function drawAttack(a) {
@@ -404,12 +414,13 @@ function drawGameOver() {
   ctx.font = '20px system-ui';
   ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, 82);
   ctx.fillStyle = '#c9bde6';
-  fitText(`Best ${S.best}   Best combo ${S.bestCombo}   Best wave ${S.bestWave}   Coins ${S.coins}`, cx, 108, 620, 16, false);
+  fitText(`Best ${S.best}   Best combo ${S.bestCombo}   Best wave ${S.bestWave}   Coins ${S.coins}${S.richPaid ? ` (+${S.richPaid})` : ''}`, cx, 108, 620, 16, false);
   const gap = S.best - S.score;                         // boast hook
   ctx.fillStyle = '#ffd36b';
   if (S.newBest && S.bestAtStart > 0) fitText(`Previous best was ${S.bestAtStart}. You smashed it!`, cx, 132, 620, 16, true);
   else if (!S.newBest && S.score > 0 && gap > 0)
     fitText(`${gap <= S.best * 0.15 ? 'So close! ' : ''}${gap} short of your best`, cx, 132, 620, 16, true);
+  if (S.score === 0) fitText(ZERO_SCORE_LINES[S.runId % ZERO_SCORE_LINES.length], cx, 132, 620, 16, true); // mock a zero score
   drawBoard();
   ctx.fillStyle = performance.now() >= S.restartAfter ? '#fff' : '#8a8aa3'; // greyed out during the short lockout
   ctx.font = '20px system-ui';

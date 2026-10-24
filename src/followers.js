@@ -21,7 +21,7 @@ const FOLLOWERS = [
     passive: 'Pulls keys up to 4 tiles one tile closer each tick. Enemies chase you more.' },
   { id: 'gorgon',  name: 'Gorgon',  color: '#8dff6b', skill: null,
     merge: 'medusa',
-    passive: 'Each Gorgon: a 1-hit shield (recharge 20 s, max 5 shields), but slows the hero 5% (max 50%).' },
+    passive: 'Each Gorgon: a one-use 1-hit shield (max 5 shields, no recharge), but slows the hero 5% (max 50%).' },
   // Fusions: made by merge.js, never recruited directly (fusion: true keeps them out of randomFollower)
   { id: 'bomber',   name: 'Bomber',   color: '#ff8a3c', skill: 'bomb', fusion: true,
     passive: 'Mine blasts reach across the whole map in a + shape. Drops a mine every 5 s.' },

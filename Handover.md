@@ -282,4 +282,4 @@ Later:
 
 ## Last session
 
-The docs were re-planned around the new economy, movement feel, speed rework, larger scrolling map, enemy eating, temporary buffs, hero kits, kicking/Goliath/Summoner, and the boss sequence. The first boss is now the wave 10 giant snake. The wizard is deliberately postponed until the map/room foundation exists.
+Tier 1 (config/text) is built: hero prices and the Magician lock, buff cleanup (Starting follower id `startFollower`, +20% score, Bounty hunter removed, Rich added: +10% of the run's earned coins paid in `endRevive` via `payRichBonus`), Gunman 16-tick volley plus front bullet, one-use Gorgon shields (cd -1 = used), zero-score game-over line, hero-card detail toggle (`S.heroDetail`, I key or the "i" button; `desc` = flavour, `detail` = stats), speed limits 0.25 to 2.0. Not yet play-tested in a browser. Next: Tier 2 (movement feel, fusion run modifiers, flag buffs, buff-screen coins).

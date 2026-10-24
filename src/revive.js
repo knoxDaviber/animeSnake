@@ -36,10 +36,17 @@ function revive() {
   hud();
 }
 
+// Rich buff: at the end of the run, add a share of the coins earned in it (revive coins spent are not subtracted).
+function payRichBonus() {
+  if (S.richBonus <= 0) return;
+  S.richPaid = Math.max(0, Math.round((S.coins - S.coinsStart + S.runSpend) * S.richBonus));
+  S.coins += S.richPaid; S.richBonus = 0;
+  saveProgress();
+}
 function endRevive() { // the countdown is over: show the game-over screen
   S.reviving = false; S.over = true;
   S.restartAfter = performance.now() + DEATH_LOCKOUT_MS;
-  retentionRunEnd(); // frustration meter and coin tier history
+  payRichBonus(); retentionRunEnd(); // frustration meter and coin tier history
   leaderboardGameOver(); // the run is really over: fetch the top 10 and offer the initials box if it qualifies
 }
 function giveUp() { // Q, Backspace or the Give up button
