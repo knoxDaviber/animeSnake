@@ -21,6 +21,7 @@ function faceOf(e, i) {
 // ---- Damage ------------------------------------------------------------------
 // Returns true if the enemy survived.
 function damageEnemyHead(e, n) {
+  if (S.pacifist) return true;
   e.hp -= n;
   if (e.hp <= 0) { killEnemy(e); return false; }
   playSfx('hitEnemy');
@@ -37,6 +38,7 @@ function killEnemy(e) {
 }
 // Breaks segment i and cuts off everything behind it.
 function cutEnemy(e, i) {
+  if (S.pacifist) return;
   const faces = e.segs.map((_, k) => faceOf(e, k));
   const cut = e.segs.splice(i);
   cut.forEach((s, k) => {
@@ -59,7 +61,7 @@ function stepEnemy(e) {
   for (const d of DIRS) {
     if (d.x === -e.dir.x && d.y === -e.dir.y) continue;
     const x = head.x + d.x, y = head.y + d.y;
-    if (x === ph.x && y === ph.y) opts.push({ d, x, y, headOn: true });
+        if (x === ph.x && y === ph.y) { if (!S.pacifist) opts.push({ d, x, y, headOn: true }); } // Pacifist: your head is just solid
     else if (enemyCanEnter(x, y) || isOwnTail(e, x, y)) opts.push({ d, x, y });
   }
   if (!opts.length) { turnAround(e); return; } // boxed in: flip the snake so its tail becomes the head
@@ -162,10 +164,18 @@ function spawnEnemy() {
 function wavesPaused() { return !!S.boss; }
 
 function startWave() {
-  S.wave++; S.giftCharges = GIFT_PORTALS_PER_WAVE; S.coins += coinReward(COIN_PER_WAVE);
+  S.wave++; S.giftCharges = GIFT_PORTALS_PER_WAVE;
+  const h = S.snake[0], bonus = WAVE_COINS[S.wave];
+  if (bonus) {
+    const c = coinReward(bonus); S.coins += c;
+    S.popups.push({ x: h.x, y: h.y, text: `Wave ${S.wave}! +${c} coins`, age: 0 });
+    playSfx('unlock');
+  }
+  if (S.pacifist) addScore(PACIFIST_POINTS.wave, h.x, h.y);
+  if (S.challenge && S.wave >= CHALLENGE_WAVE) { winRun(); return; }   // Challenge won (revive.js)
   S.toSpawn = Math.min(ENEMY_QUEUE_MAX, S.toSpawn + waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()));
   S.spawnTimer = 0;
-  S.waveTimer = waveDuration(S.wave);            // ticks until the NEXT wave starts, whether or not this one is dead
+  S.waveTimer = waveDuration(S.wave);
 }
 function updateWaves() {
   if (S.toSpawn > 0 && S.enemies.length < ENEMY_CAP) {   // snakes of the queue walk in one by one, up to the cap

@@ -150,10 +150,36 @@ const REVIVE_INVULN_TICKS = 24;     // immunity after a revive (3 s)
 const DEATH_LOCKOUT_MS = 1000;      // the game-over screen ignores restart input this long
 
 // Coins: earned during a run, kept between runs, spent on revives
-const COIN_PER_KILL = 3;            // coins for every enemy snake killed
-const COIN_PER_WAVE = 5;            // coins each time a wave starts
 const REVIVE_COST_BASE = 15;        // coins for the first revive in a run
 const REVIVE_COST_STEP = 15;        // each further revive in the same run costs this much more
+// Coins are scarce. Income: wave milestones (bosses later), the hidden Pentakill, and fake ads. Revives are ads, not coins.
+const WAVE_COINS = { 5: 3, 10: 10, 15: 5, 20: 20 }; // wave number -> coins when that wave starts (tune)
+const PENTAKILL_AT = 5;             // the Nth kill in one chain pays the coins below, once per chain
+const PENTAKILL_COINS = 5;
+const ADS_ENABLED = true;          // false = normal coin-priced revives, no ads. true = fake joke ads (ads.js)
+const AD_SECONDS = 5;               // how long an ad really takes
+const AD_FAKE_SECONDS = 30;         // how long the ad claims to be (it "fast-forwards", and cannot be skipped)
+const AD_PAYOUTS = [10, 5, 2, 1];   // hero-select ad button: each ad pays the next number
+const AD_RESET_MS = 60 * 60 * 1000; // an hour after the last coin ad, payouts start again at 10
+const AD_FREE_PRICE = 1000;         // coins for the "No ads" toggle on the hero select screen
+const ADS = [
+  { name: 'ProteinBark', line: 'Dogs hate it. Dogs are wrong.' },
+  { name: 'Wi-Fi for Fish', line: 'Finally, a reason for the aquarium.' },
+  { name: 'Hot Singles In Your Grid', line: 'They are tiles. Very single tiles.' },
+  { name: 'Mega Mattress 9000', line: 'Sleep through anything, including this ad.' },
+  { name: 'Totally Real Antivirus', line: 'Found 0 viruses. Added 3.' },
+  { name: 'Crypto Hamster Wheel', line: 'Number go round. Number go up. Maybe.' },
+  { name: 'Left Sock Club', line: 'We have your other one.' },
+  { name: 'Soup, But Square', line: 'It fits the grid. That is the whole pitch.' },
+  { name: 'Gravity Insurance', line: 'What goes up must come down on you.' },
+];
+
+// Modes (buffs.js, revive.js winRun). Challenge: a hit drops all followers; reach the wave to win the reward.
+const CHALLENGE_WAVE = 20, CHALLENGE_REWARD = 100, CHALLENGE_SCORE_MULT = 1.5;
+// Pacifist: no weapons, enemies harmless and solid. Points for recruits, merges and waves. Stuck for this long = death.
+const PACIFIST_SCORE_MULT = 1;
+const PACIFIST_POINTS = { recruit: 15, merge: 50, wave: 25 };
+const PACIFIST_STUCK_TICKS = 40;   // 20 s without a real move
 
 // Hero unlocks (unlocks.js). A hero not in HERO_FREE costs HERO_PRICES[id] coins, or HERO_DEFAULT_PRICE if it has no entry.
 // So a new hero is locked automatically; add it to HERO_PRICES only to give it its own price.

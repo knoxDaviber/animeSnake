@@ -26,10 +26,13 @@ function loadProgress() {
     S.muted = !!d.muted;
     S.bestWave = Number(d.bestWave) || 0;
     S.ret = cleanRet(d.ret);
+    S.adStep = Math.max(0, Math.min(AD_PAYOUTS.length - 1, Number(d.adStep) || 0));
+    S.adLastAt = Number(d.adLastAt) || 0;
+    S.adsOff = !!d.adsOff;
   } catch (err) { console.warn('Could not load saved progress:', err); }
 }
 function saveProgress() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted, bestWave: S.bestWave, ret: S.ret })); }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted, bestWave: S.bestWave, ret: S.ret, adStep: S.adStep, adLastAt: S.adLastAt, adsOff: S.adsOff })); }
   catch (err) { console.warn('Could not save progress:', err); }
 }
 addEventListener('pagehide', saveProgress);

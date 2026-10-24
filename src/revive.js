@@ -1,36 +1,54 @@
-// revive.js: what happens after you die.
+// revive.js: what happens after you die, and how a Challenge run is won.
 //  1. REVIVE COUNTDOWN (S.reviving): REVIVE_SECONDS long. Any key, click or tap revives you (revive()), and Q,
 //     Backspace, the Give up button or running out of time ends the run (giveUp() / endRevive()).
 //     Input is ignored for REVIVE_LOCKOUT_MS after dying, so a steering key you were mashing cannot revive by accident.
+//     Two modes, switched by ADS_ENABLED in config.js:
+//       false (default): a revive costs coins (reviveCost). Can't pay = straight to game over.
+//       true: a revive is a fake joke ad (ads.js) and costs nothing. When the ad ends, doRevive() runs.
+//             A player who bought "No ads" and switched them off gets an instant free revive.
+//     Second wind (S.freeRevive) makes the next revive free and instant in either mode.
 //  2. GAME OVER (S.over): restarting is ignored for DEATH_LOCKOUT_MS, so there is no instant restart.
-// Revives are free for now (coins come later). A revive adds REVIVE_SCORE_BONUS of your score on top of it and
-// brings back just your head, with a few seconds of immunity. The snake waits for you to pick a direction.
+//  3. WIN (S.won): the Challenge buff ends the run on the game-over screen with a reward (winRun).
+// A revive adds REVIVE_SCORE_BONUS of your score on top of it and brings back just your head, with a few seconds
+// of immunity. The snake waits for you to pick a direction.
 
-function reviveCost() { return S.freeRevive ? 0 : REVIVE_COST_BASE + REVIVE_COST_STEP * S.revives; }
+function reviveCost() {
+  if (S.freeRevive || ADS_ENABLED) return 0;
+  return REVIVE_COST_BASE + REVIVE_COST_STEP * S.revives;
+}
 
 function beginRevive() { // called once, on the tick you die
-  S.deathAt = performance.now();
-  if (S.coins < reviveCost()) { endRevive(); return; } // can't afford it: straight to game over
   const now = performance.now();
+  S.deathAt = now;
+  if (S.coins < reviveCost()) { endRevive(); return; } // can't afford it: straight to game over
   S.reviving = true; S.over = false;
   S.reviveEnd = now + REVIVE_SECONDS * 1000;
   S.inputAfter = now + REVIVE_LOCKOUT_MS;
 }
 
+// Any key / click / tap during the countdown.
 function revive() {
-  if (S.alive || !S.reviving || performance.now() < S.inputAfter) return;
+  if (S.alive || !S.reviving || S.ad || performance.now() < S.inputAfter) return;
+  if (S.coins < reviveCost()) return;
+  if (S.freeRevive || !adsActive()) return doRevive();  // coin mode, Second wind, or ads switched off
+  startAd('revive');                                    // doRevive() runs when the ad ends (updateAd in ads.js)
+}
+
+function doRevive() {
+  if (S.alive || !S.reviving) return;
   const cost = reviveCost();
   if (S.coins < cost) return;
   S.coins -= cost; S.runSpend += cost; saveProgress();
   S.freeRevive = false; S.dirQueue = [];
   S.reviving = false; S.revives++;
-  const bonus = Math.round(	S.score * S.reviveBonus);
+  const bonus = Math.round(S.score * S.reviveBonus);
   S.score += bonus;
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }
   S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: '+' + bonus + ' revive', age: 0 });
   S.alive = true; S.paused = false;
   S.invuln = REVIVE_INVULN_TICKS;
-  S.waitDir = true;                              // stand still until the player chooses a direction
+  S.waitDir = true;                                   // stand still until the player chooses a direction
+  S.stuckTicks = 0;
   S.prev = S.snake.map(s => ({ ...s }));
   S.alpha = 1; S.last = performance.now(); S.heroLast = S.last;
   S.heroAlpha = 1; S.heroLast = S.last;
@@ -51,13 +69,25 @@ function endRevive() { // the countdown is over: show the game-over screen
   payRichBonus(); retentionRunEnd(); // frustration meter and coin tier history
   leaderboardGameOver(); // the run is really over: fetch the top 10 and offer the initials box if it qualifies
 }
+// Challenge complete: the run ends on the game-over screen (titled "Challenge complete!") with the reward.
+function winRun() {
+  if (S.won || !S.alive) return;
+  S.won = true; S.alive = false; S.reviving = false; S.over = true;
+  S.deathAt = performance.now(); S.restartAfter = S.deathAt + DEATH_LOCKOUT_MS;
+  S.alpha = 1; S.heroAlpha = 1;
+  S.coins += CHALLENGE_REWARD; S.winCoins = CHALLENGE_REWARD;
+  if (S.score > S.best) { S.best = S.score; S.newBest = true; }
+  playSfx('win');
+  payRichBonus(); retentionRunEnd(); saveProgress();
+  leaderboardGameOver();
+}
 function giveUp() { // Q, Backspace or the Give up button
-  if (S.alive || !S.reviving || performance.now() < S.inputAfter) return;
+  if (S.alive || !S.reviving || S.ad || performance.now() < S.inputAfter) return;
   endRevive();
 }
-// Runs every frame (loop in main.js): ends the countdown when the time is up.
+// Runs every frame (loop in main.js): ends the countdown when the time is up (not while an ad is playing).
 function updateRevive() {
-  if (!S.alive && S.reviving && performance.now() >= S.reviveEnd) endRevive();
+  if (!S.alive && S.reviving && !S.ad && performance.now() >= S.reviveEnd) endRevive();
 }
 
 function restartRun() { // from the game-over screen, once the lockout has passed

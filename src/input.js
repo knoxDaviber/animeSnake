@@ -28,7 +28,8 @@ addEventListener('keydown', e => {
   if (inNameBox(e)) return;
   const k = e.key.toLowerCase();
   if (S.crashed) { if (k === ' ' || k === 'enter') newRun(); return; }
-    if (k === 'm' && !e.repeat && !e.ctrlKey && !e.metaKey) return toggleMute();
+  if (k === 'm' && !e.repeat && !e.ctrlKey && !e.metaKey) return toggleMute();
+  if (S.ad) return;                     // an ad is playing: nothing works
   if (!S.alive) {
     if (S.reviving) {                    // revive countdown: Q / Backspace give up, any other key revives
       if (e.repeat || MODIFIER_KEYS.includes(k)) return;
@@ -78,6 +79,7 @@ function tapPick(clientX, clientY) {
     if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return toggleMute();
     const d = detailButtonRect();
     if (p.x >= d.x && p.x <= d.x + d.w && p.y >= d.y && p.y <= d.y + d.h) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
+    if (tapAdButtons(p)) return;
   }
   if (!S.headPicking) {                      // buff screen: the mulligan button
     const p = canvasPoint(clientX, clientY), m = mulliganRect();
@@ -113,6 +115,7 @@ addEventListener('touchstart', e => {
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
   S.lastTouchAt = performance.now();   // phones fire a fake mouse click after a tap: mousedown ignores it
   tapArmed = false;
+  if (S.ad) return;
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
   if (S.picking) return tapPick(touchX, touchY);
@@ -137,7 +140,7 @@ addEventListener('touchend', e => {
 });
 addEventListener('contextmenu', e => { if (!inNameBox(e)) e.preventDefault(); }); // no long-press menus
 addEventListener('mousedown', e => {
-  if (S.crashed || inNameBox(e)) return;
+  if (S.crashed || S.ad || inNameBox(e)) return;
   if (performance.now() - S.lastTouchAt < 700) return; // the fake click that follows a touch
   if (!S.alive) tapWhileDead(e.clientX, e.clientY);
   else if (S.picking) tapPick(e.clientX, e.clientY);

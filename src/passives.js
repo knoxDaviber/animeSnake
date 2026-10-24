@@ -6,6 +6,8 @@ function countFollower(id) {
   for (let i = 1; i < S.roster.length; i++) if (FOLLOWERS[S.roster[i].c].id === id) n++;
   return n;
 }
+// Mr.X rejects (shoots) new recruits, except in Pacifist where nothing may be hurt.
+function mrxRejects() { return countFollower('mrx') > 0 && !S.pacifist; }
 
 // Kill bonus: only the Bounty hunter buff now (Raiden gives hero speed instead).
 function killBonus() { return S.bounty; }
@@ -79,7 +81,7 @@ function medusaShieldAbsorbs() {
 }
 // Medusa: every enemy HEAD in the line you face stays frozen while it is in that line. A green flash shows when one first freezes.
 function medusaGaze() {
-  if (!countFollower('medusa')) return;
+  if (!countFollower('medusa') || S.pacifist) return;
   const h = S.snake[0], d = S.dir, tiles = [];
   let fresh = false;
   for (let x = h.x + d.x, y = h.y + d.y; inBounds(x, y); x += d.x, y += d.y) {

@@ -12,16 +12,22 @@ function addScore(points, x, y, suffix = '') {
 }
 function registerKill(x, y) {
   S.combo++;
-  S.coins += coinReward(COIN_PER_KILL);
   S.comboTimer = S.comboWindow;
   if (S.combo > S.bestCombo) S.bestCombo = S.combo;
   const m = comboMult();
   playSfx('kill', S.combo - 1);
   addScore((POINTS.kill + killBonus()) * m, x, y, m > 1 ? ' x' + m : '');
+  if (S.combo >= PENTAKILL_AT && !S.pentaPaid) {      // hidden side quest: coins once per chain
+    S.pentaPaid = true;
+    const c = coinReward(PENTAKILL_COINS);
+    S.coins += c;
+    S.popups.push({ x, y, text: `Pentakill! +${c} coins`, age: 0 });
+    playSfx('unlock');
+  }
 }
 // Called once per tick: runs the combo window down.
 function updateCombo() {
-  if (S.combo > 0 && --S.comboTimer <= 0) S.combo = 0;
+  if (S.combo > 0 && --S.comboTimer <= 0) { S.combo = 0; S.pentaPaid = false; }
 }
 function agePopups() {
   S.popups.forEach(p => p.age++);

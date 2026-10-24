@@ -47,6 +47,10 @@ const BUFFS = [
     apply() { S.devMode = true; S.scoreMult *= DEV_SCORE_MULT; } },
   { id: 'bombAll', name: 'Everything is a bomb', desc: `Touching anything has a ${Math.round(BOMB_CHANCE * 100)}% chance to explode. Score x${BOMB_SCORE_MULT}.`,
     apply() { S.bombAll = true; S.scoreMult *= BOMB_SCORE_MULT; } },
+  { id: 'pacifist', name: 'Pacifist', desc: 'No weapons. Enemies cannot hurt you. Score from recruits, merges and waves.',
+    apply() { S.pacifist = true; S.scoreMult *= PACIFIST_SCORE_MULT; } },
+  { id: 'challenge', name: 'Challenge', desc: `Any hit costs ALL your followers. Reach wave ${CHALLENGE_WAVE} to win ${CHALLENGE_REWARD} coins.`,
+    apply() { S.challenge = true; S.scoreMult *= CHALLENGE_SCORE_MULT; } },
 ];
 
 // Which buffs this run offers: PICK_CHOICES random ones (or FORCE_BUFFS, for testing). Returns indexes into BUFFS.

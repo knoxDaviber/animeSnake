@@ -53,7 +53,7 @@ function updateRecruits() {
     r.ready = r.ready || (r.left === 0 && !S.snake.some(s => s.x === r.x && s.y === r.y));
   }
   touched.forEach(r => {
-    if (countFollower('mrx') > 0) return shootRecruit(r, h.x, h.y);
+    if (mrxRejects()) return shootRecruit(r, h.x, h.y);
     S.recruits = S.recruits.filter(q => q !== r);
     S.growQueue.push(r.c); onRecruited(r.c);                              // joins on the next move (playerMove)
     S.popups.push({ x: h.x, y: h.y, text: FOLLOWERS[r.c].name + '!', age: 0 });
@@ -64,6 +64,7 @@ function updateRecruits() {
 
 // Recruiting a Keysman summons one more character (never another Keysman). The old double-summon chance still exists.
 function onRecruited(c) {
+  if (S.pacifist) addScore(PACIFIST_POINTS.recruit, S.snake[0].x, S.snake[0].y);
   if (FOLLOWERS[c].id === 'keysman' && S.recruits.length < RECRUIT_MAX) summonRecruit('keysman');
 }
 function killRecruit(r) {

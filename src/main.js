@@ -2,7 +2,7 @@
 
 // Death: called after anything that can kill you (a hero move or a world tick).
 function checkDeath() {
-  if (S.alive) return;
+  if (S.alive || S.won) return;
   S.alpha = 1; S.heroAlpha = 1;
   saveProgress(); beginRevive(); // start the revive countdown
 }
@@ -24,12 +24,16 @@ function step() {
   ageZaps();
   if (S.alive) {
     mergeCheck();       // three identical followers fuse (merge.js)
+    if (S.pacifist && ++S.stuckTicks >= PACIFIST_STUCK_TICKS) { // Pacifist stuck detector
+      S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Stuck!', age: 0 });
+      S.alive = false;
+    }
     updateCombo();
-    updateSkills();
+    if (!S.pacifist) updateSkills();
     S.tailLeft = null;  // the Miner only gets the tile the tail left since the last tick
     updatePassives();   // Magneto pulls the key toward you
     updateAttacks();
-    updateHead();       // the head's weapon (heads.js)
+    if (!S.pacifist) updateHead();   // the head's weapon (heads.js)
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
     stepEnemies();
     refreshKey();       // puts the next key down unless enough characters are already waiting
@@ -45,6 +49,7 @@ function step() {
 // The hero moves first, so at normal speed it still acts before the world each tick, as before.
 // If anything throws, the game shows an error screen instead of silently freezing.
 function loop(t) {
+  updateAd();     // a finished ad gives its reward (ads.js)
   updateRevive(); // ends the revive countdown when the time is up
   audioUpdate();
   if (S.alive && !S.paused && !S.crashed && !S.picking) {

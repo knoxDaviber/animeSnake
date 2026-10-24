@@ -219,6 +219,7 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
 
   drawSpeaker();
   drawDetailButton();
+  drawAdButtons();
   HEAD_DEFS.forEach((h, i) => {
     const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
     const price = heroPrice(h.id), locked = !isUnlocked('hero', h.id, price), afford = S.coins >= price;
@@ -400,7 +401,8 @@ function drawRevive() { // after dying: a countdown to revive (any key or tap) o
   ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 120, cy, 240, 8);
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 120, cy, Math.round(240 * left / (REVIVE_SECONDS * 1000)), 8);
   ctx.fillStyle = live ? '#fff' : '#8a8aa3'; ctx.font = '20px system-ui';
-   ctx.fillText(S.freeRevive ? `Any key or tap: free revive (+${Math.round(S.reviveBonus * 100)}% score)` : `Any key or tap: revive for ${reviveCost()} coins (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
+  const how = S.freeRevive ? 'free revive' : ADS_ENABLED ? (adsActive() ? 'watch an ad to revive' : 'revive') : `revive for ${reviveCost()} coins`;
+  ctx.fillText(`Any key or tap: ${how} (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
   ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
   ctx.fillText(`Score ${S.score}   Best ${S.best}   Coins ${S.coins}`, cx, cy + 75);
   const b = giveUpRect();
@@ -412,13 +414,14 @@ function drawRevive() { // after dying: a countdown to revive (any key or tap) o
 function drawGameOver() {
   const cx = cv.width / 2;
   ctx.fillStyle = '#fff'; ctx.font = '36px system-ui';
-  ctx.fillText('Game over', cx, 48);
+  ctx.fillText(S.won ? 'Challenge complete!' : 'Game over', cx, 48);
   ctx.font = '20px system-ui';
   ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, 82);
   ctx.fillStyle = '#c9bde6';
   fitText(`Best ${S.best}   Best combo ${S.bestCombo}   Best wave ${S.bestWave}   Coins ${S.coins}${S.richPaid ? ` (+${S.richPaid})` : ''}`, cx, 108, 620, 16, false);
   const gap = S.best - S.score;                         // boast hook
   ctx.fillStyle = '#ffd36b';
+  if (S.won) fitText(`+${S.winCoins} coins for beating the Challenge!`, cx, 132, 620, 16, true); else
   if (S.newBest && S.bestAtStart > 0) fitText(`Previous best was ${S.bestAtStart}. You smashed it!`, cx, 132, 620, 16, true);
   else if (!S.newBest && S.score > 0 && gap > 0)
     fitText(`${gap <= S.best * 0.15 ? 'So close! ' : ''}${gap} short of your best`, cx, 132, 620, 16, true);
@@ -500,6 +503,46 @@ function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Ent
   if (note) { ctx.fillStyle = note.ok ? '#8dff6b' : '#ff8a8a'; ctx.font = 'bold 16px system-ui'; ctx.fillText(note.text, cv.width / 2, m.y + m.h + 30); }
   ctx.restore();
 }
+function drawAdButtons() { // hero select, bottom: watch an ad for coins, and the "No ads" toggle
+  if (!ADS_ENABLED) return;
+  const note = S.adNote && performance.now() < S.adNote.until ? S.adNote : null;
+  const owned = isUnlocked('perk', 'noads', AD_FREE_PRICE), off = !adsActive();
+  const btn = (r, label, color, border) => {
+    ctx.save();
+    ctx.fillStyle = '#211a3b'; ctx.fillRect(r.x, r.y, r.w, r.h);
+    ctx.lineWidth = 2; ctx.strokeStyle = border; ctx.strokeRect(r.x, r.y, r.w, r.h);
+    ctx.fillStyle = color; ctx.textAlign = 'center';
+    fitText(label, r.x + r.w / 2, r.y + 22, r.w - 12, 15, true);
+    ctx.restore();
+  };
+  const a = adButtonRect(), n = noAdsRect(), aN = note && note.which === 'ad', nN = note && note.which === 'noads';
+  btn(a, aN ? note.text : off ? 'Ads are off' : `Watch an ad: +${adPayout()} coins`,
+      aN ? (note.ok ? '#8dff6b' : '#ff8a8a') : off ? '#8a8aa3' : '#ffd36b', off ? '#3a2d5c' : '#ffd36b');
+  btn(n, nN ? note.text : owned ? (S.adsOff ? 'Ads: OFF (tap)' : 'Ads: ON (tap)') : `No ads: ${AD_FREE_PRICE} coins`,
+      nN ? (note.ok ? '#8dff6b' : '#ff8a8a') : owned ? '#c9bde6' : S.coins >= AD_FREE_PRICE ? '#ffd36b' : '#8a8aa3', '#3a2d5c');
+}
+function drawAd() { // the fake ad, on top of everything: a fast-forwarded, unskippable joke
+  const a = S.ad;
+  if (!a) return;
+  const now = performance.now(), p = Math.min(1, (now - a.start) / (a.end - a.start)), cx = cv.width / 2, ad = ADS[a.idx % ADS.length];
+  ctx.save();
+  ctx.fillStyle = '#0d0a18'; ctx.fillRect(0, 0, cv.width, cv.height);
+  ctx.fillStyle = '#1b1530';
+  for (let i = 0; i < 12; i++) ctx.fillRect(((i * 70 + now / 3) % 840) - 100, 0, 30, cv.height); // stripes whizzing past
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 44px system-ui';
+  ctx.fillText(ad.name, cx, 250 + Math.sin(now / 150) * 4);
+  ctx.fillStyle = '#f3e9ff'; ctx.font = '20px system-ui';
+  ctx.fillText(ad.line, cx, 295);
+  ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
+  ctx.fillText(`Ad  ${Math.ceil(AD_FAKE_SECONDS * (1 - p))}s left  >> x${Math.round(AD_FAKE_SECONDS / AD_SECONDS)}`, cx, 520);
+  ctx.fillText(a.kind === 'revive' ? 'Your revive is on its way' : `Reward: ${adPayout()} coins`, cx, 545);
+  ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 160, 560, 320, 8);
+  ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 160, 560, Math.round(320 * p), 8);
+  ctx.fillStyle = '#ff4d4d'; ctx.fillRect(14, 14, 44, 24);
+  ctx.fillStyle = '#fff'; ctx.font = 'bold 16px system-ui'; ctx.fillText('AD', 36, 32);
+  ctx.restore();
+}
 function draw() {
   ctx.clearRect(0, 0, cv.width, cv.height);
   drawHazard();
@@ -520,6 +563,7 @@ function draw() {
   drawStallHint();
   drawOverlay();
   drawPick();
+  drawAd();
 }
 // Shown instead of a frozen screen if the game code throws. Uses nothing but the canvas.
 function drawCrash(msg) {

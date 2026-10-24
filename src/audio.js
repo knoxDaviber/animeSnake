@@ -176,6 +176,7 @@ const SYNTH = {
   revive()     { [262, 330, 392, 523, 659].forEach((f, i) => tone(f, 0.18, { at: i * 0.07, type: 'triangle', vol: 0.22 })); tone(200, 0.5, { slide: 800, vol: 0.1 }); },
   gameOver()   { [392, 349, 330, 262].forEach((f, i) => tone(f, 0.28, { at: i * 0.24, vol: 0.2 })); tone(131, 1.1, { type: 'triangle', vol: 0.3 }); },
   newBest()    { [523, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.13, { at: i * 0.09, vol: 0.2 })); noise(0.6, { at: 0.3, filter: 'highpass', freq: 6000, vol: 0.08 }); },
+  win()        { [523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0.16, { at: i * 0.1, type: 'triangle', vol: 0.22 })); tone(262, 1.2, { at: 0.5, type: 'sine', vol: 0.2 }); noise(0.8, { at: 0.4, filter: 'highpass', freq: 6000, vol: 0.08 }); },
 };
 
 // Plays one sound. Quietly does nothing before the first tap, when muted, or if the same sound just played.
@@ -277,9 +278,9 @@ function audioWatch() {
   w.paused = S.paused;
 
   const died = w.alive && !S.alive, ended = S.over && !w.over;   // death, revive, game over
-  if (died) playSfx('die');
+  if (died && !S.won) playSfx('die');
   else if (!w.alive && S.alive) playSfx('revive');
-  if (ended) { const runId = S.runId; setTimeout(() => { if (S.runId === runId) playSfx('gameOver'); }, died ? 900 : 0); }
+  if (ended && !S.won) { const runId = S.runId; setTimeout(() => { if (S.runId === runId) playSfx('gameOver'); }, died ? 900 : 0); }
   w.alive = S.alive; w.over = S.over;
 
   if (S.reviving) {                                       // revive countdown: one tick per second

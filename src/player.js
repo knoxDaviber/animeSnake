@@ -34,6 +34,11 @@ function takeHit(source) {
   S.quietHit = false;
   playSfx('hit');
   if (S.snake.length === 1 || S.glass) { S.alive = false; return; } // last character lost (Glass cannon: any hit that lands)
+  if (S.challenge) {                                     // Challenge: a hit costs ALL your followers
+    while (S.snake.length > 1) { const t = S.snake.pop(), r = S.roster.pop(); dropFx(t.x, t.y, (px, py) => drawSegment(r, px, py, false)); }
+    S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'All lost!', age: 0 });
+    return;
+  }
   const t = S.snake.pop(), r = S.roster.pop();           // the tail character is the one dropped
   dropFx(t.x, t.y, (px, py) => drawSegment(r, px, py, false));
 }
@@ -63,6 +68,11 @@ function playerMove() {
   }
   const self = S.snake.some(s => s.x === nx && s.y === ny);
   let en = enemyAt(nx, ny);
+  if (S.pacifist && en) {                                // Pacifist: enemies are solid. Touching one is a stall, like your own tail
+    if (S.snake.length > 1) S.dir = { x: wrapStep(h.x - S.snake[1].x), y: wrapStep(h.y - S.snake[1].y) };
+    S.waitDir = true; playSfx('stall');
+    return;
+  }
   if (en && en.i === 0 && countFollower('medusa') > 0) { killEnemy(en.e); en = null; } // Medusa: touching a head kills it at once
   const blocked = !inBounds(nx, ny) || self || en || (nx === S.hazard.x && ny === S.hazard.y);
   if (blocked) {
@@ -80,8 +90,9 @@ function playerMove() {
     return;
   }
   S.graceUsed = 0;
+  S.stuckTicks = 0;
   const key = S.keys.find(k => k.x === nx && k.y === ny);   // the key
-  let rec = touchableRecruitAt(nx, ny); if (rec && countFollower('mrx') > 0) { shootRecruit(rec, nx, ny); rec = null; }                          // a character that is jumping, ready
+  let rec = touchableRecruitAt(nx, ny); if (rec && mrxRejects()) { shootRecruit(rec, nx, ny); rec = null; }                          // a character that is jumping, ready
   S.snake.unshift({ x: nx, y: ny });
   if (portal) { S.zaps.push({ kind: 'portal', ...portal, age: 0 }); playSfx('portal'); }
   if (rec) {
