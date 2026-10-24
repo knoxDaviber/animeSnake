@@ -8,178 +8,272 @@ Snake, but anime: a fast roguelike where the snake is a chain of anime character
 
 **Wording:** the playable head is called a **hero** in anything the player sees. The code still says head / `HEADS` / `HEAD_DEFS` (renaming is optional and not worth the risk yet).
 
-**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, follower skills (mines, Shogun lightning), a run-start buff pick (10 buffs), recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (all five families: Miner, Keysman, Magneto, Raiden, Gorgon), the hero speed system, score and combos, saved bests and coins, the Supabase top-10 leaderboard (needs the key in `config.js`), the title screen that is the hero select screen (random title and splash line), coin-gated hero unlocks, the on-canvas score / wave / coins display, placeholder sound effects and music (synthesized, mutable), the info bar, pause and an error screen, the retention systems (high-score pressure, frustration meter with a pity boost, coin tiers, boast hooks), and tap-zone touch controls next to swiping.
+**Works today:** smooth Snake loop, sprites with fallbacks, rings and damage, one hazard, enemy snakes in waves, 3 heroes (Swordsman, Magician, Gunman) with a hero-select screen, 5 followers with passives, follower skills (mines, Shogun lightning), a run-start buff pick, recruitment (keys summon characters), the tail stall, coins and paid revives, merging into fusion followers (all five families), the hero speed system, score and combos, saved bests and coins, the Supabase top-10 leaderboard, the title screen that is the hero select screen, coin-gated hero unlocks, the on-canvas score / wave / coins display, placeholder sound effects and music, the info bar, pause and an error screen, retention systems (high-score pressure, frustration meter with pity boost, coin tiers and boast hooks), and tap-zone touch controls next to swiping.
 
-**Not built yet:** mine kicking, expand-grid, rooms, real audio files and sprites (placeholder audio is built).
+**Not built yet:** the new economy/ad revive system, larger scrolling map, movement-feel buffer/grace, timed waves, enemies eating keys/recruits, new enemy types, temporary buff drops, hero levelling, title-screen shop, kickable projectiles, Goliath, Summoner, rooms/walls/hazard templates, the wave 10 boss, and the later wizard. Real audio files and final sprites are also still pending.
 
 ## Run it
 
-Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so keep the folder structure. Controls: arrows / WASD / swipe / tap zones (see Touch controls), P or Escape pauses, I (or hold the small bar under the game) shows or hides the info bar. After dying: any key, click or tap revives (costs coins), Q / Backspace / Give up ends the run, Space or tap restarts from game over. The game opens on the hero select screen (and returns to it after game over): tap a card, or press 1-9, or use the arrows and Enter. Tapping a locked hero buys it if you have the coins.
+Open `src/index.html` in a browser. Sprites load from `../assets/images/`, so keep the folder structure. Controls: arrows / WASD / swipe / tap zones (see Touch controls), P or Escape pauses, I (or hold the small bar under the game) shows or hides the info bar.
+
+The game opens on the hero select screen. Swordsman is free; Magician is now intended to start locked at 50 coins, Gunman costs 100, and Goliath/Summoner will cost 200. Old saves that already own Gunman retain that unlock.
+
+After dying, the revive flow is being replaced by the fake-ad system. The old coin-priced revive rules should not be treated as the target implementation.
 
 ## Code layout (`src/`, loaded in this order by `index.html`)
 
-| File | Owns |
-|------|------|
-| `config.js` | All constants and tuning numbers |
-| `sprites.js` | Shared sprite sheets (`SPRITES`, `HEADS`) |
-| `followers.js` | `FOLLOWERS` (5 base followers + fusions), `newSlot`, `randomFollower` (never a fusion) |
-| `state.js` | The `S` object (all mutable state) and `newRun()` |
-| `storage.js` | Saves best score, best combo, best wave, coins, unlocks and the retention meter (localStorage) |
-| `unlocks.js` | Click-to-buy unlocks: `isUnlocked`, `tryUnlock`, `heroPrice` |
-| `audio.js` | All sound: synthesized placeholder effects (`SYNTH`) and music moods, `playSfx`, `audioUpdate`, mute |
-| `world.js` | `tileFree`, keys (`placeFood`), hazard, drop effects |
-| `score.js` | Points, combos, kill coins, popups |
-| `player.js` | Steering, `playerMove`, `takeHit` |
-| `attacks.js` | Attack sheets, sword hit, bullets |
-| `heads.js` | `HEAD_DEFS`: the 3 heroes, their weapons, the hero-select layout and `chooseHead` (which also buys locked heroes) |
-| `skills.js` | Follower active skills (mine, bomb, Shogun lightning) |
-| `mines.js` | Mines, blast shape (`blastRange`, `blastTiles`) |
-| `passives.js` | Follower passives (Keysman chance, Magneto pull, enemy chase), `heroSpeed()`, Gorgon shields, Medusa freeze |
-| `recruits.js` | Keys and recruits: summon, walk in, touch, `eatKey`, `shootRecruit` |
-| `merge.js` | `mergeCheck`: three identical followers anywhere in the chain fuse |
-| `buffs.js` | `BUFFS`, buff pick layout, `startRun` |
-| `revive.js` | Revive countdown, revive cost, game over |
-| `leaderboard.js` | Shared top 10 (Supabase) and the initials box |
-| `retention.js` | `pressure()`, `coinMult()` / `coinReward()`, `retentionRunStart()` (pity boost), `retentionRunEnd()` (frustration meter) |
-| `enemies.js` | Enemy snakes, AI, damage, waves |
-| `render.js` | All drawing, including the title screen and the on-canvas score / wave / coins (reads `S`, never changes it). `hud()` now only refreshes the info bar |
-| `panel.js` | The info bar |
-| `input.js` | Keyboard, touch (swipe and tap zones), pause |
-| `main.js` | `step()` (world tick), `heroStep()` (hero move), `loop()`, start-up |
+| File             | Owns                                                                                   |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| `config.js`      | All constants and tuning numbers                                                       |
+| `sprites.js`     | Shared sprite sheets (`SPRITES`, `HEADS`)                                              |
+| `followers.js`   | `FOLLOWERS` (5 base followers + fusions), `newSlot`, `randomFollower` (never a fusion) |
+| `state.js`       | The `S` object (all mutable state) and `newRun()`                                      |
+| `storage.js`     | Saves best score, best combo, best wave, coins, unlocks and retention data             |
+| `unlocks.js`     | Click-to-buy unlocks: `isUnlocked`, `tryUnlock`, `heroPrice`                           |
+| `audio.js`       | All sound: synthesized placeholder effects and music moods                             |
+| `world.js`       | `tileFree`, keys, hazard, drop effects                                                 |
+| `score.js`       | Points, combos, coin rewards and popups                                                |
+| `player.js`      | Steering, `playerMove`, `takeHit`                                                      |
+| `attacks.js`     | Attack sheets, sword hit, bullets                                                      |
+| `heads.js`       | Hero definitions, weapons, hero-select layout and `chooseHead`                         |
+| `skills.js`      | Follower active skills (mine, bomb, Shogun lightning)                                  |
+| `mines.js`       | Mines, blast shape and detonation                                                      |
+| `passives.js`    | Follower passives, hero speed, Gorgon shields, Medusa freeze                           |
+| `recruits.js`    | Keys and recruits: summon, walk in, touch, `eatKey`, `shootRecruit`                    |
+| `merge.js`       | `mergeCheck`: three identical followers anywhere in the chain fuse                     |
+| `buffs.js`       | `BUFFS`, buff pick layout, `startRun`                                                  |
+| `revive.js`      | Death/revive/game-over flow; target is changing to fake-ad revives                     |
+| `leaderboard.js` | Shared top 10 and initials box                                                         |
+| `retention.js`   | Pressure, frustration/pity and coin-tier logic                                         |
+| `enemies.js`     | Enemy snakes, AI, damage and waves                                                     |
+| `render.js`      | All drawing, including title screen and HUD                                            |
+| `panel.js`       | Info bar                                                                               |
+| `input.js`       | Keyboard, touch, swipe/tap zones and pause                                             |
+| `main.js`        | `step()`, `heroStep()`, `loop()` and start-up                                          |
 
 Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goes in `render.js`. No loose globals. No `import`/`export` modules (they fail from `file://`).
 
-## How the clocks work
+## Clocks
 
-The game has two fixed clocks, both run from `loop()` in `main.js`. Each frame the hero clock goes first.
+The current game has a 125 ms world tick and a separate hero movement timer.
 
-**Hero move (`heroStep`)**, every `heroInterval()` ms = `TICK_MS / heroSpeed()` (125 ms at speed 1; see Hero speed below): `playerMove()`, `hud()`, `checkDeath()`. The player is drawn with its own progress value, `S.heroAlpha` (everything else uses `S.alpha`).
+- `heroStep` runs on `heroInterval()` based on `heroSpeed()`.
+- `step` advances the world, skills, attacks, recruits, enemies and waves.
+- The speed rework will halve the base hero speed and give enemies their own movement timers.
+- Enemy/food speed changes should not silently change skill timers.
 
-**World tick (`step`)**, every 125 ms:
-1. `S.tick++`, the immunity countdown, then `ageDrops`, `agePopups`, `ageBlasts`, `ageZaps`.
-2. If alive: `mergeCheck`, `updateCombo`, `updateSkills` (then `S.tailLeft` is cleared), `updatePassives` (Magneto pull, Gorgon recharge, Medusa freeze), `updateAttacks`, `updateHead` (hero weapon), `updateRecruits`, `stepEnemies`, `refreshKey`, `updateWaves`.
-3. Update best score and best wave, `hud()`, `checkDeath()` (if dead: `saveProgress()` and `beginRevive()`).
+## Rules to preserve
 
-`loop()` also calls `updateRevive()` every frame. Pause, revive and run start reset both clocks (`S.last`, `S.heroLast`). If anything throws, a "Something broke" screen shows.
+- Heroes attack automatically in the facing direction; steering is aiming.
+- Heroes start with **zero followers**.
+- A hit removes the tail character; losing the last character kills the run.
+- Three identical followers anywhere in the chain merge into one distinct fusion.
+- Fusion permanent buffs are run-only modifiers.
+- Gorgon shields stop recharging under the new rules.
+- Gunman fires every 16 ticks and gets a front bullet.
+- Magician uses a piercing fireball rather than the old shockwave.
+- Keys remain the recruitment item; eating a key summons a follower rather than directly growing the chain.
+- Keysman keeps both its old double-summon chance and the new rule that recruiting a Keysman summons a non-Keysman follower.
+- Raiden's remote mine detonation is oldest-first.
+- Modifiers such as Dev mode, Pacifist and Glass cannon are legitimate runs; they are scored differently rather than removed from the leaderboard.
 
-## Rules as built
+## Heroes and prices
 
-- **Rings:** a hit drops the tail character; you die when a hit lands on your last one. Walls, the hazard, enemy snakes, your own body and mine blasts all count. Blocked moves leave you in place. After a hit you are immune for 8 ticks (the chain blinks). The Swordsman's shield blocks the first enemy-head hit without blinking. The Magician's walls are portals. Your own tail tile is not a hit (tail stall: you stop until you steer).
-- **Heroes:** Swordsman (sword on the tile ahead, 3 damage; default every 1 s via `SWORD_COOLDOWN`), Magician (3x3 shockwave 2 tiles ahead every 10 s, 1 damage), Gunman (a bullet to each side every 6 s, 1 damage).
-- **Enemies and waves:** first wave after 24 ticks; wave size `1 + wave/3` (max 5, plus 1 under full high-score pressure); enemies spawn on the edges, never reverse, chase 60% of the time (plus 10% per Magneto, plus up to 15% under pressure). A boxed-in enemy flips itself (its tail becomes the head); an enemy may step onto its own tail tile. Hits to kill grow with the wave (`hitsToKill`).
-- **Keys and recruits:** keys are an array, `S.keys`. Eating one scores 10 and summons a random follower (never a fusion) that walks in from outside the grid, then jumps. A recruit can be touched by the hero from the moment it is on the grid, walking or ready (it also joins if it walks into your head). At most 3 wait at once; no new key drops until all keys are gone and fewer than 3 wait. Enemy heads kill recruits.
-- **Merging:** three identical followers anywhere in the chain (no need to be side by side) fuse into one fusion follower in the first one's slot, so the chain loses 2 characters. Fusions are killed like any follower and cannot merge again. The base follower lists its fusion with `merge: '<id>'` in `followers.js`.
-- **Hero speed:** `heroSpeed()` = 1 + Raiden (+10% each, max +50%) + Shogun (+30% each) - Gorgon (5% each, max 50%) - Medusa (10% each), kept between 0.4 and 1.8. `HERO_SPEED_TEST` in `config.js` multiplies it for testing (keep it at 1). It changes the **hero only**: enemies, skill timers and animations stay on the 125 ms world tick.
-- **Gorgon shields:** each Gorgon (the first 5 in the chain) holds a 1-hit shield that blocks any hit without blinking, then recharges for 20 s (`slot.cd`). The Swordsman's block is used first.
-- **Coins:** +3 per kill, +5 per wave started (both times the coin payout tier, see Retention), kept between runs. A revive costs 15, then 30, 45... (`REVIVE_COST_*`). If you cannot afford it, you go straight to game over.
-- **Score:** key 10, cut segment 5, kill 20 x combo (cap x5). Combo window 24 ticks.
-- **Run start:** pick a hero, then one of 3 random buffs from 10 (Extra follower, +10% score, Thick skin, Quick hands, Combo keeper, Skill haste, Bounty hunter, Second wind, Welcome party, Minefield). A high frustration meter adds a free Extra follower (the pity boost).
-- **Revive and leaderboard:** 10 s countdown after dying, bonus +10% of score, 24 ticks of immunity. The shared top 10 is fetched when the run really ends; beating 10th place opens the initials box. Failures are quiet.
+| Hero      | Price / state             |
+| --------- | ------------------------- |
+| Swordsman | Free                      |
+| Magician  | 50 coins; locked at start |
+| Gunman    | 100 coins                 |
+| Goliath   | 200 coins                 |
+| Summoner  | 200 coins                 |
 
-## Followers and fusions (current)
+Unlocks are by hero id, not card index. Preserve old Gunman unlocks.
 
-| Follower | Now | Fusion (3 of them) |
-|----------|-----|--------------------|
-| Miner | +1 mine blast arm length each; mine every 8 s each (max 5 mines) | **Bomber**: blast arms reach the map edge (a + shape); mine every 5 s |
-| Keysman | +10% each (max 50%) that a key summons 2 characters | **Kingsman**: key drops are 1-3 keys; Keysman 40% likelier to be summoned |
-| Magneto | pulls keys up to 4 tiles; enemies chase you more | **Mr.X**: eats keys within 3x3 of your hero; new recruits are rejected and shot at the nearest snake for 2-5 damage |
-| Raiden | +10% hero speed each (max +50%) | **Raiden Shogun**: +30% hero speed; every 5 s lightning hits the closest enemy tile (any segment) for 1-3 damage |
-| Gorgon | 1-hit shield each (max 5, recharge 20 s); slows the hero 5% each (max 50%) | **Medusa**: enemy heads in the line you face freeze; any enemy head you touch dies at once; hero slowed 10% |
+## Buff cleanup
 
-## Retention (built)
+Target buff changes:
 
-`retention.js` holds four hooks. Every number is a `RET_*` constant in config.js; `RETENTION_ON = false` switches all of them off and `RET_COIN_TIERS_ON = false` switches off only the coin tiers. Everything is visible to the player.
+- Extra follower → Starting follower.
+- +10% score → +20% score.
+- Remove Bounty hunter.
+- Add Get Rich Quick.
+- Second wind = free revive.
+- Add/retain flag-style buffs: Magician's gift, Glass cannon, Dev mode, Everything is a bomb.
+- The pity boost remains, because starting with zero followers makes it materially more useful.
 
-- **High-score pressure:** `pressure()` goes 0..1 as `S.score / S.bestAtStart` goes from 0.85 to 1 (and stays at 1). `S.bestAtStart` is the best score when the run began, so passing your best mid-run keeps the pressure capped instead of resetting it. Off while the best is under `RET_PRESSURE_MIN_BEST` (200). It adds `RET_PRESSURE_CHASE` to `enemyChase()` (passives.js) and `RET_PRESSURE_EXTRA` snakes to a wave (`updateWaves`, enemies.js). `drawHud` shows "N to beat best" from `RET_SHOW_FROM` (60%) of the best.
-- **Frustration meter:** `S.ret.frustration` (0-100, saved). `retentionRunEnd()` (called from `endRevive`, revive.js) adds for a short run, a low score and a death streak, and subtracts for a new best or a long run. `retentionRunStart()` (called from `startRun`, buffs.js) adds for a fast restart, and if the meter is at `RET_PITY_AT` it applies the buff `RET_PITY_BUFF` (Extra follower), resets the meter to `RET_PITY_RESET`, sets `S.pity` and shows a "Pity boost!" popup. Run length is measured from `S.runStart` to `S.deathAt` (set in `beginRevive`), so the revive countdown does not count.
-- **Coin tiers:** `coinMult()` looks at `S.ret.spendHist` (revive coins spent per run, last 5 runs) and picks a tier from `RET_COIN_TIERS` (x0.7 / x1 / x1.25 / x1.5; neutral for the first 3 runs). `newRun` rolls it into `S.coinMult`, and `coinReward(n)` applies it to kill coins (score.js) and wave coins (enemies.js). `S.runSpend` is added to in `revive()`. Shown on the hero select screen (top right, under the coins) and on the info bar line when it is not x1.
-- **Boast hooks:** `drawGameOver` (render.js) shows best wave, "Previous best was N. You smashed it!" after a new best, or "N short of your best" ("So close!" within 15%).
-- **Saved data:** storage.js now also saves `bestWave` and `ret` (old saves load with zeros).
+## Economy
 
-## Touch controls (built)
+The old "+3 per kill, +5 per wave, coin-priced revive" economy is obsolete.
 
-- Swiping still works (`touchmove`, 24 px threshold). A tap steers too: `touchend` calls `tapSteer(x, y)` (input.js), which splits the page into four zones with an X centred at the canvas's horizontal middle and `TAP_CENTER_Y` (0.62) of its height. Whichever of |dx| and |dy| from that centre is bigger decides left/right or up/down. `setDir` still refuses an instant reverse and ends a tail stall.
-- A touch is a tap only while `tapArmed` is true: it is cleared when the touch becomes a swipe, and never set when the touch only resumes from pause, or happens on a pick screen, the revive or game-over screen, or the initials box / info bar. Taps outside the canvas count too, measured against the canvas.
-- No visual feedback on purpose.
-- style.css makes the page text unselectable (`user-select: none`, no touch callout, no tap highlight); inputs keep `user-select: text` so the initials box works on iOS. `input.js` also blocks the context menu everywhere except the initials box and info bar.
+Target direction:
 
-## Title screen and hero unlocks (built)
+- Coins are scarce.
+- A Pentakill can pay **5 coins** as a hidden mini-sidequest. It is a once-per-chain bonus, not 5 coins per kill.
+- Wave milestones and bosses provide most of the normal run income.
+- Fake ads handle revives.
+- Hero-select ad button: 10, 5, 2, 1 coins, then back to 10 after an hour.
+- Dev-side ad toggle and 1000-coin player toggle.
+- Joke ads are absurd fake products with no tracking.
+- Buff screen: 1 coin for the third card, 5 coins for a mulligan.
+- Retention coin tiers stay, but use coins spent in runs rather than revive coins spent. Initial threshold idea: 0 / 5 / 12 / 25 over five runs.
 
-- `newRun()` always starts on the hero select screen (`S.headPicking`), so it is also the title screen: at game start and after every game over. `drawHeadPick` (render.js) draws it, `headLayout` / `headCardRect` / `chooseHead` (heads.js) lay it out and act on it, and input.js handles taps (`tapCard`), keys 1-9, arrows and Enter.
-- `unlocks.js` is generic: `isUnlocked(kind, id, price)` and `tryUnlock(kind, id, price)`. `heroPrice(id)` reads `HERO_FREE`, `HERO_PRICES` and `HERO_DEFAULT_PRICE` in config.js. Bought ids live in `S.unlocked[kind]` and are saved by storage.js under `unlocked` (ids, not indexes; old saves without it load with nothing bought, so Gunman is locked).
-- Clicking a locked card calls `tryUnlock` and never starts the run. A note shows on the card (`S.cardNote`, `CARD_NOTE_MS`).
-- Layout: up to 3 heroes are big cards, 4 to 8 a compact grid (`HERO_GRID_COLS` per row). In the grid the first tap focuses a card and the second acts.
-- The title is `S.titleText` ("animeSnake", or "Snake-lite" with chance `TITLE_ALT_CHANCE`) and the splash line is `S.splashText`, picked from `SPLASHES`. Both are rolled in `newRun()`.
-- To add a hero: one `HEAD_DEFS` entry, its sheet name in `HEADS` (sprites.js), and optionally a price in `HERO_PRICES`. A hero not in `HERO_FREE` is locked by default.
-- Testing: `TEST_START_COINS` and `TEST_RELOCK` in config.js, marked TEST ONLY. Keep them at 0 / false and remove them later.
-- Phones send a fake mouse click after a tap, so `mousedown` ignores clicks within 700 ms of a touch (`S.lastTouchAt`).
-- The numbers are drawn on the canvas (`drawHud` in render.js). Hard rule: nothing may sit above the canvas where it could move or resize the game. The info bar line is fixed height, one line, ellipsised.
+## Movement and map
 
-## Audio (built)
+The intended movement feel is still unmistakably Snake.
 
-- `audio.js` makes every placeholder sound with the Web Audio API, so no files are needed and it works from `file://`. Game code calls `playSfx('name', optionalNumber)`. The names are the keys of `SYNTH`. Try `audioDemo()` in the browser console (after one click) to hear all of them, or set `AUDIO_LOG = true` in config.js.
-- Most sounds need no hook: `audioWatch()` (called every frame by `audioUpdate()` in `loop()`) spots changes in `S` and plays the menu, pause, death, revive, game-over, countdown, wave, spawn, shield-ready and new-best sounds. Combat sounds are explicit `playSfx` calls placed next to the event (heads.js, enemies.js, score.js, player.js, recruits.js, mines.js, skills.js, passives.js, merge.js).
-- Music moods come from `audioMode()`: title, run, battle, tense. They crossfade on one shared clock (`MUSIC_BPM`).
-- Real files: put them in `assets/audio/sfx/` or `assets/audio/music/` and list them in `SFX_FILES` (sound name to file) or `MUSIC_FILES` (mood to file) in config.js. Only listed files are requested, so nothing 404s. A listed sfx file plays instead of its synth version; a listed music file replaces that mood's synth music.
-- Browsers keep audio silent until the first tap or key press: `audioUnlock()` handles that. Mute: M, or the speaker icon top left of the hero select screen (`muteButtonRect`); saved as `muted` in storage.js.
-- Audio can never crash the game: every entry point is wrapped, and an error turns sound off for the session (see the console).
-- Volumes and timing live in config.js (`MASTER_VOLUME`, `SFX_VOLUME`, `MUSIC_VOLUME`, `SFX_GAPS`...).
+First experiments:
 
-## Hero speed (built)
+1. Two-entry input buffer, so quick taps queue rather than overwrite.
+2. `GRACE_TICKS = 0 or 1` coyote/grace tick before a wall/body collision lands.
+3. Consider an instant reverse for a one-segment hero.
+4. Temporary Ghost Body buff can remove self-collision for followers without permanently removing the chain's snake behaviour.
+5. Halve base speed to improve reaction time.
 
-Raiden, Shogun, Gorgon and Medusa all work through `heroSpeed()` in `passives.js`. The hero has its own move timer (`S.heroLast`, `heroStep()` in `main.js`), so speed changes never touch enemies or skill timers.
+Map direction:
 
-## Assets (`assets/images/`)
+- Make the world larger than the viewport.
+- Use a **scrolling camera first**.
+- Keep room-snap/Zelda-style framing compatible with the same world/room architecture for later.
+- Do not add an edge arrow for keys initially; searching is intentional.
+- Recruits should spawn near the player, not from the far world edge.
+- Room templates are curated rather than fully procedural.
+- Walls and hazard templates are part of the room/map work.
 
-Every object has a PNG at its final path, so art is swapped by overwriting the file. Missing sheets fall back to coloured squares.
+## Waves and enemies
 
-- `characters/<name>.png`: heroes (`character1`, `magician`, `gunman`), 128x128, 4x4 directional. `character1.png` is the user's own art, never overwrite it.
-- `followers/<id>.png`: miner, raiden, keysman, magneto, gorgon (was medusa), plus the fusions bomber, kingsman, mrx, shogun, medusa (the new fusion). `tools/make_placeholders.py` draws a placeholder for each one that is missing.
-- `enemies/enemy_head.png`, `enemy_body.png`; `attacks/slash_sword.png` (256x41, 4 frames of 64x41); `food.png` (the key), `hazard.png`, `mine.png`, `recruit.png` (128x32, 4 frames).
+Target wave system:
 
-## Leaderboard setup (one time)
+- Early wave timing around 10 s.
+- Around 30 s by wave 10.
+- Around 60 s by wave 20.
+- Cap live enemies.
+- No new regular snakes during boss fights.
+- Pause the wave timer during boss fights.
+- Enemies can eat keys and recruits, then grow and speed up.
+- Add fast thin snakes, armored heads and spitters in later wave bands.
+- Room templates can favour enemy types.
 
-1. In Supabase, SQL Editor: run all of `tools/supabase_setup.sql` (if you set it up earlier with the keep-10 version, run `tools/supabase_keep50.sql` once).
-2. Copy the **publishable** key (`sb_publishable_...`) into `LEADERBOARD.key` in `config.js`. Never the secret or service_role key.
-3. Commit and push; play to the game-over screen to check "TOP 10" appears.
+## Goliath and kicking
 
-## Decisions the user has confirmed
+One kickable-projectile system should support both the mine-kick idea and Goliath.
 
-- Heroes attack automatically in the facing direction; followers are the body with passives and skills.
-- Keys plus characters replace food growth. A hit takes the tail character; losing the last one kills you.
-- Fusions are completely different characters, not stronger copies, and each merge combination gives its own fusion.
-- Merging does not need strict order.
-- Speed and slowdown change the hero only, never enemies or skill timers.
-- Coins: earned per kill and wave, spent on revives and on hero unlocks.
-- The 20x20 grid stays for now. Future idea: several rooms you can enter to expand the map, different wall types, and either floors that change hazard positions or curated dungeon-like rooms (the user leans towards curated rooms). See DESIGN.md.
-- Retention hooks are deliberate (see DESIGN.md) and are now built.
-- The title screen is the hero select screen, with no separate menu. Locked heroes are bought by clicking them. The title is "animeSnake" or, half the time, "Snake-lite", with a Minecraft-style splash joke.
-- Score, wave and coins are drawn on the canvas. Best score and best combo are on the game-over screen.
-- Touch: tapping steers by four canvas zones (an X, centre lowered for thumbs) next to swiping, with no visible feedback. Page text is not selectable.
+Goliath rules:
 
-## Ideas for later (not decided)
+- Any contact from a non-facing tile hurts him.
+- Front contact is harmless, including walls, hazard and enemy heads.
+- Mines kill him regardless.
+- "Back" means the tile behind his head / any direction he is not facing.
+- Goliath is 0.75x the halved base speed.
+- Food shields, follower walk-in every 5 kicks, fusion reversion on wall kicks and other kick rules depend on the shared kick system.
 
-- **Kick the mines:** a kicked mine slides in the facing direction and explodes the moment it touches anything. Open questions: who kicks (the hero by walking into a mine, or a follower or fusion such as the Bomber?), how fast and how far it slides, what counts as "anything" (enemy segments, your own chain, walls, the hazard, keys, recruits, other mines), whether the blast can hurt you, and whether kicking uses a cooldown. Mines currently only go off when a snake head steps on them (`detonateMine` in `mines.js` can be reused for the explosion).
+## Summoner
 
-- **More title-screen sections:** Followers (choose which can appear in a run) and Upgrades, with locked items bought by clicking them, reusing `unlocks.js`. Not built.
+Summoner is Tier 4/hard work.
+
+- Followers become autonomous agents.
+- Normal summons live for 8 s.
+- Context AI chooses useful movement/behaviour.
+- Fusion summons last 5 s.
+- Example: Medusa freezes and chases.
+
+## Bosses
+
+### Wave 10: giant snake
+
+Build this first.
+
+- Gridless giant snake.
+- Swaps head and tail when hit.
+- Eats other snakes.
+- No new regular snakes arrive during the fight.
+- Boss rewards should reuse the existing buff-pick screen; a relic/buff reward is a good target.
+- Any boss payout is a tuning target; the earlier 10-coin wave-10 idea is not locked.
+
+### Wave 20: wizard
+
+Build much later.
+
+- Teleports.
+- Persistent map-wide laser.
+- Forcefield pushes the player out.
+- Can fire across rooms.
+- Needs the larger map/room support first.
+
+## Retention
+
+Keep the existing high-score pressure and frustration meter/pity boost.
+
+Change only the coin-tier input:
+
+- Old input: revive coins spent.
+- New input: coins spent in runs, especially buff-screen purchases.
+- Principle: players who spend more in runs earn more later; players who spend little earn less.
+- Tune thresholds after the buff screen exists.
+
+## Challenge and Pacifist
+
+**Challenge:** separate win screen; 100-coin reward; intentionally difficult and can be made harder later. Modifier runs stay on the leaderboard and receive their own scoring multiplier.
+
+**Pacifist:** normal Snake-style avoidance. Avoid everything. No combat. Enemies are solid but do not damage you. Score through keys, recruits, merges and waves survived. Add a stuck detector and decide the exact goal during implementation.
+
+## Build order
+
+1. Foundation: Tier 1, movement feel, speed rework, timed waves, enemies eating.
+2. Economy: joke ads, scarce coins, Pentakill, buff-screen purchases, shop and retention coin-tier change.
+3. Hero kits: Gunman, Magician, follower/fusion changes and levelling.
+4. Map: larger scrolling world, enemy types, temporary buff blocks, rooms/walls/hazards.
+5. Kick physics: shared kickable-projectile system.
+6. New heroes: Goliath, then Summoner.
+7. Bosses: wave 10 snake first; wizard much later.
+
+## Files likely to change
+
+Near-term:
+
+- `config.js`
+- `state.js`
+- `heads.js`
+- `buffs.js`
+- `input.js`
+- `player.js`
+- `passives.js`
+- `skills.js`
+- `mines.js`
+- `recruits.js`
+- `merge.js`
+- `enemies.js`
+- `score.js`
+- `revive.js`
+- `retention.js`
+- `render.js`
+- `panel.js`
+- `audio.js`
+- `storage.js`
+
+Later:
+
+- `camera.js` or equivalent camera logic
+- room/map data
+- kickable-projectile logic
+- Goliath/Summoner definitions and AI
+- boss logic
 
 ## Known gaps and cautions
 
-- Nothing has been played in a real browser by the assistant. Recent changes (retention systems, tap controls, coins, fusions, enemy corner fix, shield flash, recruit touching, any-order merging) are untested.
-- Retention numbers are first guesses. Check: does the pity boost trigger too easily after a few quick deaths? Is x0.7 coins for a player who never revives too harsh (it slows saving for hero unlocks)? Does pressure feel fair near your best? To test fast, set `RET_PRESSURE_MIN_BEST` low or edit the saved `animeSnake.progress.v1` entry in localStorage (`ret.frustration`, `ret.spendHist`).
-- Tap controls: check `TAP_CENTER_Y` (0.62) on a real phone, that a tap never also resumes from pause, and that the initials box still types on iOS.
-- Batch 2: the hero speed system has been checked in a browser. Raiden/Shogun lightning and Gorgon shields / Medusa freeze still need a proper play-through. Delete this line once they are tested.
-- Audio is tested only against a mock of Web Audio (no errors), not by ear. Levels and the music will need your ears.
-- The title screen, unlocks and the on-canvas display are untested in a real browser (by the assistant).
-- Enemy AI is simple. The corner fix lets a boxed-in snake flip itself; if enemies still get stuck, note where.
-- Anyone can post a fake score from the console. Accepted for a hobby game.
+- The assistant has not verified the new design changes in a real browser; they are design targets.
+- The old retention implementation needs migration from revive spending to run spending.
+- The old coin rewards/revive costs must not survive accidentally when the economy is rebuilt.
+- Old saves must preserve any existing Gunman unlock.
+- Exact speed bonus numbers, boss payouts, ad timing, Pacifist goal, room templates and kick physics need play-testing.
+- The daily challenge is parked and should not block the main roadmap.
+- The leaderboard currently accepts hobby-game scores without anti-cheat protection.
 - The assistant cannot push to git. Files are delivered as edits; the user copies them in and commits.
 - Docs mention HEADS/HEAD_DEFS because the code uses those names.
 
 ## Working preferences
 
 - Ask a clarifying question on vague instructions.
-- Give copy-paste edits with exact Ctrl+F find text and where it goes. Do not resend whole files unless needed. For the docs (Handover, DESIGN, README), give the full files.
+- Give copy-paste edits with exact Ctrl+F find text and where it goes. For the docs (Handover, DESIGN, README), give the full files.
 - Write a short handover after long code sessions.
 - Code split across files, not one big file.
 - Commit when something works, and before big AI changes.
@@ -188,4 +282,4 @@ Every object has a PNG at its final path, so art is swapped by overwriting the f
 
 ## Last session
 
-Added tap-zone touch controls (next to swiping) and made page text unselectable, then built the retention systems (`retention.js`): high-score pressure with an "N to beat best" line, the frustration meter with a pity boost, coin payout tiers, and boast lines on the game-over screen. New saved data: `bestWave` and `ret`. To check in a browser: tap steering on a phone, die a few times quickly to see the pity boost, and look at the game-over screen. Next: play-test and tune the retention numbers, then rooms and wall types (see DESIGN.md).
+The docs were re-planned around the new economy, movement feel, speed rework, larger scrolling map, enemy eating, temporary buffs, hero kits, kicking/Goliath/Summoner, and the boss sequence. The first boss is now the wave 10 giant snake. The wizard is deliberately postponed until the map/room foundation exists.
