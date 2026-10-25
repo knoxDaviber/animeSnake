@@ -17,6 +17,9 @@ const HEAD_DEFS = [
   { id: 'gunman', name: 'Gunman', update: updateGunman, weapon: 'Bullets', cd: GUNMAN_COOLDOWN,
     desc: 'Why aim when you can spray?',
     detail: `Bullets fly out ahead and to each side every ${secs(GUNMAN_COOLDOWN)} s.` },
+  { id: 'goliath', name: 'Goliath', update: updateGoliath, weapon: 'Headbutt', cd: 0,
+    desc: 'Stares down everything. Kicks the rest.',
+    detail: `Harmless from the front, hurt from the sides and back. Kicks keys, mines and characters: they slide until they hit something. Every ${KICK_REWARD_EVERY} kicks a fusion follower joins. ${Math.round(GOLIATH_SPEED * 100)}% speed.` },
 ];
 
 function heroText(def) { return S.heroDetail ? def.detail : def.desc; } // hero select: flavour by default, stats when toggled
@@ -32,6 +35,7 @@ function weaponDamage(base, id = 'base') { return Math.max(1, Math.round((base +
 
 // Called once per tick, after the player has moved.
 function updateHead() { HEAD_DEFS[S.roster[0].c].update(); }
+function updateGoliath() { /* no weapon: he is the weapon (see kicks.js) */ }
 
 // ---- Swordsman -----------------------------------------------------------------
 function updateSwordsman() {

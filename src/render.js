@@ -66,7 +66,7 @@ function drawEnemySeg(isHead, fx, fy, px, py) {
 }
 function drawFood() { // the recruit keys (still the food sprite until it gets its own art)
   S.keys.forEach(k => {
-    const x = k.x * CELL, y = k.y * CELL;
+    const ip = itemPos(k), x = ip.x, y = ip.y;
     if (SPRITES.food.ready) return drawItem(SPRITES.food, S.tick, x, y);
     ctx.fillStyle = '#ff4d4d';
     ctx.fillRect(x + 6, y + 6, CELL - 12, CELL - 12);
@@ -74,7 +74,7 @@ function drawFood() { // the recruit keys (still the food sprite until it gets i
 }
 function drawMines() {
   S.mines.forEach(m => {
-    const x = m.x * CELL, y = m.y * CELL;
+    const ip = itemPos(m), x = ip.x, y = ip.y;
     if (SPRITES.mine.ready) return drawItem(SPRITES.mine, S.tick, x, y);
     ctx.fillStyle = '#3a3a4a'; // fallback: dark disc with a blinking red light
     ctx.beginPath(); ctx.arc(x + CELL / 2, y + CELL / 2, 10, 0, Math.PI * 2); ctx.fill();
@@ -689,14 +689,14 @@ function draw() {
       drawBlasts();
       drawZaps();
       drawPopups();
+      drawLevelBar();       // hud.js: small bar under the hero (world pixels)
+      drawKeyArrow();       // hud.js: arrow halfway to the window edge (world pixels)
       ctx.restore();
+      ctx.setTransform(S.view.dpr, 0, 0, S.view.dpr, 0, 0);   // window pixels from here on
+      drawHud(); drawBuffList(); drawComboBar(); drawStallHint();
     } finally { ctx = ui; }
   }
   ctx.clearRect(0, 0, cv.width, cv.height);            // screen layers go on the UI square
-  drawHud();
-  drawKeyArrow();
-  drawComboBar();
-  drawStallHint();
   drawOverlay();
   drawPick();
   drawAd();

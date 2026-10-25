@@ -29,12 +29,14 @@ function step() {
       S.alive = false;
     }
     updateCombo();
+    passiveXp();        // the XP bar trickles up on its own (levels.js)
     if (!S.pacifist) updateSkills();
     S.tailLeft = null;  // the Miner only gets the tile the tail left since the last tick
     updatePassives();   // Magneto pulls the key toward you
     updateAttacks();
     if (!S.pacifist) { updateHead(); updateBranches(); }   // the hero's weapon (heads.js) and level branches (levels.js)
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
+    updateKicks();      // kicked items slide (kicks.js)
     stepEnemies();
     updateSpits();      // spitter orbs fly (enemies.js)
     refreshKey();       // puts the next key down unless enough characters are already waiting

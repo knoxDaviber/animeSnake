@@ -15,6 +15,12 @@ function addXp(n) {
   S.xp += n;
   while (S.xp >= xpNeed(S.level)) { S.xp -= xpNeed(S.level); levelUp(); }
 }
+// Once per world tick: the bar fills slowly by itself, more at low levels (fades out by LEVEL_XP_PASSIVE_FADE).
+function passiveXp() {
+  if (LEVEL_XP_PASSIVE_FADE <= 0 || S.level >= LEVEL_XP_PASSIVE_FADE) return;
+  const k = 1 - (S.level - 1) / LEVEL_XP_PASSIVE_FADE;
+  addXp(LEVEL_XP_PASSIVE * k * TICK_MS / 1000);
+}
 function levelUp() {
   S.level++;
   const newest = S.weapons[S.weapons.length - 1];

@@ -16,6 +16,23 @@ Snake, but anime: a fast roguelike where the snake is a chain of anime character
 
 **Not built yet:** push blocks, bumpers, turrets and crumbling floor (templates 4, 5, 7, 8 in templates.md), the serpentine (6, it has no side doors), temporary buff drops, kickable projectiles, Goliath, Summoner, the wave 10 boss, and the later wizard. Real audio files and final sprites are also still pending.
 
+## Latest step: terrain fixes and window HUD (written, untested)
+
+- **Terrain (player.js):** ice and conveyors no longer lock you into a wall (`terrainBlocked`, `forced`). While on ice or a belt, bumping a wall, hazard or wrong-way gate is free and just waits for a new heading. A belt running against a chain longer than 1 holds you in place (steer sideways to leave); a lone hero is turned around.
+- **HUD (hud.js, new, loaded after render.js and overriding the old drawHud/drawComboBar/drawStallHint/drawKeyArrow):** drawn on the WORLD canvas in window pixels (window corners), not on the 640 square. `draw()` in render.js calls it after the camera `restore()`. `TEXT_ZONES` are now window-pixel boxes anchored to a corner (`inTextZone` in world.js).
+- **Buff list** (`activeBuffs`/`drawBuffList`): small chips bottom-left. **Level bar** is world-space under the hero. **Key arrow** sits halfway between the hero and the window edge.
+- Old `drawHud` etc. in render.js can be deleted. `worldToUi` and `KEY_ARROW_RADIUS` are now unused.
+- Check first: ice/belt rooms (chapel, mill) no longer trap you, the HUD sits in the window corners on wide and tall windows, the chips do not overlap anything important, and the arrow looks right at the window edges.
+- **Passive XP (levels.js `passiveXp`, called from `step`):** `LEVEL_XP_PASSIVE` XP/s at level 1, fading linearly to 0 at `LEVEL_XP_PASSIVE_FADE`. XP can now be fractional.
+
+## Latest step: kick physics and Goliath (written, untested)
+
+- `kicks.js` (new) has one shared kick system for mines, keys and waiting recruits: `tryKick` (called from `playerMove`), `updateKicks` (each world tick), `S.kicks`, `S.kickCount`. A kicked item slides `KICK_SPEED` tiles per tick until a wall, snake or another item blocks it; a sliding mine that hits an enemy explodes. A pinned item (cannot slide) is eaten or stepped on normally.
+- Only Goliath kicks (`KICK_ALL_HEROES` in config.js switches it on for everyone). Every `KICK_REWARD_EVERY` (5) kicks a random fusion joins his chain.
+- Goliath (hero 4, `HEADS` needs `goliath.png`, placeholder fallback exists): 0.75x speed; hits from the tile he faces are harmless (walls, hazards, enemy heads, spit orbs; he headbutts heads for 1); side/back hits and mines hurt; instant reverse when his chain is 1 long.
+- Not built: food shields, wall kicks that revert fusions, recruits walking in as the kick reward, Goliath art.
+- Check first: kicks slide and stop correctly, pinned items are eaten, front hits are harmless, back hits hurt, speed feels right.
+
 ## Latest step: rooms, food and enemy types (written, untested)
 
 - **Rooms.** `rooms.js` holds the templates (20 strings of 20 characters), themes and `buildWorld()`, called from `newRun`. The world is a 3x3 grid of 20x20 rooms. The middle room is always the start room; the four rooms next to it are tier 1 and the corners tier 2. Each room is picked at random (never the same as the previous one), rotated 0 to 3 quarter turns and maybe mirrored (`transformRows`; direction tiles turn with it). The world edge is always wall. Built templates: start, ruins, gauntlet, garden, mill, chapel (ice), keep (moat), nest (barracks). A console warning appears if a template is not 20x20.

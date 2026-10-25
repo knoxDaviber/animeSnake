@@ -14,11 +14,11 @@ const FRAMES = 4;    // frames per animation row in a directional sheet
 // (world.js inTextZone), so text never sits on top of a key, mine, hazard, recruit or new enemy. Tiles: x, y, w, h.
 const TEXT_ALPHA = 0.5;
 const TEXT_ZONES = [
-  { x: 0,  y: 0,  w: 5, h: 3 },  // score, combo, "to beat best" (top left)
-  { x: 8,  y: 0,  w: 4, h: 2 },  // wave and "next wave" timer (top centre)
-  { x: 16, y: 0,  w: 4, h: 1 },  // coins (top right)
-  { x: 6,  y: 18, w: 8, h: 2 },  // "Choose a direction" (bottom centre)
-  { x: 0,  y: 19, w: 2, h: 1 },  // "Lv N" (bottom left)
+  { ax: 'l', ay: 't', w: 190, h: 80 },   // score, combo, "to beat best"
+  { ax: 'c', ay: 't', w: 150, h: 56 },   // wave and "next wave" timer
+  { ax: 'r', ay: 't', w: 110, h: 34 },   // coins
+  { ax: 'c', ay: 'b', w: 240, h: 44 },   // "Choose a direction"
+  { ax: 'l', ay: 'b', w: 200, h: 130 },  // buff list
 ];
 
 // Rings and damage
@@ -62,6 +62,12 @@ function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 // Rooms and terrain (rooms.js, world.js)
 const PORTAL_WALL_REACH = 8;  // Magician / gift: a wall up to this many tiles thick can be stepped through
 const MUD_SLOW = 0.5;         // speed multiplier while a snake's head is on mud
+// Kicking (kicks.js): mines, keys and waiting recruits can be kicked. A kicked item slides until it hits something.
+const KICK_ALL_HEROES = false;  // true: every hero kicks (for testing). false: Goliath only
+const KICK_SPEED = 2;           // tiles per world tick that a kicked item slides
+const KICK_FLOOR = '.*e~I';     // tiles a sliding item can cross
+const KICK_REWARD_EVERY = 5;    // Goliath: every Nth kick, a random fusion follower joins the chain
+const GOLIATH_SPEED = 0.75;     // Goliath's speed multiplier
 // Food presence (world.js)
 const KEY_PRESENCE = 3;       // keys on the map at once (a Kingsman fusion adds 1 for the rest of the run)
 const KEY_MIN_DIST = 8;       // new keys appear at least this far from the hero
@@ -140,6 +146,8 @@ const SHOGUN_DMG_MIN = 1, SHOGUN_DMG_MAX = 3; // lightning damage to the closest
 const LEVEL_XP_KILL = 2;         // XP per enemy kill
 const LEVEL_XP_BASE = 2, LEVEL_XP_STEP = 2; // XP to leave level l = BASE + STEP * l
 function xpNeed(l) { return LEVEL_XP_BASE + LEVEL_XP_STEP * l; }
+const LEVEL_XP_PASSIVE = 0.2;       // XP per second that trickles in just for surviving, at level 1
+const LEVEL_XP_PASSIVE_FADE = 15;   // ...shrinking each level, and gone at this level (0 = no passive XP at all)
 const LEVEL_BRANCH_EVERY = 5;    // every Nth level you pick a weapon branch
 const BRANCH_CHOICES = 3;        // cards offered on a branch pick
 const BRANCH_LOCKOUT_MS = 600;   // the branch pick ignores input this long after it appears
@@ -220,7 +228,7 @@ const AD_HOLD_DELAY_MS = 300;       // a hold only counts this long after the ad
 const AD_FAKE_SECONDS = 60;         // how long the ad claims to be (it "fast-forwards", and cannot be skipped)
 const AD_PAYOUTS = [10, 5, 2, 1];   // hero-select ad button: each ad pays the next number
 const AD_RESET_MS = 60 * 60 * 1000; // an hour after the last coin ad, payouts start again at 10
-const AD_FREE_PRICE = 1000;         // coins for the "No ads" toggle on the hero select screen
+const AD_FREE_PRICE = 99999;         // coins for the "No ads" toggle on the hero select screen
 const ADS = [
   { name: 'ProteinBark', line: 'Dogs hate it. Dogs are wrong.' },
   { name: 'Wi-Fi for Fish', line: 'Finally, a reason for the aquarium.' },

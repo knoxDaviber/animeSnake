@@ -110,6 +110,7 @@ function stepEnemy(e) {
   } else pick = opts[Math.floor(Math.random() * opts.length)];
   if (pick.headOn) {
     if (countFollower('medusa') > 0) { killEnemy(e); return; } // Medusa: an enemy head that touches you dies at once
+    if (goliathFront(-pick.d.x, -pick.d.y)) { if (damageEnemyHead(e, 1)) e.stun = 4; return; }  // Goliath faces it: harmless to him
     if (S.invuln > 0) return;                   // player is immune: the enemy just waits
     takeHit('enemyHead');                       // head-on: both snakes take damage, short stun
     if (damageEnemyHead(e, 1)) e.stun = 4;
@@ -208,7 +209,7 @@ function updateSpits() {
       if (!inBounds(nx, ny) || isWall(nx, ny)) { b.dead = true; break; }
       b.x = nx; b.y = ny;
       if (S.alive && S.snake.some(s => s.x === nx && s.y === ny)) {
-        if (S.invuln <= 0) takeHit();
+        if (S.invuln <= 0 && !(nx === S.snake[0].x && ny === S.snake[0].y && goliathFront(-b.dx, -b.dy))) takeHit();
         b.dead = true;
       }
     }

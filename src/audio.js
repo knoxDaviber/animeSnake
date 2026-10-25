@@ -155,6 +155,7 @@ const SYNTH = {
   hit()    { tone(240, 0.3, { type: 'sawtooth', slide: 70, vol: 0.38 }); noise(0.22, { freq: 1000, freqEnd: 180, vol: 0.35 }); },       // a character is lost
   portal() { tone(300, 0.18, { type: 'sine', slide: 1300, vol: 0.22 }); tone(1300, 0.18, { at: 0.14, type: 'sine', slide: 300, vol: 0.18 }); }, // Magician walls
   stall()  { tone(120, 0.12, { type: 'sine', slide: 70, vol: 0.35 }); },                                                              // ran into your own tail
+  kick()   { tone(180, 0.1, { slide: 70, vol: 0.25 }); noise(0.06, { freq: 800, vol: 0.2 }); },
 
   // keys and characters
   key()     { tone(784, 0.06, { type: 'triangle', vol: 0.22 }); tone(1175, 0.14, { at: 0.06, type: 'triangle', vol: 0.22 }); },

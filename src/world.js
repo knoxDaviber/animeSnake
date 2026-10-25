@@ -27,13 +27,14 @@ function tileFree(x, y) {
 }
 function randomTile() { return { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
 
-// TEXT_ZONES are areas of the 640x640 UI square, so a tile is checked at the spot where it is drawn on that square.
 function inTextZone(x, y) {
-  const v = S.view, c = S.cam || camTarget(), r = cv.getBoundingClientRect();
-  if (!v || !r.width) return false;
-  const ux = ((x * CELL + CELL / 2 - c.x) * v.scale - r.left) * SCREEN_W / r.width;
-  const uy = ((y * CELL + CELL / 2 - c.y) * v.scale - r.top) * SCREEN_H / r.height;
-  return TEXT_ZONES.some(z => ux >= z.x * CELL && ux < (z.x + z.w) * CELL && uy >= z.y * CELL && uy < (z.y + z.h) * CELL);
+  const v = S.view, c = S.cam || camTarget();
+  if (!v) return false;
+  const sx = (x * CELL + CELL / 2 - c.x) * v.scale, sy = (y * CELL + CELL / 2 - c.y) * v.scale;   // window pixels
+  return TEXT_ZONES.some(z => {
+    const x0 = z.ax === 'l' ? 0 : z.ax === 'r' ? v.cssW - z.w : (v.cssW - z.w) / 2, y0 = z.ay === 't' ? 0 : v.cssH - z.h;
+    return sx >= x0 && sx < x0 + z.w && sy >= y0 && sy < y0 + z.h;
+  });
 }
 
 // ---- Keys: the food ----

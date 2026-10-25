@@ -31,7 +31,7 @@ const SPRITES = {
 
 // The playable heads: slot 0 of the chain. Same order as HEAD_DEFS in heads.js (Swordsman, Magician, Gunman).
 // Sheets live at assets/images/characters/<name>.png.
-const HEADS = ['character1', 'magician', 'gunman'].map(name => {
+const HEADS = ['character1', 'magician', 'gunman', 'goliath'].map(name => {
   const ch = dirSheet(`../assets/images/characters/${name}.png`);
   ch.name = name; // keep the same object so onload can set ch.ready
   return ch;
