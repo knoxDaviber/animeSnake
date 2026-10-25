@@ -3,14 +3,15 @@
 // the combo count (capped at COMBO_MAX_MULT). Food and cut segments are flat.
 
 function comboMult() { return Math.min(Math.max(S.combo, 1), COMBO_MAX_MULT); }
-
+// XP for a kill: LEVEL_XP_KILL for a snake with up to LEVEL_XP_TAIL_FREE tail segments, LEVEL_XP_PER_TAIL more per extra segment.
+function killXp(tail) { return LEVEL_XP_KILL + Math.max(0, tail - LEVEL_XP_TAIL_FREE) * LEVEL_XP_PER_TAIL; }
 // Adds points. If a tile (x, y) is given, a "+N" popup floats up from it.
 function addScore(points, x, y, suffix = '') {
   points = Math.round(points * S.scoreMult);
   S.score += points;
   if (x !== undefined) S.popups.push({ x, y, text: '+' + points + suffix, age: 0 });
 }
-function registerKill(x, y) {
+function registerKill(x, y, tail = 0) {
   S.combo++;
   S.comboTimer = S.comboWindow;
   if (S.combo > S.bestCombo) S.bestCombo = S.combo;

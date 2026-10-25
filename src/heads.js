@@ -10,16 +10,16 @@ function secs(ticks) { return Math.round(ticks * TICK_MS / 100) / 10; }
 const HEAD_DEFS = [
   { id: 'swordsman', name: 'Swordsman', update: updateSwordsman, weapon: 'Sword', cd: SWORD_COOLDOWN,
     desc: 'A blade, a shield, and zero chill.',
-    detail: `Sword hits for ${SWORD_DAMAGE} every ${secs(SWORD_COOLDOWN)} s. Blocks the first enemy-head hit, ready again after ${secs(SHIELD_RECHARGE)} s.` },
+        detail: `Sword hits for ${SWORD_DAMAGE} every ${secs(SWORD_COOLDOWN)} s and lingers. Strikes twice from level ${SWORD_DOUBLE_LEVEL}. Blocks the first enemy-head hit, back after ${secs(SHIELD_RECHARGE)} s.` },
   { id: 'magician', name: 'Magician', update: updateMagician, weapon: 'Shockwave', cd: SHOCK_COOLDOWN,
     desc: 'Walls are just suggestions.',
     detail: `Walls open a portal. A 3x3 shockwave fires itself at enemies in range: ${SHOCK_MAX_CHARGES} charges, 1 back per ${secs(SHOCK_COOLDOWN)} s.` },
   { id: 'gunman', name: 'Gunman', update: updateGunman, weapon: 'Bullets', cd: GUNMAN_COOLDOWN,
     desc: 'Why aim when you can spray?',
     detail: `Bullets fly out ahead and to each side every ${secs(GUNMAN_COOLDOWN)} s.` },
-  { id: 'goliath', name: 'Goliath', update: updateGoliath, weapon: 'Headbutt', cd: 0,
+  { id: 'goliath', name: 'Goliath', update: updateGoliath, weapon: 'Swipe', cd: GOLIATH_SWIPE_COOLDOWN,
     desc: 'Stares down everything. Kicks the rest.',
-    detail: `Harmless from the front, hurt from the sides and back. Kicks keys, mines and characters: they slide until they hit something. Every ${KICK_REWARD_EVERY} kicks a fusion follower joins. ${Math.round(GOLIATH_SPEED * 100)}% speed.` },
+        detail: `Hurt only from behind. Swipes the 3 tiles in front every ${secs(GOLIATH_SWIPE_COOLDOWN)} s (6 from level ${GOLIATH_WIDE_LEVEL}). Kicks keys, mines and characters. Every ${KICK_REWARD_EVERY} kicks a fusion follower joins. ${Math.round(GOLIATH_SPEED * 100)}% speed.` },
 ];
 
 function heroText(def) { return S.heroDetail ? def.detail : def.desc; } // hero select: flavour by default, stats when toggled
@@ -35,17 +35,36 @@ function weaponDamage(base, id = 'base') { return Math.max(1, Math.round((base +
 
 // Called once per tick, after the player has moved.
 function updateHead() { HEAD_DEFS[S.roster[0].c].update(); }
-function updateGoliath() { /* no weapon: he is the weapon (see kicks.js) */ }
+// Goliath: a swipe across the 3 tiles in front of him (a row at right angles to his heading), 2 rows deep from GOLIATH_WIDE_LEVEL.
+function updateGoliath() {
+  if (!weaponReady(GOLIATH_SWIPE_COOLDOWN)) return;
+  const h = S.snake[0], d = S.dir, rows = S.level >= GOLIATH_WIDE_LEVEL ? 2 : 1, tiles = [];
+  for (let k = 1; k <= rows; k++) for (let s = -1; s <= 1; s++) {
+    const x = h.x + d.x * k - d.y * s, y = h.y + d.y * k + d.x * s;
+    if (inBounds(x, y) && !isWall(x, y)) tiles.push({ x, y });
+  }
+  if (!tiles.length) return;
+  fireAttack(ATTACKS.swipe, tiles[0].x, tiles[0].y, d, weaponDamage(GOLIATH_SWIPE_DAMAGE), tiles);
+  playSfx('sword');
+  S.lastSwing = S.tick;
+}
 
 // ---- Swordsman -----------------------------------------------------------------
 function updateSwordsman() {
   if (!S.shield && --S.shieldTimer <= 0) S.shield = true;
+  if (S.swordAgain > 0 && S.tick >= S.swordAgain) { S.swordAgain = 0; swordSwing(); }   // the second strike
   if (!weaponReady(SWORD_COOLDOWN)) return;
+  if (swordSwing()) {
+    S.lastSwing = S.tick;
+    if (S.level >= SWORD_DOUBLE_LEVEL) S.swordAgain = S.tick + SWORD_DOUBLE_GAP;
+  }
+}
+function swordSwing() {
   const h = S.snake[0], tx = h.x + S.dir.x, ty = h.y + S.dir.y;
-  if (!inBounds(tx, ty)) return;
+  if (!inBounds(tx, ty)) return false;
   fireAttack(ATTACKS.sword, tx, ty, S.dir, weaponDamage(SWORD_DAMAGE));
   playSfx('sword');
-  S.lastSwing = S.tick;
+  return true;
 }
 // Called by takeHit for a hit from an enemy HEAD. True if the Swordsman's block absorbs it.
 function shieldAbsorbs() {
@@ -91,7 +110,7 @@ function headLayout() {
   const n = HEAD_DEFS.length, big = n <= 3, cols = big ? n : HERO_GRID_COLS, rows = Math.ceil(n / cols);
   const gap = big ? 20 : 14, margin = 30, top = big ? 140 : 130, area = big ? 300 : 310;
   const w = (SCREEN_W - 2 * margin - (cols - 1) * gap) / cols;
-  const h = big ? area : Math.min(190, (area - (rows - 1) * gap) / rows);
+  const h = big ? area : Math.min(260, (area - (rows - 1) * gap) / rows);
   return { n, big, cols, rows, gap, margin, top, w, h };
 }
 // Where card i sits on the 640x640 canvas. Shared by drawing (render.js) and tapping (input.js).

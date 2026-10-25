@@ -41,6 +41,8 @@ function viewTiles() {
   const v = S.view, c = S.cam || camTarget(), x0 = Math.floor(c.x / CELL), y0 = Math.floor(c.y / CELL);
   return { x0, y0, x1: Math.ceil((c.x + v.w) / CELL), y1: Math.ceil((c.y + v.h) / CELL) };
 }
+// True if the tile is inside the camera view (partly visible edge tiles count). Pass viewTiles() as v when checking many tiles.
+function onScreen(x, y, v = viewTiles()) { return x >= v.x0 && x <= v.x1 && y >= v.y0 && y <= v.y1; }
 function worldToUi(wx, wy) { // a world pixel -> a point on the 640x640 UI square
   const v = S.view, c = S.cam || camTarget(), r = cv.getBoundingClientRect();
   return { x: ((wx - c.x) * v.scale - r.left) * SCREEN_W / r.width, y: ((wy - c.y) * v.scale - r.top) * SCREEN_H / r.height };

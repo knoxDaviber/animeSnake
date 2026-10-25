@@ -24,7 +24,9 @@ function detonateOldest() { if (S.mines.length) detonateMine(S.mines[0]); return
 function castShogun(r, i) {
   const h = S.snake[0];
   let best = null, bestD = Infinity;
-  for (const e of S.enemies) for (const s of e.segs) {      // any segment counts, not just heads
+    const v = viewTiles();
+  for (const e of S.enemies) for (const s of e.segs) {
+    if (!onScreen(s.x, s.y, v)) continue;      // any segment counts, not just heads
     const d = Math.abs(s.x - h.x) + Math.abs(s.y - h.y);
     if (d < bestD) { best = s; bestD = d; }
   }

@@ -95,7 +95,8 @@ function updateNova(id) {
 function updateThunder(id) {
   if (!branchReady(id, THUNDER_COOLDOWN)) return;
   const h = S.snake[0], segs = [];
-  for (const e of S.enemies) for (const s of e.segs) segs.push({ x: s.x, y: s.y, d: Math.abs(s.x - h.x) + Math.abs(s.y - h.y) });
+    const v = viewTiles();
+  for (const e of S.enemies) for (const s of e.segs) if (onScreen(s.x, s.y, v)) segs.push({ x: s.x, y: s.y, d: Math.abs(s.x - h.x) + Math.abs(s.y - h.y) });
   if (!segs.length) return;
   segs.sort((a, b) => a.d - b.d);
   branchFired(id); playSfx('lightning');

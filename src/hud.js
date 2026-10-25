@@ -76,20 +76,21 @@ function drawKeyArrow() {
 
 // ---- Buff list: small chips in the bottom-left corner, far from the hero, faded like the other HUD text ----
 function activeBuffs() { // [{ text, color }]
-  const out = [], add = (text, color) => out.push({ text, color });
+  const out = [], add = (text, color, prog) => out.push({ text, color, prog });
   const b = BUFFS.find(x => x.id === S.buff);
   if (b) add(b.name, '#ffd36b');
   if (S.pity) add('Pity boost', '#9a8cc4');
   if (S.gift) add(`Portals ${S.giftCharges}/${S.giftPerWave}`, '#c78bff');
-  if (headId() === 'magician') add(`Charges ${S.shockCharges}/${SHOCK_MAX_CHARGES}`, '#c78bff');
+  if (headId() === 'magician') add(`Charges ${S.shockCharges}/${SHOCK_MAX_CHARGES}`, '#c78bff',
+  S.shockCharges < SHOCK_MAX_CHARGES ? Math.min(1, (S.shockTimer + S.alpha) / weaponCooldown(SHOCK_COOLDOWN)) : undefined);   // the thin bar under the chip is the reload
   if (headId() === 'swordsman') add(S.shield ? 'Block ready' : `Block ${Math.ceil(S.shieldTimer * TICK_MS / 1000)}s`, '#6bc5ff');
   if (S.freeRevive) add('Free revive', '#8dff6b');
   const gs = gorgonSlots().length;
   if (gs) add(`Shields ${gorgonReady()}/${gs}`, '#8dff6b');
   if (S.medMerges > 0) add(S.medShieldCd > 0 ? `Medusa shield ${Math.ceil(S.medShieldCd * TICK_MS / 1000)}s` : 'Medusa shield', '#2fbf71');
   S.weapons.forEach(id => {
-    const w = id === 'base' ? null : BRANCHES.find(x => x.id === id);
-    if (w) add(`${w.name} Lv ${1 + Math.floor(S.wlv[id] || 0)}`, '#6bc5ff');
+  const w = id === 'base' ? null : BRANCHES.find(x => x.id === id);
+  if (w) add(`${w.name} Lv ${1 + Math.floor(S.wlv[id] || 0)}`, '#6bc5ff');
   });
   if (S.speedBonus > 0) add(`+${Math.round(S.speedBonus * 100)}% speed`, '#6bc5ff');
   if (S.keyBonus > 0) add(`+${S.keyBonus} key`, '#ffd36b');
@@ -109,6 +110,7 @@ function drawBuffList() {
     ctx.fillStyle = 'rgba(20,16,31,.7)'; ctx.fillRect(x, y, w, h);
     ctx.fillStyle = c.color; ctx.fillRect(x, y, 3, h);
     ctx.fillStyle = '#f3e9ff'; ctx.fillText(c.text, x + 11, y + h / 2 + 1);
+    if (c.prog !== undefined) { ctx.fillStyle = c.color; ctx.fillRect(x, y + h - 2, Math.round(w * c.prog), 2); }
   });
   ctx.restore();
 }

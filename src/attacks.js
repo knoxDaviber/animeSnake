@@ -8,9 +8,14 @@ const ATTACKS = {
     sheet: loadSheet('../assets/images/attacks/slash_sword.png'),
     w: 64, h: 41,  // size of ONE frame in the sheet (use 32 x 32 for tile-sized frames)
     fit: true,     // scale each frame down to fit inside one 32x32 tile (keeps aspect ratio)
-    // frames: 4,  // optional: omit to count every frame in the sheet (left to right, top to bottom)
     ticksPerFrame: 1,
     hitFrame: 1,   // hit resolves at the start of tick 1
+    linger: SWORD_LINGER,   // extra ticks it stays on its last frame and keeps hitting
+  },
+  swipe: {         // Goliath: drawn in code (drawSwipe in render.js), no sheet
+    frames: 4, ticksPerFrame: 1, hitFrame: 1,
+    linger: GOLIATH_SWIPE_LINGER,
+    draw: a => drawSwipe(a),
   },
 };
 
@@ -19,18 +24,20 @@ function frameCount(d) {
   const img = d.sheet.img;
   return d.sheet.ready ? Math.floor(img.width / d.w) * Math.floor(img.height / d.h) : 4;
 }
-function fireAttack(def, tx, ty, d, damage = 1) {
-  S.attacks.push({ def, x: tx, y: ty, dir: d, age: 0, damage });
+// tiles = every tile the attack covers (default: just the one it was fired at).
+function fireAttack(def, tx, ty, d, damage = 1, tiles = null) {
+  S.attacks.push({ def, x: tx, y: ty, dir: d, age: 0, damage, tiles: tiles || [{ x: tx, y: ty }], hit: new Set(),
+                   life: frameCount(def) * def.ticksPerFrame + (def.linger || 0) });
 }
 
-// The sword hits the enemy segment on the target tile.
-//  * Head: costs the enemy `damage` hit points (hits needed grow with the wave). At zero the whole snake dies.
-//  * Body segment: breaks it, and everything behind it is cut off.
+// Hits every enemy standing on one of the attack's tiles, once per enemy per swing. Head: costs hit points. Body: cut off there.
 function resolveHit(a) {
-  const t = enemyAt(a.x, a.y);
-  if (!t) return;
-  if (t.i === 0) { damageEnemyHead(t.e, a.damage); return; }
-  cutEnemy(t.e, t.i);
+  for (const tile of a.tiles) {
+    const t = enemyAt(tile.x, tile.y);              // looked up fresh: an earlier hit can cut or kill a snake
+    if (!t || a.hit.has(t.e)) continue;
+    a.hit.add(t.e);
+    if (t.i === 0) damageEnemyHead(t.e, a.damage); else cutEnemy(t.e, t.i);
+  }
 }
 
 // Hits whatever enemy is on (x, y): a head loses `dmg` hit points, a body segment is cut (with everything behind it).
@@ -65,8 +72,8 @@ function updateBullets() {
 function updateAttacks() {
   for (const a of S.attacks) {
     a.age++;
-    if (a.age === a.def.hitFrame * a.def.ticksPerFrame) resolveHit(a);
+    if (a.age >= a.def.hitFrame * a.def.ticksPerFrame && a.age < a.life) resolveHit(a);   // hits whatever is on its tiles until it fades
   }
-  S.attacks = S.attacks.filter(a => a.age < frameCount(a.def) * a.def.ticksPerFrame);
+  S.attacks = S.attacks.filter(a => a.age < a.life);
   updateBullets();
 }

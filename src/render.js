@@ -228,11 +228,10 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
     if (locked) drawLock(cx, py + SPRITE, 30, '#c9bde6');
     ctx.fillStyle = locked ? '#9a8cc4' : '#ffd36b';
     fitText(h.name, cx, py + (L.big ? 100 : 86), c.w - 12, L.big ? 22 : 16, true);
-    if (L.big) {
-      ctx.fillStyle = locked ? '#9a8cc4' : '#f3e9ff'; ctx.font = '14px system-ui';
-      wrapText(heroText(h), c.w - 24).forEach((line, k) => ctx.fillText(line, cx, c.y + 148 + k * 18));
-    }
-    const sy = L.big ? c.y + c.h - 40 : c.y + 124, sz = L.big ? 16 : 13;   // status line: a note, or the price
+    const sz = L.big ? 16 : 13, sy = c.y + c.h - (L.big ? 40 : 14);          // status line: a note, or the price
+    ctx.fillStyle = locked ? '#9a8cc4' : '#f3e9ff';
+    const dTop = c.y + (L.big ? 148 : 122), dBot = sy - sz - 4;               // the description lives INSIDE the card
+    drawFitted(heroText(h), cx, dTop, c.w - 20, dBot - dTop, L.big ? 14 : 12);
     if (note) {
       ctx.fillStyle = note.ok ? '#8dff6b' : '#ff8a8a'; fitText(note.text, cx, sy, c.w - 10, sz, true);
     } else if (locked) {
@@ -243,19 +242,6 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
       ctx.fillText(String(price), x0 + 18, sy); ctx.textAlign = 'center';
     }
   });
-
-  if (!L.big && HEAD_DEFS[S.pickIndex]) {                 // compact grid: the focused hero's name and description in a panel right under the cards
-    const h = HEAD_DEFS[S.pickIndex], c = headCardRect(S.pickIndex), cx = c.x + c.w / 2;
-    ctx.font = '14px system-ui';
-    const lines = wrapText(heroText(h), 540).slice(0, 5);
-    const top = L.top + L.rows * (L.h + L.gap) - L.gap + 14, ph = 42 + lines.length * 18;
-    ctx.fillStyle = '#211a3b'; ctx.fillRect(30, top, 580, ph);
-    ctx.lineWidth = 3; ctx.strokeStyle = '#ffd36b'; ctx.strokeRect(30, top, 580, ph);
-    ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.moveTo(cx - 9, top); ctx.lineTo(cx + 9, top); ctx.lineTo(cx, top - 9); ctx.fill();   // points at the focused card
-    ctx.font = 'bold 18px system-ui'; ctx.fillText(h.name, mid, top + 26);
-    ctx.fillStyle = '#f3e9ff'; ctx.font = '14px system-ui';
-    lines.forEach((line, k) => ctx.fillText(line, mid, top + 50 + k * 18));
-  }
   ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
   ctx.fillText(L.big ? 'Tap a hero to start' : 'Tap a hero to look, tap again to start', mid, 592);
   ctx.fillText('Steer with swipes, taps or arrow keys. Press I or tap i for details', mid, 614);
@@ -263,17 +249,28 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
 }
 function drawAttack(a) {
   const d = a.def;
+  if (d.draw) return d.draw(a);                             // code-drawn attacks (the Goliath swipe)
   if (!d.sheet.ready) return;
-  const f = Math.floor(a.age / d.ticksPerFrame);
+  const last = frameCount(d) - 1, f = Math.min(last, Math.floor(a.age / d.ticksPerFrame));   // lingers on its last frame
   const cols = Math.max(1, Math.floor(d.sheet.img.width / d.w));
   const sx = (f % cols) * d.w, sy = Math.floor(f / cols) * d.h;
   const s = d.fit ? Math.min(CELL / d.w, CELL / d.h) : 1; // "contain" inside one tile
   const dw = Math.round(d.w * s), dh = Math.round(d.h * s);
   ctx.save();
+  if (a.age >= (last + 1) * d.ticksPerFrame) ctx.globalAlpha = 0.55;   // lingering: a little faded
   ctx.translate(a.x * CELL + CELL / 2, a.y * CELL + CELL / 2);
   if (a.dir.x < 0) ctx.scale(-1, 1);                        // left: mirror
   else if (a.dir.y) ctx.rotate(a.dir.y * Math.PI / 2);      // up / down: rotate the FX
   ctx.drawImage(d.sheet.img, sx, sy, d.w, d.h, -Math.floor(dw / 2), -Math.floor(dh / 2), dw, dh);
+  ctx.restore();
+}
+function drawSwipe(a) { // Goliath's swipe: a pale sweep over every tile it covers, fading while it lingers
+  const fade = 1 - 0.8 * a.age / a.life;
+  ctx.save();
+  ctx.globalAlpha = 0.5 * fade; ctx.fillStyle = '#e8e0ff';
+  a.tiles.forEach(t => ctx.fillRect(t.x * CELL + 2, t.y * CELL + 2, CELL - 4, CELL - 4));
+  ctx.globalAlpha = 0.9 * fade; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+  a.tiles.forEach(t => ctx.strokeRect(t.x * CELL + 3, t.y * CELL + 3, CELL - 6, CELL - 6));
   ctx.restore();
 }
 
@@ -500,6 +497,15 @@ function wrapText(text, maxW) { // split text into lines that fit maxW pixels in
   });
   if (line) lines.push(line);
   return lines;
+}
+function drawFitted(text, cx, y, maxW, maxH, px) { // wrapped, centred text that shrinks (down to 9px) until it fits the box
+  let fs = px, lines;
+  for (;; fs--) {
+    ctx.font = `${fs}px system-ui`;
+    lines = wrapText(text, maxW);
+    if (fs <= 9 || lines.length * (fs + 4) <= maxH) break;
+  }
+  lines.slice(0, Math.max(1, Math.floor(maxH / (fs + 4)))).forEach((l, k) => ctx.fillText(l, cx, y + k * (fs + 4)));
 }
 function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Enter'
   if (!S.picking) return;

@@ -41,7 +41,7 @@ function killEnemy(e) {
     const f = faceOf(e, i);
     dropFx(s.x, s.y, (px, py) => drawEnemySeg(i === 0, f.fx, f.fy, px, py));
   });
-  registerKill(e.segs[0].x, e.segs[0].y);
+  registerKill(e.segs[0].x, e.segs[0].y, e.segs.length - 1);
 }
 // Breaks segment i and cuts off everything behind it.
 function cutEnemy(e, i) {

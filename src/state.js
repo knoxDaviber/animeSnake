@@ -75,7 +75,7 @@ function newRun() {
     invuln: 0, quietHit: false, newBest: false,
     bestAtStart: S.best, coinMult: coinMult(), runSpend: 0, runStart: 0, deathAt: 0, pity: false, // retention.js
     combo: 0, comboTimer: 0, popups: [],
-    attacks: [], lastSwing: 0, drops: [],
+    attacks: [], lastSwing: 0, swordAgain: 0, drops: [],
     level: 1, xp: 0, weapons: ['base'], wlv: { base: 0 }, bt: {}, pendingBranch: false, branchPicking: false, // levels.js
     enemies: [], wave: 0, toSpawn: 0, spawnTimer: 0, waveTimer: START_DELAY,
   });

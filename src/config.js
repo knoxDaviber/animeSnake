@@ -111,6 +111,14 @@ const MEDUSA_SHIELD_MIN = 120;      // the recharge never gets shorter than this
 const RAIDEN_DETONATE_COOLDOWN = 80; // ticks (10 s) between Raiden setting off your oldest mine
 const SWORD_COOLDOWN = 8;      // ticks (1 s) between Swordsman swings
 const SWORD_DAMAGE = 3;         // hit points a sword hit takes off an enemy head
+const SWORD_LINGER = 4;           // ticks (0.5 s) the slash stays on its tile, still hitting, after its animation
+const SWORD_DOUBLE_LEVEL = 10;    // from this hero level the Swordsman strikes twice
+const SWORD_DOUBLE_GAP = 4;       // ticks between the two strikes
+const GOLIATH_SWIPE_COOLDOWN = 16, GOLIATH_SWIPE_DAMAGE = 2;   // ticks (2 s) between swipes
+const GOLIATH_SWIPE_LINGER = 8;   // ticks (1 s) the swipe stays and keeps hitting
+const GOLIATH_WIDE_LEVEL = 10;    // from this hero level the swipe is 3 wide and 2 deep
+const LEVEL_XP_TAIL_FREE = 4;     // a snake with up to this many tail segments gives the normal LEVEL_XP_KILL
+const LEVEL_XP_PER_TAIL = 0.5;    // extra XP per tail segment beyond that
 const SHIELD_RECHARGE = 40;     // ticks (5 s) until the Swordsman's block is ready again after it blocks a hit
 const SHOCK_COOLDOWN = 40;      // ticks (5 s) for the Magician to regain one shockwave charge
 const SHOCK_DAMAGE = 1;         // hit points a shockwave takes off an enemy head
