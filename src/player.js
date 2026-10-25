@@ -17,7 +17,7 @@ function setDir(x, y) {
   if (S.devMode) S.devStep = true;          // Dev mode: this press is one step
 }
 // A step between neighbouring tiles is -1, 0 or 1. Across a Magician portal it looks like +-(COLS-1): flip it back.
-function wrapStep(d) { return Math.abs(d) > 1 ? -Math.sign(d) : d; }
+function wrapStep(d) { return Math.abs(d) > 1 ? Math.sign(d) : d; }
 // Each segment faces the direction it is travelling in (the head faces the steering direction).
 function faceSegments() {
   S.snake.forEach((s, i) => {
@@ -49,14 +49,24 @@ function playerMove() {
   if (S.devMode) { const d = heldDir(); if (d) setDir(d.x, d.y); } // Dev mode: a held key is a step every hero move
   if (S.waitDir) return;               // stalled: stand still until the player steers (enemies keep moving)
   if (S.devMode) { if (!S.devStep) return; S.devStep = false; } // Dev mode: only move when a key was pressed
-  if (S.dirQueue.length) S.dir = S.dirQueue.shift();
   const h = S.snake[0], tail = S.snake[S.snake.length - 1];
+  const under = tileAt(h.x, h.y), belt = CONVEYOR_DIR[under];
+  if (under === 'I') { /* ice: the heading is locked, queued turns wait until the head is off it */ }
+  else if (belt && !(S.snake.length > 1 && belt.x === -S.dir.x && belt.y === -S.dir.y)) { S.dir = { x: belt.x, y: belt.y }; S.dirQueue = []; } // a conveyor pushes you
+  else if (S.dirQueue.length) S.dir = S.dirQueue.shift();
   let nx = h.x + S.dir.x, ny = h.y + S.dir.y, portal = null;
   const isMage = headId() === 'magician', gift = !isMage && S.gift && S.giftCharges > 0;
-  if (!inBounds(nx, ny) && (isMage || gift)) {
-    if (gift) S.giftCharges--;                           // Magician's gift: a limited number of portals per wave
-    nx = (nx + COLS) % COLS; ny = (ny + ROWS) % ROWS;   // the wall opens a portal to the other side
-    portal = { x1: h.x, y1: h.y, x2: nx, y2: ny };
+  if ((isMage || gift) && isWall(nx, ny)) {              // a wall opens a portal: step through to the first open tile beyond it
+    for (let k = 2; k <= PORTAL_WALL_REACH; k++) {
+      const tx = h.x + S.dir.x * k, ty = h.y + S.dir.y * k;
+      if (!inBounds(tx, ty)) break;
+      if (isWall(tx, ty)) continue;                      // still inside the wall
+      if (tileAt(tx, ty) !== 'H' && !gateBlocks(tx, ty, S.dir.x, S.dir.y) && !S.snake.some(s => s.x === tx && s.y === ty) && !enemyAt(tx, ty)) {
+        if (gift) S.giftCharges--;                       // Magician's gift: a limited number of portals per wave
+        portal = { x1: h.x, y1: h.y, x2: tx, y2: ty }; nx = tx; ny = ty;
+      }
+      break;                                             // the first open tile decides: land there, or the wall wins
+    }
   }
   if (S.snake.length > 1 && nx === tail.x && ny === tail.y) {
     // Own tail: no hit, but the snake stops. It waits for a new direction, so enemies get time to close in.
@@ -74,17 +84,18 @@ function playerMove() {
     return;
   }
   if (en && en.i === 0 && countFollower('medusa') > 0) { killEnemy(en.e); en = null; } // Medusa: touching a head kills it at once
-  const blocked = !inBounds(nx, ny) || self || en || (nx === S.hazard.x && ny === S.hazard.y);
+  const wallHit = !inBounds(nx, ny) || isWall(nx, ny) || gateBlocks(nx, ny, S.dir.x, S.dir.y);
+  const blocked = wallHit || self || en || isHazardAt(nx, ny);
   if (blocked) {
     // Grace: the first wall/body bump is forgiven. The snake waits one hero move, so a turn can still get in.
-    if (GRACE_TICKS > 0 && !S.devMode && (!inBounds(nx, ny) || self) && !en && S.graceUsed < GRACE_TICKS) { S.graceUsed++; return; }
-    // Wall, hazard, enemy or own body: the snake stays put and loses one character (unless invulnerable).
+    if (GRACE_TICKS > 0 && !S.devMode && (wallHit || self) && !en && S.graceUsed < GRACE_TICKS) { S.graceUsed++; return; }
+    // Wall, gate, hazard, enemy or own body: the snake stays put and loses one character (unless invulnerable).
     if (S.invuln <= 0) {
       if (self && !SELF_HIT_COSTS_RING) S.alive = false;
       else {
         takeHit(en && en.i === 0 ? 'enemyHead' : undefined);
         if (en && en.i === 0 && damageEnemyHead(en.e, 1)) en.e.stun = 4; // head-on: the enemy is hurt too
-        bombContact(inBounds(nx, ny) ? nx : h.x, inBounds(nx, ny) ? ny : h.y); // Everything is a bomb (a wall blows up on your tile)
+        bombContact(wallHit ? h.x : nx, wallHit ? h.y : ny); // Everything is a bomb (a wall blows up on your tile)
       }
     }
     return;
@@ -92,7 +103,7 @@ function playerMove() {
   S.graceUsed = 0;
   S.stuckTicks = 0;
   const key = S.keys.find(k => k.x === nx && k.y === ny);   // the key
-  let rec = touchableRecruitAt(nx, ny); if (rec && mrxRejects()) { shootRecruit(rec, nx, ny); rec = null; }                          // a character that is jumping, ready
+  let rec = touchableRecruitAt(nx, ny); if (rec && mrxRejects()) { shootRecruit(rec, nx, ny); rec = null; } // a character that is jumping, ready
   S.snake.unshift({ x: nx, y: ny });
   if (portal) { S.zaps.push({ kind: 'portal', ...portal, age: 0 }); playSfx('portal'); }
   if (rec) {

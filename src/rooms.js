@@ -1,0 +1,330 @@
+// rooms.js: the world is a 3x3 grid of 20x20 ROOMS. Each room is a template (20 strings of 20 characters) that is
+// randomly rotated / mirrored and stamped into S.map by buildWorld() (called from newRun in state.js).
+// The middle room is always the start room (the hero begins in the middle of it). More template sketches are in
+// templates.md; the ones built so far need only the tiles below.
+//
+// Tile characters (S.map[y][x] holds one character per tile):
+//   .  floor          #  wall (solid for everything)       H  hazard: costs a ring
+//   ~  mud: a snake whose head is on it moves at half speed
+//   > < ^ v   conveyor: whoever stands on it is pushed this way (the hero's heading is forced)
+//   r l u d   one-way gate: can only be entered heading right / left / up / down, solid from every other side
+//   I  ice: the hero cannot turn while the head is on it
+//   *  key spot: new keys prefer these tiles (plain floor otherwise)      e  floor (enemy door, unused for now)
+//
+// Decor is the "show, don't tell" layer: bones, a dead bonfire, swords stuck in the ground, headless statues...
+// Each template lists its decor as [kind, x, y]. buildWorld turns it into S.decor = { x, y, k, v } and scatters more
+// small decor on the floor from the room's theme. Drawing is in scenery.js.
+//
+// Room tags: tier (1 = rooms next to the start room, 2 = corner rooms), favors = the enemy type that spawns more
+// often while the hero is in that room (see pickEnemyType in enemies.js).
+
+const ROOM = 20; // tiles per room side. COLS and ROWS in config.js are 3 x ROOM
+
+const ROOM_THEMES = {
+  crypt:    { floor: '#1d1730', alt: '#221a38', wall: '#3a3350', density: 0.035, scatter: ['bone', 'crack', 'crack', 'skull'] },
+  knights:  { floor: '#1f1a2b', alt: '#251f33', wall: '#403b5a', density: 0.03,  scatter: ['bone', 'crack'] },
+  garden:   { floor: '#16241d', alt: '#1b2b22', wall: '#2f4a3a', density: 0.09,  scatter: ['moss', 'moss', 'flower', 'bone'] },
+  flooded:  { floor: '#15212d', alt: '#1a2938', wall: '#2f4357', density: 0.08,  scatter: ['puddle', 'puddle', 'crack', 'bone'] },
+  frozen:   { floor: '#1a2433', alt: '#202c3e', wall: '#3d516b', density: 0.07,  scatter: ['frost', 'frost', 'bone'] },
+  keep:     { floor: '#241922', alt: '#2b1f29', wall: '#4d3548', density: 0.04,  scatter: ['bone', 'crack', 'chain'] },
+  barracks: { floor: '#231c1a', alt: '#2a211e', wall: '#4a3a34', density: 0.04,  scatter: ['bone', 'crack', 'skull'] },
+};
+
+// ---- The story, told only by what is lying around -------------------------------------------------
+// The start room is a cold hearth: a dead bonfire, an empty helm and a trail of bones that crawls to the north door.
+// Every other room hints at what happened to the people who lived here (knights died at the gates they guarded, a king
+// died on his throne with the drawbridge chains cut, a congregation froze while kneeling, soldiers never left their beds).
+
+const START_ROOM = {
+  id: 'start', theme: 'crypt',
+  rows: [
+    '#########..#########',
+    '#..................#',
+    '#..................#',
+    '#..#............#..#',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '....................',
+    '....................',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '#..#............#..#',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '#..................#',
+    '#########..#########',
+  ],
+  decor: [['bonfire', 10, 12], ['helm', 9, 12], ['ribs', 8, 13], ['sword', 11, 13], ['bone', 10, 7], ['bone', 10, 5], ['skull', 10, 3],
+          ['banner', 4, 0], ['banner', 15, 0], ['banner', 4, 19], ['banner', 15, 19]],
+};
+
+const ROOM_TEMPLATES = [
+  { id: 'ruins', name: 'Ruins', tier: [1], theme: 'crypt',
+    rows: [
+      '#########..#########',
+      '#*................*#',
+      '#..................#',
+      '#..................#',
+      '#...##........##...#',
+      '#...##........##...#',
+      '#..................#',
+      '#..................#',
+      '#........~~........#',
+      '....................',
+      '....................',
+      '#........~~........#',
+      '#..................#',
+      '#..................#',
+      '#...##........##...#',
+      '#...##........##...#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // a lone grave: a sword in the ground, a helm, burnt-out candles
+    decor: [['sword', 3, 16], ['helm', 3, 17], ['candle', 2, 16], ['candle', 4, 16], ['candle', 2, 17], ['ribs', 16, 3], ['bone', 15, 2], ['banner', 6, 0]] },
+
+  { id: 'gauntlet', name: 'The Gauntlet', tier: [1, 2], theme: 'knights', favors: 'armored',
+    rows: [
+      '#########..#########',
+      '#.....r............#',
+      '#.....r..........*.#',
+      '#.....r............#',
+      '#...############...#',
+      '#...############...#',
+      '#...############...#',
+      '#...############ddd#',
+      '#...############...#',
+      '....############....',
+      '....############....',
+      '#...############...#',
+      '#uuu############...#',
+      '#...############...#',
+      '#...############...#',
+      '#...############...#',
+      '#..*....l..........#',
+      '#.......l..........#',
+      '#.......l..........#',
+      '#########..#########',
+    ],
+    // headless knights line the walls, and each gate has a fallen one in front of it, all facing the same way
+    decor: [['statue', 5, 4], ['statue', 10, 4], ['statue', 14, 4], ['statue', 5, 15], ['statue', 10, 15], ['statue', 14, 15],
+            ['statue', 4, 7], ['statue', 15, 7], ['statue', 4, 12],
+            ['ribs', 5, 2], ['ribs', 17, 6], ['ribs', 9, 17], ['ribs', 2, 13],
+            ['sword', 4, 1], ['sword', 17, 5], ['sword', 10, 18], ['sword', 3, 14]] },
+
+  { id: 'garden', name: 'The Withered Garden', tier: [1, 2], theme: 'garden', favors: 'fast',
+    rows: [
+      '#########..#########',
+      '#*................*#',
+      '#..HH....HH....HH..#',
+      '#..HH....HH....HH..#',
+      '#..................#',
+      '#..................#',
+      '#.HH....HHHH....HH.#',
+      '#.HH....HHHH....HH.#',
+      '#..................#',
+      '....................',
+      '....................',
+      '#..................#',
+      '#.HH....HHHH....HH.#',
+      '#.HH....HHHH....HH.#',
+      '#..................#',
+      '#..................#',
+      '#..HH....HH....HH..#',
+      '#..HH....HH....HH..#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // somebody sat down against the wall with a flower and never got up
+    decor: [['ribs', 2, 5], ['flower', 3, 5], ['skull', 9, 12], ['statue', 0, 5], ['statue', 19, 14], ['bone', 8, 14]] },
+
+  { id: 'mill', name: 'The Flooded Mill', tier: [1, 2], theme: 'flooded', favors: 'fast',
+    rows: [
+      '#########..#########',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#...>>>>>>>>>>>>.HH#',
+      '#...>>>>>>>>>>>>.HH#',
+      '#..................#',
+      '#..................#',
+      '....................',
+      '....................',
+      '#..................#',
+      '#..................#',
+      '#HH.<<<<<<<<<<<<...#',
+      '#HH.<<<<<<<<<<<<...#',
+      '#..................#',
+      '#...HH........HH...#',
+      '#........*.........#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // the wheel broke, the water kept running, and the current drags everything toward the spikes
+    decor: [['wheel', 5, 0], ['wheel', 14, 19], ['skull', 16, 4], ['ribs', 2, 12], ['bone', 3, 12], ['chain', 1, 8]] },
+
+  { id: 'chapel', name: 'The Frozen Chapel', tier: [2], theme: 'frozen', favors: 'spitter',
+    rows: [
+      '#########..#########',
+      '#*................*#',
+      '#IIII#IIIIIIIII#III#',
+      '#IIIIIIIIIIIIIIIIII#',
+      '#III#IIIIIIIIIIII#I#',
+      '#IIIIIIIIIIIIIIIIII#',
+      '#IIIIIIII##IIIIIIII#',
+      '#IIIIIIIIIIIIIIIIII#',
+      '#I#IIIIIIIIIIIIII#I#',
+      'IIIIIIIIIIIIIIIIIIII',
+      'IIIIIIIIIIIIIIIIIIII',
+      '#IIIIIIIIIIIIIIIIII#',
+      '#IIIIIIII##IIIIIIII#',
+      '#IIIIIIIIIIIIIIIIII#',
+      '#III#IIIIIIIIIIII#I#',
+      '#IIIIIIIIIIIIIIIIII#',
+      '#IIII#IIIIIIIII#III#',
+      '#IIIIIIIIIIIIIIIIII#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // a congregation knelt in the middle and froze there, facing a sword
+    decor: [['candle', 5, 2], ['candle', 15, 2], ['candle', 4, 4], ['candle', 17, 4], ['candle', 8, 6], ['candle', 9, 6],
+            ['ribs', 8, 9], ['ribs', 11, 9], ['ribs', 9, 11], ['helm', 10, 10], ['sword', 10, 9]] },
+
+  { id: 'keep', name: 'The Moat Keep', tier: [2], theme: 'keep', favors: 'armored',
+    rows: [
+      '#########..#########',
+      '#..................#',
+      '#.HHHHHHH..HHHHHHH.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '.........*..........',
+      '....................',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.H..............H.#',
+      '#.HHHHHHH..HHHHHHH.#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // the king died on his throne, his crown still on his lap, and somebody cut the drawbridge chains
+    decor: [['throne', 10, 4], ['ribs', 10, 5], ['crown', 10, 6], ['chain', 2, 9], ['chain', 17, 9], ['banner', 4, 0], ['banner', 15, 0],
+            ['skull', 6, 6], ['bone', 7, 7], ['sword', 13, 7]] },
+
+  { id: 'nest', name: 'The Barracks', tier: [2], theme: 'barracks', favors: 'spitter',
+    rows: [
+      '#########..#########',
+      '#*................*#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#....####uu####....#',
+      '#....#........#....#',
+      '#....#..eeee..#....#',
+      '.....#........#.....',
+      '.....#........#.....',
+      '#....#........#....#',
+      '#....#........#....#',
+      '#....##########....#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // the soldiers never left their beds, and whatever hatched in there leaves through the only gate
+    decor: [['bedroll', 7, 8], ['bedroll', 12, 8], ['bedroll', 7, 11], ['bedroll', 12, 11], ['ribs', 9, 12], ['skull', 9, 5], ['bone', 10, 4],
+            ['banner', 4, 0], ['banner', 15, 0], ['sword', 3, 3]] },
+];
+
+// ---- Rotating and mirroring templates ----------------------------------------------------------------------------
+// Direction tiles must turn with the room: a conveyor pointing right becomes one pointing down after a quarter turn.
+const CHAR_ROT = { '>': 'v', v: '<', '<': '^', '^': '>', r: 'd', d: 'l', l: 'u', u: 'r' };  // quarter turn clockwise
+const CHAR_MIR = { '>': '<', '<': '>', r: 'l', l: 'r' };                                       // mirrored left-right
+
+function rotCW(g) { // g = array of N strings of N characters
+  const n = g.length, out = [];
+  for (let y = 0; y < n; y++) { let row = ''; for (let x = 0; x < n; x++) row += g[n - 1 - x][y]; out.push(row); }
+  return out;
+}
+function transformRows(rows, rot, flip) {
+  let g = rows.slice();
+  if (flip) g = g.map(r => r.split('').reverse().map(c => CHAR_MIR[c] || c).join(''));
+  for (let i = 0; i < rot; i++) g = rotCW(g).map(r => r.split('').map(c => CHAR_ROT[c] || c).join(''));
+  return g;
+}
+function transformPoint(x, y, rot, flip) { // the same turn, applied to one tile
+  if (flip) x = ROOM - 1 - x;
+  for (let i = 0; i < rot; i++) { const nx = ROOM - 1 - y, ny = x; x = nx; y = ny; }
+  return { x, y };
+}
+
+// Warns in the console if a template is not 20 rows of 20 characters (easy to get wrong when editing by hand).
+(function checkTemplates() {
+  [START_ROOM, ...ROOM_TEMPLATES].forEach(t => {
+    if (t.rows.length !== ROOM || t.rows.some(r => r.length !== ROOM)) console.warn('Room template is not 20x20:', t.id);
+  });
+})();
+
+function pickTemplate(tier, avoidId) {
+  const list = ROOM_TEMPLATES.filter(t => t.tier.includes(tier) && t.id !== avoidId);
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+// Which room the tile (x, y) belongs to (S.rooms is in row order: index = room row * 3 + room column).
+function roomAt(x, y) {
+  const rx = Math.max(0, Math.min(2, Math.floor(x / ROOM))), ry = Math.max(0, Math.min(2, Math.floor(y / ROOM)));
+  return S.rooms[ry * 3 + rx];
+}
+
+// Builds a fresh world for a new run: S.map, S.rooms, S.decor, S.keySpots.
+function buildWorld() {
+  const map = range(ROWS).map(() => Array(COLS).fill('#'));
+  const rooms = [], vignettes = [], spots = [];
+  let last = null;
+  for (let ry = 0; ry < 3; ry++) for (let rx = 0; rx < 3; rx++) {
+    const start = rx === 1 && ry === 1, corner = rx !== 1 && ry !== 1;
+    const tpl = start ? START_ROOM : pickTemplate(corner ? 2 : 1, last);
+    last = tpl.id;
+    const rot = start ? 0 : Math.floor(Math.random() * 4), flip = !start && Math.random() < 0.5;
+    const rows = transformRows(tpl.rows, rot, flip), ox = rx * ROOM, oy = ry * ROOM;
+    for (let y = 0; y < ROOM; y++) for (let x = 0; x < ROOM; x++) {
+      const c = rows[y][x];
+      map[oy + y][ox + x] = c;
+      if (c === '*') spots.push({ x: ox + x, y: oy + y });
+    }
+    (tpl.decor || []).forEach(([k, x, y]) => {
+      const p = transformPoint(x, y, rot, flip);
+      vignettes.push({ x: ox + p.x, y: oy + p.y, k, v: Math.random() });
+    });
+    rooms.push({ id: tpl.id, theme: tpl.theme, favors: tpl.favors || null });
+  }
+  for (let x = 0; x < COLS; x++) { map[0][x] = '#'; map[ROWS - 1][x] = '#'; }   // the edge of the world is always wall
+  for (let y = 0; y < ROWS; y++) { map[y][0] = '#'; map[y][COLS - 1] = '#'; }
+  const scatter = [];                                                           // small decor from each room's theme
+  rooms.forEach((r, i) => {
+    const th = ROOM_THEMES[r.theme], ox = (i % 3) * ROOM, oy = Math.floor(i / 3) * ROOM;
+    for (let y = oy; y < oy + ROOM; y++) for (let x = ox; x < ox + ROOM; x++)
+      if (map[y][x] === '.' && Math.random() < th.density)
+        scatter.push({ x, y, k: th.scatter[Math.floor(Math.random() * th.scatter.length)], v: Math.random() });
+  });
+  S.map = map; S.rooms = rooms;
+  S.decor = scatter.concat(vignettes);                                          // vignettes are drawn on top
+  S.keySpots = spots.filter(s => map[s.y][s.x] === '*');
+}

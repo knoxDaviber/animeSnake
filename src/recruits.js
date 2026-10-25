@@ -15,7 +15,7 @@ function touchableRecruitAt(x, y) { return S.recruits.find(r => inBounds(r.x, r.
 
 // Puts the next key on the map, unless enough characters are already waiting. Called every tick.
 function refreshKey() {
-  if (!S.keys.length && S.recruits.length < RECRUIT_MAX) placeFood();
+  if (S.keys.length < keyTarget() && S.recruits.length < RECRUIT_MAX) placeFood();
 }
 
 // Picks a random edge, a random lane, and a walking distance, and starts a character walking in.
@@ -32,8 +32,11 @@ function summonRecruit(exceptId) {
     const tx = sx + d.x * len, ty = sy + d.y * len;
     if (!inBounds(tx, ty) || !tileFree(tx, ty)) continue;
     if (S.recruits.some(r => r.tx === tx && r.ty === ty)) continue;
-    let clear = true;                      // do not walk across the hazard
-    for (let k = 1; k <= len; k++) if (sx + d.x * k === S.hazard.x && sy + d.y * k === S.hazard.y) clear = false;
+    let clear = true;                      // do not walk through walls, hazards, gates or belts
+    for (let k = 0; k <= len; k++) {
+      const px = sx + d.x * k, py = sy + d.y * k;
+      if (inBounds(px, py) && !'.*e~'.includes(tileAt(px, py))) clear = false;
+    }
     if (!clear) continue;
     S.recruits.push({ c: randomFollower(exceptId), x: sx, y: sy, px: sx, py: sy, dx: d.x, dy: d.y,
                       left: len, tx, ty, ready: false, age: 0 });

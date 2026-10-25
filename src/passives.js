@@ -47,7 +47,8 @@ function heroSpeed() {
   const raiden = Math.min(RAIDEN_MAX_BONUS, RAIDEN_SPEED_BONUS * countFollower('raiden'));
   const gorgon = Math.min(GORGON_MAX_SLOW, GORGON_SLOW * countFollower('gorgon'));
   const m = HERO_SPEED_TEST * (1 + raiden + S.speedBonus + SHOGUN_SPEED_BONUS * countFollower('shogun') - gorgon - MEDUSA_SLOW * countFollower('medusa'));
-  return Math.min(HERO_SPEED_MAX, Math.max(HERO_SPEED_MIN, HERO_BASE_SPEED * m));
+    const mud = S.map && tileAt(S.snake[0].x, S.snake[0].y) === '~' ? MUD_SLOW : 1;
+  return Math.min(HERO_SPEED_MAX, Math.max(HERO_SPEED_MIN, HERO_BASE_SPEED * m * mud));
 }
 function heroInterval() { return TICK_MS / heroSpeed(); } // ms between hero moves
 // Gorgon shields. Each Gorgon (the first GORGON_MAX_SHIELDS in the chain) holds one 1-hit shield. Its slot's cd is the

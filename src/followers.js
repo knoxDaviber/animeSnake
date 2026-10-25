@@ -26,7 +26,7 @@ const FOLLOWERS = [
   { id: 'bomber',   name: 'Bomber',   color: '#ff8a3c', skill: 'bomb', fusion: true,
     passive: 'Mine blasts reach across the whole map in a + shape. Drops a mine every 5 s.' },
   { id: 'kingsman', name: 'Kingsman', color: '#ffe36b', skill: null, fusion: true,
-    passive: 'Bounty: when every key is gone, the next drop is 1 to 3 keys. Keysman are 40% more likely to be summoned.' },
+       passive: 'Fusion leaves +1 key on the map and +1 weapon damage for the rest of the run. Keysman are 40% more likely to be summoned.' },
   { id: 'mrx',      name: 'Mr. X',    color: '#9a4bd6', skill: null, fusion: true,
     passive: 'Keys within 3x3 of your head are eaten. New recruits are rejected and shot at the nearest snake for 2-5 damage.' },
   { id: 'shogun',   name: 'Raiden Shogun', color: '#3a8dff', skill: 'shogun', fusion: true,

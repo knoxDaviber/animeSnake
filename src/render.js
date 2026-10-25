@@ -64,18 +64,6 @@ function drawEnemySeg(isHead, fx, fy, px, py) {
     ctx.fillRect(px + 2, py + 2, CELL - 4, CELL - 4);
   }
 }
-function drawHazard() {
-  const x = S.hazard.x * CELL, y = S.hazard.y * CELL;
-  if (SPRITES.hazard.ready) return drawItem(SPRITES.hazard, S.tick, x, y);
-  ctx.fillStyle = '#8a8aa3'; // fallback spikes
-  for (let i = 0; i < 3; i++) {
-    ctx.beginPath();
-    ctx.moveTo(x + 2 + i * 10, y + CELL - 4);
-    ctx.lineTo(x + 7 + i * 10, y + 6);
-    ctx.lineTo(x + 12 + i * 10, y + CELL - 4);
-    ctx.fill();
-  }
-}
 function drawFood() { // the recruit keys (still the food sprite until it gets its own art)
   S.keys.forEach(k => {
     const x = k.x * CELL, y = k.y * CELL;
@@ -293,11 +281,43 @@ function lerpPos(prevList, i, cur, a = S.alpha) {
 function drawEnemies() {
   S.enemies.forEach(e => {
     if (e.stun > 0 && S.tick % 2 === 0) return; // blink while stunned
+    const T = e.type || 'normal';
     e.segs.forEach((s, i) => {
       const p = lerpPos(e.prev, i, s, e.alpha), f = faceOf(e, i);
+      ctx.save();
+      if (T === 'fast') { const cx = p.x + CELL / 2, cy = p.y + CELL / 2; ctx.translate(cx, cy); ctx.scale(0.7, 0.7); ctx.translate(-cx, -cy); } // thin
       drawEnemySeg(i === 0, f.fx, f.fy, p.x, p.y);
+      ctx.restore();
+      if (i === 0 && T !== 'normal') drawEnemyMark(T, p.x, p.y);
     });
   });
+}
+function drawEnemyMark(type, px, py) { // a small sign on the head of a special enemy
+  const x = Math.round(px), y = Math.round(py);
+  ctx.save(); ctx.lineWidth = 2;
+  if (type === 'armored') { ctx.strokeStyle = '#b8c2d6'; ctx.strokeRect(x + 3, y + 3, CELL - 6, CELL - 6); }
+  else if (type === 'fast') { ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.moveTo(x + 8, y + 6); ctx.lineTo(x + 16, y + 11); ctx.lineTo(x + 8, y + 16); ctx.fill(); }
+  else if (type === 'spitter') { ctx.fillStyle = '#8dff6b'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + 5, 4, 0, 6.3); ctx.fill(); }
+  ctx.restore();
+}
+function drawSpits() { // spitter orbs, interpolated between ticks
+  S.spits.forEach(b => {
+    const x = Math.round((b.px + (b.x - b.px) * S.alpha) * CELL + CELL / 2), y = Math.round((b.py + (b.y - b.py) * S.alpha) * CELL + CELL / 2);
+    ctx.fillStyle = '#5fd35f'; ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.3); ctx.fill();
+    ctx.fillStyle = '#d6ffb0'; ctx.beginPath(); ctx.arc(x - 1, y - 1, 2.5, 0, 6.3); ctx.fill();
+  });
+}
+function drawKeyArrow() { // screen layer: a faint arrow around the hero toward the nearest key
+  if (!KEY_ARROW || S.picking || !S.alive || !S.view || !S.cam) return;
+  const n = nearestKey();
+  if (!n || n.d < KEY_ARROW_HIDE_DIST) return;
+  const h = lerpPos(S.prev, 0, S.snake[0], S.heroAlpha), c = worldToUi(h.x + CELL / 2, h.y + CELL / 2);
+  const a = Math.atan2(n.k.y - S.snake[0].y, n.k.x - S.snake[0].x);
+  ctx.save();
+  ctx.globalAlpha = TEXT_ALPHA; ctx.translate(c.x + Math.cos(a) * KEY_ARROW_RADIUS, c.y + Math.sin(a) * KEY_ARROW_RADIUS); ctx.rotate(a);
+  ctx.lineWidth = 3; ctx.strokeStyle = '#14101f'; ctx.fillStyle = '#ffd36b'; ctx.lineJoin = 'round';
+  ctx.beginPath(); ctx.moveTo(-8, -9); ctx.lineTo(11, 0); ctx.lineTo(-8, 9); ctx.closePath(); ctx.stroke(); ctx.fill();
+  ctx.restore();
 }
 function drawPlayer() {
   if (S.invuln > 0 && !S.quietHit && S.tick % 2 === 0) return; // chain blinks while invulnerable
@@ -623,10 +643,10 @@ function drawShop() { // the scrolling shop (shop.js has the rows and the buying
   ctx.fillText('Tap a row to pick it, tap again to buy. Drag or scroll for more. Esc = back', mid, 626);
   ctx.restore();
 }
-function drawWorld() { // the floor, a faint grid and the wall around the world (call inside the camera transform)
-  const W = COLS * CELL, H = ROWS * CELL, v = S.view;
-  ctx.fillStyle = '#1d1730'; ctx.fillRect(0, 0, W, H);
+function drawWorld() { // floors, walls, terrain and decor (scenery.js), then a faint grid (call inside the camera transform)
+  drawScenery();
   if (GRID_ALPHA > 0) {
+    const v = S.view;
     const x0 = Math.max(0, Math.floor(S.cam.x / CELL)), y0 = Math.max(0, Math.floor(S.cam.y / CELL));
     const x1 = Math.min(COLS, Math.ceil((S.cam.x + v.w) / CELL)), y1 = Math.min(ROWS, Math.ceil((S.cam.y + v.h) / CELL));
     ctx.strokeStyle = `rgba(255,255,255,${GRID_ALPHA})`; ctx.lineWidth = 1; ctx.beginPath();
@@ -634,7 +654,6 @@ function drawWorld() { // the floor, a faint grid and the wall around the world 
     for (let y = y0; y <= y1; y++) { ctx.moveTo(x0 * CELL, y * CELL + 0.5); ctx.lineTo(x1 * CELL, y * CELL + 0.5); }
     ctx.stroke();
   }
-  ctx.strokeStyle = '#3a2d5c'; ctx.lineWidth = 6; ctx.strokeRect(-3, -3, W + 6, H + 6);
 }
 // How visible the world canvas is: hidden behind full-screen menus, dimmed behind overlays (the UI square dims itself).
 function worldOpacity() {
@@ -657,7 +676,6 @@ function draw() {
       ctx.scale(k, k);
       ctx.translate(-Math.round(S.cam.x), -Math.round(S.cam.y));
       drawWorld();
-      drawHazard();
       drawFood();
       drawMines();
       drawRecruits();
@@ -667,6 +685,7 @@ function draw() {
       drawDrops();
       S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
       drawBullets();
+      drawSpits();
       drawBlasts();
       drawZaps();
       drawPopups();
@@ -675,6 +694,7 @@ function draw() {
   }
   ctx.clearRect(0, 0, cv.width, cv.height);            // screen layers go on the UI square
   drawHud();
+  drawKeyArrow();
   drawComboBar();
   drawStallHint();
   drawOverlay();

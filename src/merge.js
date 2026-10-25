@@ -14,7 +14,7 @@ function mergeCheck() { // called once per tick (step in main.js)
 // Run modifiers a fusion leaves behind for the rest of the run (kept in S, reset by newRun). They stay even if the fusion dies.
 function applyFusionBonus(id) {
   if (id === 'bomber') S.mineMaxBonus++;                       // +1 max mine
-  else if (id === 'kingsman') S.damageBonus++;                 // +1 hero weapon damage
+  else if (id === 'kingsman') { S.damageBonus++; S.keyBonus++; }                 // +1 hero weapon damage
   else if (id === 'shogun') S.speedBonus += SHOGUN_PERMA_SPEED; // +10% hero speed
   else if (id === 'medusa') { if (S.medMerges === 0) S.medShieldCd = 0; S.medMerges++; } // a shield, see medusaShieldAbsorbs
 }

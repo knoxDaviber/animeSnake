@@ -36,6 +36,7 @@ function step() {
     if (!S.pacifist) { updateHead(); updateBranches(); }   // the hero's weapon (heads.js) and level branches (levels.js)
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
     stepEnemies();
+    updateSpits();      // spitter orbs fly (enemies.js)
     refreshKey();       // puts the next key down unless enough characters are already waiting
     updateWaves();
   }

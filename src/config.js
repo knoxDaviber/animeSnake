@@ -1,7 +1,7 @@
 // config.js: constants and tuning numbers. Change how the game feels here, not in the logic files.
 
 // Numbers from ART_SPEC.md: 32x32 tiles, 20x20 grid (640x640), 125 ms logic tick.
-const COLS = 40, ROWS = 40, CELL = 32, TICK_MS = 125; // COLS / ROWS = the WORLD size in tiles
+const COLS = 60, ROWS = 60, CELL = 32, TICK_MS = 125; // COLS / ROWS = the WORLD size in tiles
 const SCREEN_W = 640, SCREEN_H = 640;   // the UI canvas (HUD, menus, overlays): a fixed square, must match index.html
 const VIEW_SHORT_TILES = 20;            // the window's short side shows this many tiles...
 const VIEW_LONG_MAX_TILES = 32;         // ...and the long side never more than this (whichever zooms in more wins)
@@ -58,6 +58,27 @@ function waveDuration(w) {
 function enemyWaveSpeed(w) { return 1 + Math.min(ENEMY_WAVE_SPEED_MAX, ENEMY_WAVE_SPEED * (w - 1)); }
 function waveSize(w) { return Math.min(1 + Math.floor(w / 3), 5); }
 function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
+
+// Rooms and terrain (rooms.js, world.js)
+const PORTAL_WALL_REACH = 8;  // Magician / gift: a wall up to this many tiles thick can be stepped through
+const MUD_SLOW = 0.5;         // speed multiplier while a snake's head is on mud
+// Food presence (world.js)
+const KEY_PRESENCE = 3;       // keys on the map at once (a Kingsman fusion adds 1 for the rest of the run)
+const KEY_MIN_DIST = 8;       // new keys appear at least this far from the hero
+const KEY_SPOT_CHANCE = 0.5;  // chance a new key goes on a '*' key spot of a room
+const KEY_ARROW = true;       // the arrow toward the nearest key
+const KEY_ARROW_RADIUS = 90;  // UI px from the hero
+const KEY_ARROW_HIDE_DIST = 5;
+// Enemy types (enemies.js). speed = multiplier, hp = x hitsToKill, len = segments added, from = first wave
+const ENEMY_TYPES = {
+  normal:  { speed: 1,    hp: 1, len: 0,  from: 1 },
+  fast:    { speed: 1.6,  hp: 1, len: -1, from: 4 },
+  armored: { speed: 0.85, hp: 2, len: 1,  from: 7 },
+  spitter: { speed: 0.9,  hp: 1, len: 0,  from: 10 },
+};
+const ENEMY_TYPE_CHANCE = 0.45;   // chance a snake is a special type once one is unlocked
+const ENEMY_FAVOR_CHANCE = 0.6;   // chance it is the room's favoured type while you are in that room
+const SPIT_COOLDOWN = 24, SPIT_RANGE = 10, SPIT_SPEED = 1; // ticks between spits, tiles, tiles per tick
 
 // Followers, skills and mines
 const START_FOLLOWERS = []; // who follows the head at the start of a run (ids from followers.js)

@@ -68,7 +68,7 @@ function newRun() {
     gift: false, giftCharges: 0, freeRevive: false, thirdUnlocked: false, pickNote: null,
     giftPerWave: 1, bombChance: BOMB_CHANCE, shopping: false, giveAskUntil: 0,
     challenge: false, pacifist: false, won: false, winCoins: 0, stuckTicks: 0, pentaPaid: false, ad: null,
-    keys: [], growQueue: [], recruits: [], hazard: null, mines: [], blasts: [], zaps: [],
+    keys: [], growQueue: [], recruits: [], map: null, rooms: [], decor: [], keySpots: [], spits: [], keyBonus: 0, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
     tick: 0, alpha: 1, last: performance.now(), heroLast: performance.now(), heroAlpha: 1,
@@ -79,5 +79,5 @@ function newRun() {
     level: 1, xp: 0, weapons: ['base'], wlv: { base: 0 }, bt: {}, pendingBranch: false, branchPicking: false, // levels.js
     enemies: [], wave: 0, toSpawn: 0, spawnTimer: 0, waveTimer: START_DELAY,
   });
-  placeHazard(); placeFood(); hud();
+  buildWorld(); placeFood(); hud();
 }

@@ -15,7 +15,7 @@ function blastTiles(m) {
   const tiles = [{ x: m.x, y: m.y }], reach = blastRange();
   for (const d of DIRS) for (let k = 1; k <= reach; k++) {
     const x = m.x + d.x * k, y = m.y + d.y * k;
-    if (!inBounds(x, y)) break;
+    if (!inBounds(x, y) || isWall(x, y)) break;
     tiles.push({ x, y });
   }
   return tiles;
