@@ -7,7 +7,8 @@
 function isGoliath() { return headId() === 'goliath'; }
 function heroKicks() { return KICK_ALL_HEROES || isGoliath(); }
 // (fx, fy) = the direction from the hero toward whatever touched him. True if Goliath is looking at it.
-function goliathFront(fx, fy) { return isGoliath() && fx === S.dir.x && fy === S.dir.y; }
+// Goliath is only hurt from BEHIND: a hit from the front or from either side is harmless. (The name stays so callers need no change.)
+function goliathFront(fx, fy) { return isGoliath() && !(fx === -S.dir.x && fy === -S.dir.y); }
 
 // Where to draw a mine or key (smooth while it slides).
 function itemPos(o) {

@@ -62,6 +62,7 @@ function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
 // Rooms and terrain (rooms.js, world.js)
 const PORTAL_WALL_REACH = 8;  // Magician / gift: a wall up to this many tiles thick can be stepped through
 const MUD_SLOW = 0.5;         // speed multiplier while a snake's head is on mud
+const TURRET_COOLDOWN = 32;   // ticks (4 s) between a wall turret's shots; it only counts down while the hero is in its room
 // Kicking (kicks.js): mines, keys and waiting recruits can be kicked. A kicked item slides until it hits something.
 const KICK_ALL_HEROES = false;  // true: every hero kicks (for testing). false: Goliath only
 const KICK_SPEED = 2;           // tiles per world tick that a kicked item slides

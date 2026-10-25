@@ -16,7 +16,7 @@ function enemyAt(x, y) {
 function enemyCanEnter(x, y, dx = 0, dy = 0) {
   if (!inBounds(x, y)) return false;
   const t = tileAt(x, y);
-  return t !== '#' && t !== 'H' && !gateBlocks(x, y, dx, dy) &&
+  return t !== '#' && t !== 'B' && t !== 'T' && t !== 'H' && !gateBlocks(x, y, dx, dy) &&
     !S.snake.some(s => s.x === x && s.y === y) && !enemyAt(x, y);
 }
 // Which way segment i is facing (the head faces its heading, the rest face the segment ahead of them).
@@ -74,7 +74,7 @@ function distField(tx, ty) {
       const j = ny * COLS + nx;
       if (DIST[j] >= 0) continue;
       const t = S.map[ny][nx];
-      if (t === '#' || t === 'H' || GATE_DIR[t]) continue;
+      if (t === '#' || t === 'B' || t === 'T' || t === 'H' || GATE_DIR[t]) continue;
       DIST[j] = d; BFS_QUEUE[tail++] = j;
     }
   }
@@ -216,7 +216,19 @@ function updateSpits() {
   }
   S.spits = S.spits.filter(b => !b.dead);
 }
-
+// Wall turrets ('T' tiles, S.turrets from buildWorld). Each fires an orb out of its wall every TURRET_COOLDOWN ticks, but
+// only counts down while the hero is in its room. The orbs are spitter orbs (S.spits), so updateSpits moves and resolves them.
+function updateTurrets() {
+  if (S.pacifist || !S.turrets || !S.turrets.length) return;
+  const h = S.snake[0], hx = Math.floor(h.x / ROOM), hy = Math.floor(h.y / ROOM);
+  for (const t of S.turrets) {
+    if (Math.floor(t.x / ROOM) !== hx || Math.floor(t.y / ROOM) !== hy) continue;
+    if (--t.cd > 0) continue;
+    t.cd = TURRET_COOLDOWN;
+    S.spits.push({ x: t.x, y: t.y, px: t.x, py: t.y, dx: t.dx, dy: t.dy, dead: false, col: '#ff8a3c' });
+    playSfx('shoot');
+  }
+}
 // ---- Waves -------------------------------------------------------------------
 // Which type the next snake is. Types unlock by wave (ENEMY_TYPES[type].from). While the hero is in a room that favours
 // an unlocked type, that type is likely (ENEMY_FAVOR_CHANCE). Otherwise ENEMY_TYPE_CHANCE of snakes are a random special.
@@ -243,7 +255,7 @@ function spawnEnemy() {
     else                 { d = DIRS[3]; segs = range(len).map(i => ({ x: lane, y: v.y1 + 1 + i })); }
     const head = S.snake[0];
     const far = Math.abs(segs[0].x - head.x) + Math.abs(segs[0].y - head.y) >= ENEMY_SPAWN_MIN_DIST;
-    if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y) && !inTextZone(s.x, s.y))) {
+    if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y) && !inTextZone(s.x, s.y) && !noItems(s.x, s.y))) {
       S.enemies.push({ segs, prev: segs.map(s => ({ ...s })), dir: d, hp: hitsToKill(S.wave) * T.hp, stun: 0, type, fire: SPIT_COOLDOWN,
                       speed: Math.min(ENEMY_SPEED_MAX, enemyWaveSpeed(S.wave) * T.speed), last: performance.now(), alpha: 1 });
       return true;

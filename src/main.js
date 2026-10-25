@@ -38,6 +38,7 @@ function step() {
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)
     updateKicks();      // kicked items slide (kicks.js)
     stepEnemies();
+    updateTurrets();    // wall turrets fire (enemies.js)
     updateSpits();      // spitter orbs fly (enemies.js)
     refreshKey();       // puts the next key down unless enough characters are already waiting
     updateWaves();

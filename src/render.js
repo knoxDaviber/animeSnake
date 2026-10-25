@@ -244,11 +244,17 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
     }
   });
 
-  if (!L.big && HEAD_DEFS[S.pickIndex]) {                 // compact grid: the focused hero's description
-    const h = HEAD_DEFS[S.pickIndex];
-    ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 18px system-ui'; ctx.fillText(h.name, mid, 476);
+  if (!L.big && HEAD_DEFS[S.pickIndex]) {                 // compact grid: the focused hero's name and description in a panel right under the cards
+    const h = HEAD_DEFS[S.pickIndex], c = headCardRect(S.pickIndex), cx = c.x + c.w / 2;
+    ctx.font = '14px system-ui';
+    const lines = wrapText(heroText(h), 540).slice(0, 5);
+    const top = L.top + L.rows * (L.h + L.gap) - L.gap + 14, ph = 42 + lines.length * 18;
+    ctx.fillStyle = '#211a3b'; ctx.fillRect(30, top, 580, ph);
+    ctx.lineWidth = 3; ctx.strokeStyle = '#ffd36b'; ctx.strokeRect(30, top, 580, ph);
+    ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.moveTo(cx - 9, top); ctx.lineTo(cx + 9, top); ctx.lineTo(cx, top - 9); ctx.fill();   // points at the focused card
+    ctx.font = 'bold 18px system-ui'; ctx.fillText(h.name, mid, top + 26);
     ctx.fillStyle = '#f3e9ff'; ctx.font = '14px system-ui';
-    wrapText(heroText(h), 560).slice(0, 3).forEach((line, k) => ctx.fillText(line, mid, 500 + k * 18));
+    lines.forEach((line, k) => ctx.fillText(line, mid, top + 50 + k * 18));
   }
   ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
   ctx.fillText(L.big ? 'Tap a hero to start' : 'Tap a hero to look, tap again to start', mid, 592);
@@ -303,7 +309,7 @@ function drawEnemyMark(type, px, py) { // a small sign on the head of a special 
 function drawSpits() { // spitter orbs, interpolated between ticks
   S.spits.forEach(b => {
     const x = Math.round((b.px + (b.x - b.px) * S.alpha) * CELL + CELL / 2), y = Math.round((b.py + (b.y - b.py) * S.alpha) * CELL + CELL / 2);
-    ctx.fillStyle = '#5fd35f'; ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.3); ctx.fill();
+        ctx.fillStyle = b.col || '#5fd35f'; ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.3); ctx.fill();
     ctx.fillStyle = '#d6ffb0'; ctx.beginPath(); ctx.arc(x - 1, y - 1, 2.5, 0, 6.3); ctx.fill();
   });
 }

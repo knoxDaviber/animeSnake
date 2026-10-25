@@ -45,7 +45,14 @@ function takeHit(source) {
 
 // Would stepping onto (x, y) heading (dx, dy) hit a wall, hazard or wrong-way gate?
 function terrainBlocked(x, y, dx, dy) { return !inBounds(x, y) || isWall(x, y) || isHazardAt(x, y) || gateBlocks(x, y, dx, dy); }
-
+// A bumper turns the heading a quarter turn clockwise, or further if that way is blocked by terrain or your own body.
+function bumperTurn(x, y) {
+  let d = S.dir;
+  for (let k = 0; k < 3; k++) {
+    d = { x: -d.y, y: d.x };
+    if (!terrainBlocked(x + d.x, y + d.y, d.x, d.y) && !S.snake.some(s => s.x === x + d.x && s.y === y + d.y)) { S.dir = d; S.dirQueue = []; return; }
+  }
+}
 function playerMove() {
   S.tailLeft = null;
   S.prev = S.snake.map(s => ({ ...s }));
@@ -54,7 +61,7 @@ function playerMove() {
   if (S.devMode) { if (!S.devStep) return; S.devStep = false; } // Dev mode: only move when a key was pressed
   const h = S.snake[0], tail = S.snake[S.snake.length - 1];
   const under = tileAt(h.x, h.y), belt = CONVEYOR_DIR[under];
-  const stuck = d => terrainBlocked(h.x + d.x, h.y + d.y, d.x, d.y);   // would this heading hit terrain?
+  const stuck = d => terrainBlocked(h.x + d.x, h.y + d.y, d.x, d.y) || S.snake.some((s, i) => i > 0 && s.x === h.x + d.x && s.y === h.y + d.y);   // terrain or your own body   // would this heading hit terrain?
   let forced = false;                                                  // on ice or a conveyor: terrain bumps are free
   if (under === 'I') {                                                 // ice: the heading is locked, unless it points into terrain
     forced = true;
@@ -70,6 +77,9 @@ function playerMove() {
   } else if (S.dirQueue.length) S.dir = S.dirQueue.shift();
   let nx = h.x + S.dir.x, ny = h.y + S.dir.y, portal = null;
   const isMage = headId() === 'magician', gift = !isMage && S.gift && S.giftCharges > 0;
+  if (tileAt(nx, ny) === 'B' && !pushBlock(nx, ny, S.dir.x, S.dir.y) && !(isMage || gift)) { // a stuck block just stops the snake, like your own tail
+    S.waitDir = true; playSfx('stall'); return;
+  }
   if ((isMage || gift) && isWall(nx, ny)) {              // a wall opens a portal: step through to the first open tile beyond it
     for (let k = 2; k <= PORTAL_WALL_REACH; k++) {
       const tx = h.x + S.dir.x * k, ty = h.y + S.dir.y * k;
@@ -106,7 +116,7 @@ function playerMove() {
     return;
   }
   if (blocked) {
-    if (forced && !self && !en) { S.waitDir = true; playSfx('stall'); return; }   // ice / conveyor: bumping terrain is free, wait for a new heading
+    if (forced && !en && (!self || belt)) { S.waitDir = true; playSfx('stall'); return; }   // ice / conveyor: bumping terrain is free, wait for a new heading
     // Grace: the first wall/body bump is forgiven. The snake waits one hero move, so a turn can still get in.
     if (GRACE_TICKS > 0 && !S.devMode && (wallHit || self) && !en && S.graceUsed < GRACE_TICKS) { S.graceUsed++; return; }
     // Wall, gate, hazard, enemy or own body: the snake stays put and loses one character (unless invulnerable).
@@ -141,6 +151,8 @@ function playerMove() {
     S.roster.push(newSlot(S.growQueue.shift(), last.fx, last.fy));
   } else S.tailLeft = S.snake.pop();
   if (key) eatKey(key);
+  if (S.tailLeft && tileAt(S.tailLeft.x, S.tailLeft.y) === 'C') S.map[S.tailLeft.y][S.tailLeft.x] = 'H';   // crumbling floor: gone once the tail has left it
+  if (tileAt(nx, ny) === 'Z') bumperTurn(nx, ny);                                                          // bumper: the heading turns
   faceSegments();
   const mine = mineAt(nx, ny);
   if (mine) detonateMine(mine); // stepped on a mine

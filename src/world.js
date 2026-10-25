@@ -4,7 +4,7 @@
 
 // ---- Tiles ----
 function tileAt(x, y) { return inBounds(x, y) && S.map ? S.map[y][x] : '#'; }   // outside the world counts as wall
-function isWall(x, y) { return tileAt(x, y) === '#'; }
+function isWall(x, y) { const t = tileAt(x, y); return t === '#' || t === 'B' || t === 'T'; }   // push blocks and wall turrets are solid too
 function isHazardAt(x, y) { return tileAt(x, y) === 'H'; }
 const GATE_DIR = { r: { x: 1, y: 0 }, l: { x: -1, y: 0 }, u: { x: 0, y: -1 }, d: { x: 0, y: 1 } };
 const CONVEYOR_DIR = { '>': { x: 1, y: 0 }, '<': { x: -1, y: 0 }, '^': { x: 0, y: -1 }, v: { x: 0, y: 1 } };
@@ -26,7 +26,18 @@ function tileFree(x, y) {
     !enemyAt(x, y);
 }
 function randomTile() { return { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
-
+// Push blocks ('B'). Returns true if the block at (x, y) slid one tile along (dx, dy). It cannot move into a wall, another
+// block, a snake, a key, a mine or a waiting recruit. Pushed onto a hazard it FILLS it: both turn into plain floor.
+function pushBlock(x, y, dx, dy) {
+  const bx = x + dx, by = y + dy;
+  if (!inBounds(bx, by) || tileAt(x, y) !== 'B') return false;
+  const fills = tileAt(bx, by) === 'H';
+  if (!fills && !tileFree(bx, by)) return false;
+  S.map[y][x] = '.';
+  S.map[by][bx] = fills ? '.' : 'B';
+  playSfx('kick');
+  return true;
+}
 function inTextZone(x, y) {
   const v = S.view, c = S.cam || camTarget();
   if (!v) return false;
@@ -49,7 +60,7 @@ function placeKey() { // one new key: on a key spot of a room if there is a free
   }
   for (let tries = 0; tries < 200; tries++) {
     const t = randomTile();
-    if (tileFree(t.x, t.y) && far(t)) { S.keys.push(t); return true; }
+    if (tileFree(t.x, t.y) && far(t) && !noItems(t.x, t.y)) { S.keys.push(t); return true; }
   }
   return false;
 }

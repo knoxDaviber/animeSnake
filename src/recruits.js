@@ -30,7 +30,7 @@ function summonRecruit(exceptId) {
     const sy = side === 2 ? v.y0 - 1 : side === 3 ? v.y1 + 1 : lane;
     const len = RECRUIT_WALK_MIN + Math.floor(Math.random() * (RECRUIT_WALK_MAX - RECRUIT_WALK_MIN + 1));
     const tx = sx + d.x * len, ty = sy + d.y * len;
-    if (!inBounds(tx, ty) || !tileFree(tx, ty)) continue;
+    if (!inBounds(tx, ty) || !tileFree(tx, ty) || noItems(tx, ty)) continue;
     if (S.recruits.some(r => r.tx === tx && r.ty === ty)) continue;
     let clear = true;                      // do not walk through walls, hazards, gates or belts
     for (let k = 0; k <= len; k++) {

@@ -20,10 +20,14 @@ function drawScenery() {
 function drawTile(x, y) {
   const t = S.map[y][x], th = themeAt(x, y), px = x * CELL, py = y * CELL;
   if (t === '#') return drawWallTile(x, y, th, px, py);
+  if (t === 'T') return drawTurretTile(x, y, th, px, py);
   ctx.fillStyle = (x * 7 + y * 13) % 5 === 0 ? th.alt : th.floor;   // a few lighter flagstones so the floor is not flat
   ctx.fillRect(px, py, CELL, CELL);
   if (t === 'H') drawHazardTile(px, py);
   else if (t === '~') drawMud(px, py);
+  else if (t === 'B') drawBlockTile(px, py);
+  else if (t === 'Z') drawBumper(px, py);
+  else if (t === 'C') drawCrumble(x, y, px, py);
   else if (t === 'I') drawIce(x, y, px, py);
   else if (CONVEYOR_DIR[t]) drawConveyor(t, px, py);
   else if (GATE_DIR[t]) drawGate(t, th, px, py);
@@ -83,7 +87,42 @@ function drawGate(t, th, px, py) {                                   // stone po
   ctx.fillStyle = '#c9a64b'; ctx.beginPath(); ctx.moveTo(-6, -7); ctx.lineTo(7, 0); ctx.lineTo(-6, 7); ctx.fill();
   ctx.restore();
 }
-
+function drawBlockTile(px, py) {                                     // a push block: a stone crate
+  ctx.fillStyle = '#6b5f86'; ctx.fillRect(px + 3, py + 3, CELL - 6, CELL - 6);
+  ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(px + 3, py + 3, CELL - 6, 3);
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(px + 3, py + CELL - 7, CELL - 6, 4);
+  ctx.strokeStyle = '#2b2440'; ctx.lineWidth = 2; ctx.strokeRect(px + 3, py + 3, CELL - 6, CELL - 6);
+  ctx.strokeStyle = 'rgba(43,36,64,.6)'; ctx.beginPath();
+  ctx.moveTo(px + 3, py + 3); ctx.lineTo(px + CELL - 3, py + CELL - 3); ctx.moveTo(px + CELL - 3, py + 3); ctx.lineTo(px + 3, py + CELL - 3); ctx.stroke();
+}
+function drawBumper(px, py) {                                        // a purple pad with a clockwise arrow
+  const cx = px + 16, cy = py + 16, r = 11 * (1 + 0.08 * Math.sin(S.tick));
+  ctx.fillStyle = '#7a3fb5'; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.3); ctx.fill();
+  ctx.strokeStyle = '#c78bff'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(cx, cy, r, 0, 6.3); ctx.stroke();
+  ctx.strokeStyle = '#fff6d0'; ctx.fillStyle = '#fff6d0'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx, cy, 5, -2.4, 0.6); ctx.stroke();
+  const a = 0.6, ex = cx + Math.cos(a) * 5, ey = cy + Math.sin(a) * 5, tx = -Math.sin(a), ty = Math.cos(a), nx = Math.cos(a), ny = Math.sin(a);
+  ctx.beginPath(); ctx.moveTo(ex + tx * 4, ey + ty * 4); ctx.lineTo(ex + nx * 3, ey + ny * 3); ctx.lineTo(ex - nx * 3, ey - ny * 3); ctx.fill();
+}
+function drawCrumble(x, y, px, py) {                                 // cracked flagstone
+  ctx.fillStyle = 'rgba(120,100,80,.5)'; ctx.fillRect(px + 1, py + 1, CELL - 2, CELL - 2);
+  ctx.strokeStyle = 'rgba(20,12,8,.7)'; ctx.lineWidth = 1.5; ctx.beginPath();
+  const s = (x * 3 + y * 7) % 6;
+  ctx.moveTo(px + 4 + s, py + 3); ctx.lineTo(px + 13, py + 14); ctx.lineTo(px + 9, py + 20); ctx.lineTo(px + 18, py + 29);
+  ctx.moveTo(px + 13, py + 14); ctx.lineTo(px + 26, py + 10);
+  ctx.stroke();
+}
+function drawTurretTile(x, y, th, px, py) {                          // a wall tile with a barrel pointing into the room; it glows just before it fires
+  drawWallTile(x, y, th, px, py);
+  const t = (S.turrets || []).find(q => q.x === x && q.y === y);
+  if (!t) return;
+  const cx = px + 16, cy = py + 16, hot = t.cd <= 3;
+  ctx.fillStyle = '#2a2438'; ctx.beginPath(); ctx.arc(cx, cy, 11, 0, 6.3); ctx.fill();
+  ctx.fillStyle = hot ? '#ff6b4d' : '#7b7f8f'; ctx.beginPath(); ctx.arc(cx, cy, 7, 0, 6.3); ctx.fill();
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.atan2(t.dy, t.dx));
+  ctx.fillStyle = hot ? '#ff6b4d' : '#9aa3b5'; ctx.fillRect(2, -3, 14, 6);
+  ctx.restore();
+}
 // ---- Decor: small drawings, each in its own 32x32 tile (px, py = top left, v = a random 0..1 for variety) --------
 const DECOR = {
   bone(px, py, v) {

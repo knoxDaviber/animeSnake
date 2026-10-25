@@ -15,7 +15,8 @@ function blastTiles(m) {
   const tiles = [{ x: m.x, y: m.y }], reach = blastRange();
   for (const d of DIRS) for (let k = 1; k <= reach; k++) {
     const x = m.x + d.x * k, y = m.y + d.y * k;
-    if (!inBounds(x, y) || isWall(x, y)) break;
+        if (!inBounds(x, y)) break;
+    if (isWall(x, y)) { if (tileAt(x, y) === 'B') S.map[y][x] = '.'; break; }   // a blast smashes the first push block in its way
     tiles.push({ x, y });
   }
   return tiles;

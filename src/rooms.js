@@ -251,6 +251,139 @@ const ROOM_TEMPLATES = [
     // the soldiers never left their beds, and whatever hatched in there leaves through the only gate
     decor: [['bedroll', 7, 8], ['bedroll', 12, 8], ['bedroll', 7, 11], ['bedroll', 12, 11], ['ribs', 9, 12], ['skull', 9, 5], ['bone', 10, 4],
             ['banner', 4, 0], ['banner', 15, 0], ['sword', 3, 3]] },
+  // ---- Paste these inside ROOM_TEMPLATES, right after the nest template (before the closing  ];  ) ----
+  // doors: 'tb' = only the top and bottom openings exist. buildWorld (rooms.js) turns such a room so the opening that
+  // faces the middle of the world stays open. noItems = no keys, recruits or enemy spawns here.
+
+  { id: 'vault', name: 'The Sealed Vault', tier: [2], theme: 'keep', favors: 'armored', doors: 'tb', noItems: true,
+    rows: [
+      '#########..#########',
+      '#..................#',
+      '#..................#',
+      '#.....B......B.....#',
+      '#..................#',
+      '#.....B......B.....#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#HHHHHHHHHHHHHHHHHH#',
+      '#HHHHHHHHHHHHHHHHHH#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#.....B......B.....#',
+      '#..................#',
+      '#.....B......B.....#',
+      '#..................#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // somebody dragged crates to the edge of the pit and ran out of strength
+    decor: [['skull', 6, 8], ['bone', 13, 8], ['ribs', 9, 12], ['sword', 16, 16], ['helm', 3, 15], ['banner', 4, 0], ['banner', 15, 19]] },
+
+  { id: 'pinball', name: 'The Bouncing Hall', tier: [1, 2], theme: 'knights', favors: 'fast',
+    rows: [
+      '#########..#########',
+      '#*................*#',
+      '#.......Z....Z.....#',
+      '#..................#',
+      '#..Z..........Z....#',
+      '#..................#',
+      '#........ZZ........#',
+      '#..................#',
+      '#..Z............Z..#',
+      '....................',
+      '....................',
+      '#..................#',
+      '#...Z..........Z...#',
+      '#..................#',
+      '#........ZZ........#',
+      '#..................#',
+      '#.....Z......Z.....#',
+      '#..................#',
+      '#*................*#',
+      '#########..#########',
+    ],
+    // helms scattered like something threw them from stone to stone
+    decor: [['wheel', 5, 0], ['helm', 13, 6], ['skull', 10, 10], ['bone', 5, 12], ['bone', 14, 12], ['sword', 16, 17]] },
+
+  { id: 'bridges', name: 'The Crumbling Bridges', tier: [2], theme: 'keep', favors: 'fast', doors: 'tb',
+    rows: [
+      '#########..#########',
+      '#HHHHHHHH..HHHHHHHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHCCCCCCCCCCCCCCHH#',
+      '#HHCCCCCCCCCCCCCCHH#',
+      '#HHCCHHHHHHHHHHCCHH#',
+      '#HHCCHHHHHHHHHHCCHH#',
+      '#HHCCHHHHHHHHHHCCHH#',
+      '#HHCCHHHHHHHHHHCCHH#',
+      '#HHCCCCCCCCCCCCCCHH#',
+      '#HHCCCCCCCCCCCCCCHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHHHHHHHCCHHHHHHHH#',
+      '#HHHHHHHH..HHHHHHHH#',
+      '#########..#########',
+    ],
+    // the ones who stopped to rest on the way
+    decor: [['skull', 9, 1], ['bone', 10, 1], ['sword', 9, 18], ['ribs', 10, 18], ['banner', 4, 0], ['banner', 15, 0]] },
+
+  { id: 'alley', name: 'Turret Alley', tier: [2], theme: 'knights', favors: 'armored', doors: 'tb',
+    rows: [
+      '#########..#########',
+      '#..................#',
+      'T..................#',
+      '#..................#',
+      '#..................T',
+      '#..................#',
+      'T..................#',
+      '#..................#',
+      '#..................T',
+      '#..................#',
+      'T..................#',
+      '#..................#',
+      '#..................T',
+      '#..................#',
+      'T..................#',
+      '#..................#',
+      '#..................T',
+      '#*................*#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // the stone watchers still keep the rhythm; the ones who ran straight through lie in the lanes
+    decor: [['ribs', 10, 3], ['skull', 5, 5], ['bone', 12, 7], ['sword', 15, 11], ['helm', 3, 15], ['bone', 9, 18]] },
+
+  { id: 'serpentine', name: 'The Long March', tier: [1, 2], theme: 'knights', favors: 'fast', doors: 'tb',
+    rows: [
+      '#########..#########',
+      '#..................#',
+      '#..................#',
+      '#################..#',
+      '#..................#',
+      '#..................#',
+      '#..#################',
+      '#..................#',
+      '#........*.........#',
+      '#################..#',
+      '#..................#',
+      '#..................#',
+      '#..#################',
+      '#........*.........#',
+      '#..................#',
+      '#################..#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#########..#########',
+    ],
+    // a column of soldiers walked this lane, one lost helm and one sword at a time
+    decor: [['banner', 4, 0], ['helm', 2, 1], ['sword', 17, 4], ['skull', 2, 7], ['bone', 16, 10], ['ribs', 3, 13], ['candle', 17, 16], ['bone', 9, 18]] },
 ];
 
 // ---- Rotating and mirroring templates ----------------------------------------------------------------------------
@@ -292,31 +425,40 @@ function roomAt(x, y) {
   const rx = Math.max(0, Math.min(2, Math.floor(x / ROOM))), ry = Math.max(0, Math.min(2, Math.floor(y / ROOM)));
   return S.rooms[ry * 3 + rx];
 }
-
+// Rooms with doors: 'tb' (only top and bottom openings) must keep the opening that faces the middle of the world.
+function pickRot(tpl, rx, ry) {
+  if (tpl.doors !== 'tb' || (rx !== 1 && ry !== 1)) return Math.floor(Math.random() * 4);   // corners can face either way
+  return (rx === 1 ? 0 : 1) + 2 * Math.floor(Math.random() * 2);                          // top/bottom rooms: 0 or 180; left/right rooms: 90 or 270
+}
+// True on tiles where nothing may spawn (keys, recruits, enemies): rooms flagged noItems, like the vault.
+function noItems(x, y) { const r = roomAt(x, y); return !!(r && r.noItems); }
 // Builds a fresh world for a new run: S.map, S.rooms, S.decor, S.keySpots.
 function buildWorld() {
   const map = range(ROWS).map(() => Array(COLS).fill('#'));
-  const rooms = [], vignettes = [], spots = [];
+    const rooms = [], vignettes = [], spots = [], turrets = [];
   let last = null;
   for (let ry = 0; ry < 3; ry++) for (let rx = 0; rx < 3; rx++) {
     const start = rx === 1 && ry === 1, corner = rx !== 1 && ry !== 1;
     const tpl = start ? START_ROOM : pickTemplate(corner ? 2 : 1, last);
     last = tpl.id;
-    const rot = start ? 0 : Math.floor(Math.random() * 4), flip = !start && Math.random() < 0.5;
+        const rot = start ? 0 : pickRot(tpl, rx, ry), flip = !start && Math.random() < 0.5;
     const rows = transformRows(tpl.rows, rot, flip), ox = rx * ROOM, oy = ry * ROOM;
     for (let y = 0; y < ROOM; y++) for (let x = 0; x < ROOM; x++) {
       const c = rows[y][x];
       map[oy + y][ox + x] = c;
-      if (c === '*') spots.push({ x: ox + x, y: oy + y });
+            if (c === 'T') {                                                          // a turret fires away from the room's edge it sits on
+        const dx = x === 0 ? 1 : x === ROOM - 1 ? -1 : 0, dy = dx ? 0 : y === 0 ? 1 : y === ROOM - 1 ? -1 : 0;
+        if (dx || dy) turrets.push({ x: ox + x, y: oy + y, dx, dy, cd: 10 + (turrets.length * 5) % 22 });
+      }
     }
     (tpl.decor || []).forEach(([k, x, y]) => {
       const p = transformPoint(x, y, rot, flip);
       vignettes.push({ x: ox + p.x, y: oy + p.y, k, v: Math.random() });
     });
-    rooms.push({ id: tpl.id, theme: tpl.theme, favors: tpl.favors || null });
+        rooms.push({ id: tpl.id, theme: tpl.theme, favors: tpl.favors || null, noItems: !!tpl.noItems });
   }
-  for (let x = 0; x < COLS; x++) { map[0][x] = '#'; map[ROWS - 1][x] = '#'; }   // the edge of the world is always wall
-  for (let y = 0; y < ROWS; y++) { map[y][0] = '#'; map[y][COLS - 1] = '#'; }
+  for (let x = 0; x < COLS; x++) { if (map[0][x] !== 'T') map[0][x] = '#'; if (map[ROWS - 1][x] !== 'T') map[ROWS - 1][x] = '#'; }   // the edge of the world is always wall
+  for (let y = 0; y < ROWS; y++) { if (map[y][0] !== 'T') map[y][0] = '#'; if (map[y][COLS - 1] !== 'T') map[y][COLS - 1] = '#'; }
   const scatter = [];                                                           // small decor from each room's theme
   rooms.forEach((r, i) => {
     const th = ROOM_THEMES[r.theme], ox = (i % 3) * ROOM, oy = Math.floor(i / 3) * ROOM;
@@ -324,7 +466,7 @@ function buildWorld() {
       if (map[y][x] === '.' && Math.random() < th.density)
         scatter.push({ x, y, k: th.scatter[Math.floor(Math.random() * th.scatter.length)], v: Math.random() });
   });
-  S.map = map; S.rooms = rooms;
+    S.map = map; S.rooms = rooms; S.turrets = turrets;
   S.decor = scatter.concat(vignettes);                                          // vignettes are drawn on top
   S.keySpots = spots.filter(s => map[s.y][s.x] === '*');
 }
