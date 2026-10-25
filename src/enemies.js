@@ -141,15 +141,16 @@ function chaseTarget(head, ph) {
 
 // ---- Waves -------------------------------------------------------------------
 function spawnEnemy() {
-  const len = enemyLength(S.wave);
+  const len = enemyLength(S.wave), v = viewTiles();
   for (let tries = 0; tries < 40; tries++) {
     const side = Math.floor(Math.random() * 4);
-    const c = Math.floor(Math.random() * (side < 2 ? ROWS : COLS));
-    let d, segs; // the snake starts in a straight line along an edge, heading inward
-    if (side === 0)      { d = DIRS[0]; segs = range(len).map(i => ({ x: len - 1 - i, y: c })); }
-    else if (side === 1) { d = DIRS[1]; segs = range(len).map(i => ({ x: COLS - len + i, y: c })); }
-    else if (side === 2) { d = DIRS[2]; segs = range(len).map(i => ({ x: c, y: len - 1 - i })); }
-    else                 { d = DIRS[3]; segs = range(len).map(i => ({ x: c, y: ROWS - len + i })); }
+    const lane = side < 2 ? v.y0 + Math.floor(Math.random() * (v.y1 - v.y0 + 1))
+                          : v.x0 + Math.floor(Math.random() * (v.x1 - v.x0 + 1));
+    let d, segs; // a straight line just OUTSIDE the view, heading inward (blocked sides at the world edge just retry)
+    if (side === 0)      { d = DIRS[0]; segs = range(len).map(i => ({ x: v.x0 - 1 - i, y: lane })); }
+    else if (side === 1) { d = DIRS[1]; segs = range(len).map(i => ({ x: v.x1 + 1 + i, y: lane })); }
+    else if (side === 2) { d = DIRS[2]; segs = range(len).map(i => ({ x: lane, y: v.y0 - 1 - i })); }
+    else                 { d = DIRS[3]; segs = range(len).map(i => ({ x: lane, y: v.y1 + 1 + i })); }
     const head = S.snake[0];
     const far = Math.abs(segs[0].x - head.x) + Math.abs(segs[0].y - head.y) >= ENEMY_SPAWN_MIN_DIST;
     if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y) && !inTextZone(s.x, s.y))) {

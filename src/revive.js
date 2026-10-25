@@ -97,11 +97,11 @@ function restartRun() { // from the game-over screen, once the lockout has passe
 
 // The Give up button on the revive screen (canvas pixels). Shared by drawing (render.js) and tapping (input.js).
 function giveUpRect() {
-  const w = COLS * CELL, h = ROWS * CELL;
+  const w = SCREEN_W, h = SCREEN_H;
   return { x: w / 2 - 100, y: h / 2 + 115, w: 200, h: 40 };
 }
 // ---- Give up mid-run: P to pause, then Q (or Backspace, or the Give up button) twice within GIVE_UP_CONFIRM_MS ----
-function pauseGiveUpRect() { const w = COLS * CELL, h = ROWS * CELL; return { x: w / 2 - 130, y: h / 2 + 60, w: 260, h: 40 }; }
+function pauseGiveUpRect() { const w = SCREEN_W, h = SCREEN_H; return { x: w / 2 - 130, y: h / 2 + 60, w: 260, h: 40 }; }
 function askGiveUp() {
   if (!S.alive || !S.paused || S.picking) return;
   const now = performance.now();

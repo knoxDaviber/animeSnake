@@ -1,7 +1,9 @@
 html, body { margin: 0; height: 100%; background: #14101f; color: #f3e9ff; font-family: system-ui, sans-serif; overflow: hidden; touch-action: none; }
 body { display: flex; align-items: center; justify-content: center; }
-canvas {
-  background: #1d1730; border: 2px solid #3a2d5c;
+/* #w = the world, fills the window, behind. #c = the UI square (HUD, menus, overlays), centred on top. */
+#w { position: fixed; left: 0; top: 0; image-rendering: pixelated; }
+#c {
+  position: relative; z-index: 1;
   width: min(96vw, calc(100vh - 20px), 640px); height: auto; aspect-ratio: 1 / 1;
   image-rendering: pixelated; /* keep pixel art crisp when the canvas is scaled */
 }

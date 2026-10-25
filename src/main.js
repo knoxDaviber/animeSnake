@@ -75,11 +75,12 @@ function loop(t) {
   }
   if (S.crashed) drawCrash(S.crashed);
   else {
-    try { draw(); } catch (err) { console.error(err); S.crashed = err.message || 'error'; }
+    try { updateCamera(t); draw(); } catch (err) { console.error(err); S.crashed = err.message || 'error'; }
   }
   requestAnimationFrame(loop);
 }
 
+resizeView();
 loadProgress();
 if (TEST_RELOCK) S.unlocked = {};                     // TEST ONLY
 if (TEST_START_COINS > 0) S.coins = TEST_START_COINS; // TEST ONLY

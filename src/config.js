@@ -1,7 +1,12 @@
 // config.js: constants and tuning numbers. Change how the game feels here, not in the logic files.
 
 // Numbers from ART_SPEC.md: 32x32 tiles, 20x20 grid (640x640), 125 ms logic tick.
-const COLS = 20, ROWS = 20, CELL = 32, TICK_MS = 125;
+const COLS = 40, ROWS = 40, CELL = 32, TICK_MS = 125; // COLS / ROWS = the WORLD size in tiles
+const SCREEN_W = 640, SCREEN_H = 640;   // the UI canvas (HUD, menus, overlays): a fixed square, must match index.html
+const VIEW_SHORT_TILES = 20;            // the window's short side shows this many tiles...
+const VIEW_LONG_MAX_TILES = 32;         // ...and the long side never more than this (whichever zooms in more wins)
+const CAM_SMOOTH_MS = 110;              // camera follow lag (bigger = lazier)
+const GRID_ALPHA = 0.05;                // faint tile grid so scrolling is visible on an empty floor (0 = off)
 const SPRITE = 32;   // size of one frame in a character / enemy / item sheet
 const FRAMES = 4;    // frames per animation row in a directional sheet
 

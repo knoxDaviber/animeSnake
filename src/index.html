@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<canvas id="w"></canvas>
 <canvas id="c" width="640" height="640"></canvas>
 
 <!-- Plain scripts (no server or build step needed). Order matters: each file may use the ones above it
@@ -21,6 +22,7 @@
 <script src="world.js"></script>    <!-- food, hazard, drop effects -->
 <script src="score.js"></script>    <!-- points, combos, floating score text -->
 <script src="player.js"></script>   <!-- steering, moving, rings and damage -->
+<script src="camera.js"></script>   <!-- scrolling camera, viewTiles() -->
 <script src="attacks.js"></script>  <!-- attack definitions, swing timer, hit resolution -->
 <script src="heads.js"></script>    <!-- the 3 playable heads: weapons and passives -->
 <script src="levels.js"></script>   <!-- hero levelling: XP, weapon branches -->

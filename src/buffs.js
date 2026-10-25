@@ -66,11 +66,11 @@ function rollPickChoices() {
 
 // Where card i sits on the 640x640 canvas. Shared by drawing (render.js) and tapping (input.js).
 function pickCardRect(i) {
-  const n = S.pickChoices.length, gap = 20, margin = 30, w = (COLS * CELL - 2 * margin - (n - 1) * gap) / n;
+  const n = S.pickChoices.length, gap = 20, margin = 30, w = (SCREEN_W - 2 * margin - (n - 1) * gap) / n;
   return { x: margin + i * (w + gap), y: 200, w, h: 240 };
 }
 // The mulligan button under the cards (render.js draws it, input.js taps it).
-function mulliganRect() { return { x: COLS * CELL / 2 - 120, y: 470, w: 240, h: 44 }; }
+function mulliganRect() { return { x: SCREEN_W / 2 - 120, y: 470, w: 240, h: 44 }; }
 
 // ---- Buff-screen coin spending ----
 function spendCoins(n) { S.coins -= n; S.runSpend += n; saveProgress(); } // counts toward the retention coin tiers

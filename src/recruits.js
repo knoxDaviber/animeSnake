@@ -24,9 +24,10 @@ function summonRecruit(exceptId) {
   for (let tries = 0; tries < 60; tries++) {
     const side = Math.floor(Math.random() * 4);
     const d = DIRS[side];                  // inward heading: 0 = from the left edge, 1 = right, 2 = top, 3 = bottom
-    const lane = Math.floor(Math.random() * (side < 2 ? ROWS : COLS));
-    const sx = side === 0 ? -1 : side === 1 ? COLS : lane;   // start: one tile outside the grid
-    const sy = side === 2 ? -1 : side === 3 ? ROWS : lane;
+    const v = viewTiles();                  // recruits walk in from just outside the VIEW, so they arrive near you
+    const lane = side < 2 ? v.y0 + Math.floor(Math.random() * (v.y1 - v.y0 + 1)) : v.x0 + Math.floor(Math.random() * (v.x1 - v.x0 + 1));
+    const sx = side === 0 ? v.x0 - 1 : side === 1 ? v.x1 + 1 : lane;
+    const sy = side === 2 ? v.y0 - 1 : side === 3 ? v.y1 + 1 : lane;
     const len = RECRUIT_WALK_MIN + Math.floor(Math.random() * (RECRUIT_WALK_MAX - RECRUIT_WALK_MIN + 1));
     const tx = sx + d.x * len, ty = sy + d.y * len;
     if (!inBounds(tx, ty) || !tileFree(tx, ty)) continue;

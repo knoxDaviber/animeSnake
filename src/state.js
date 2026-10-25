@@ -49,9 +49,9 @@ function newLeaderboardState() {
 function newRun() {
   hideNameEntry(); // the initials box belongs to the previous game-over screen
   // The head plus START_FOLLOWERS, in a line heading right from the middle of the grid.
-  const snake = range(1 + START_FOLLOWERS.length).map(i => ({ x: 10 - i, y: 10 }));
+  const snake = range(1 + START_FOLLOWERS.length).map(i => ({ x: Math.floor(COLS / 2) - i, y: Math.floor(ROWS / 2) }));
   Object.assign(S, {
-    runId: (S.runId || 0) + 1, lb: newLeaderboardState(),
+    runId: (S.runId || 0) + 1, lb: newLeaderboardState(), cam: null, camT: 0,
     snake,
     prev: snake.map(s => ({ ...s })),
     roster: [newSlot(0, 1, 0), ...START_FOLLOWERS.map(id => newSlot(followerIndex(id), 1, 0))],

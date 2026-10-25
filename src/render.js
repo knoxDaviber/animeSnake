@@ -1,6 +1,9 @@
 // render.js: everything that draws. Reads S, never changes game state (hud() only touches the page text).
 
-const cv = document.getElementById('c'), ctx = cv.getContext('2d');
+const cv = document.getElementById('c');
+let ctx = cv.getContext('2d');   // the UI canvas. draw() points it at the world canvas while it draws the world layers
+const wcv = document.getElementById('w'), wctx = wcv.getContext('2d');
+let wOpacity = 1;                // what the world canvas is currently set to (see worldOpacity)
 ctx.imageSmoothingEnabled = false;
 
 function hud() {} // nothing to refresh: the HUD is drawn on the canvas every frame (drawHud). Many files still call this. // the numbers now live on the canvas (drawHud); this only refreshes the info bar
@@ -620,21 +623,57 @@ function drawShop() { // the scrolling shop (shop.js has the rows and the buying
   ctx.fillText('Tap a row to pick it, tap again to buy. Drag or scroll for more. Esc = back', mid, 626);
   ctx.restore();
 }
+function drawWorld() { // the floor, a faint grid and the wall around the world (call inside the camera transform)
+  const W = COLS * CELL, H = ROWS * CELL, v = S.view;
+  ctx.fillStyle = '#1d1730'; ctx.fillRect(0, 0, W, H);
+  if (GRID_ALPHA > 0) {
+    const x0 = Math.max(0, Math.floor(S.cam.x / CELL)), y0 = Math.max(0, Math.floor(S.cam.y / CELL));
+    const x1 = Math.min(COLS, Math.ceil((S.cam.x + v.w) / CELL)), y1 = Math.min(ROWS, Math.ceil((S.cam.y + v.h) / CELL));
+    ctx.strokeStyle = `rgba(255,255,255,${GRID_ALPHA})`; ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = x0; x <= x1; x++) { ctx.moveTo(x * CELL + 0.5, y0 * CELL); ctx.lineTo(x * CELL + 0.5, y1 * CELL); }
+    for (let y = y0; y <= y1; y++) { ctx.moveTo(x0 * CELL, y * CELL + 0.5); ctx.lineTo(x1 * CELL, y * CELL + 0.5); }
+    ctx.stroke();
+  }
+  ctx.strokeStyle = '#3a2d5c'; ctx.lineWidth = 6; ctx.strokeRect(-3, -3, W + 6, H + 6);
+}
+// How visible the world canvas is: hidden behind full-screen menus, dimmed behind overlays (the UI square dims itself).
+function worldOpacity() {
+  if (S.ad || (S.picking && (S.headPicking || S.shopping))) return 0;
+  if (S.picking) return 0.15;
+  if (!S.alive || S.paused) return 0.4;
+  return 1;
+}
 function draw() {
-  ctx.clearRect(0, 0, cv.width, cv.height);
-  drawHazard();
-  drawFood();
-  drawMines();
-  drawRecruits();
-  drawEnemies();
-  drawPlayer();
-  drawShield();
-  drawDrops();
-  S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
-  drawBullets();
-  drawBlasts();
-  drawZaps();
-  drawPopups();
+  const op = worldOpacity();
+  if (op !== wOpacity) { wcv.style.opacity = op; wOpacity = op; }
+  if (op > 0) {                                        // world layers go on the world canvas, moved by the camera
+    const ui = ctx;
+    ctx = wctx;
+    try {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = '#0d0a18'; ctx.fillRect(0, 0, wcv.width, wcv.height); // outside the world
+      ctx.save();
+      const k = S.view.scale * S.view.dpr;
+      ctx.scale(k, k);
+      ctx.translate(-Math.round(S.cam.x), -Math.round(S.cam.y));
+      drawWorld();
+      drawHazard();
+      drawFood();
+      drawMines();
+      drawRecruits();
+      drawEnemies();
+      drawPlayer();
+      drawShield();
+      drawDrops();
+      S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
+      drawBullets();
+      drawBlasts();
+      drawZaps();
+      drawPopups();
+      ctx.restore();
+    } finally { ctx = ui; }
+  }
+  ctx.clearRect(0, 0, cv.width, cv.height);            // screen layers go on the UI square
   drawHud();
   drawComboBar();
   drawStallHint();

@@ -86,7 +86,7 @@ function updateGunman() {
 function headLayout() {
   const n = HEAD_DEFS.length, big = n <= 3, cols = big ? n : HERO_GRID_COLS, rows = Math.ceil(n / cols);
   const gap = big ? 20 : 14, margin = 30, top = big ? 140 : 130, area = big ? 300 : 310;
-  const w = (COLS * CELL - 2 * margin - (cols - 1) * gap) / cols;
+  const w = (SCREEN_W - 2 * margin - (cols - 1) * gap) / cols;
   const h = big ? area : Math.min(190, (area - (rows - 1) * gap) / rows);
   return { n, big, cols, rows, gap, margin, top, w, h };
 }
