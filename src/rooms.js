@@ -446,7 +446,8 @@ function buildWorld() {
     for (let y = 0; y < ROOM; y++) for (let x = 0; x < ROOM; x++) {
       const c = rows[y][x];
       map[oy + y][ox + x] = c;
-            if (c === 'T') {                                                          // a turret fires away from the room's edge it sits on
+      if (c === '*') spots.push({ x: ox + x, y: oy + y });   // key spots (placeKey in world.js prefers these)
+      if (c === 'T') {                                                          // a turret fires away from the room's edge it sits on
         const dx = x === 0 ? 1 : x === ROOM - 1 ? -1 : 0, dy = dx ? 0 : y === 0 ? 1 : y === ROOM - 1 ? -1 : 0;
         if (dx || dy) turrets.push({ x: ox + x, y: oy + y, dx, dy, cd: 10 + (turrets.length * 5) % 22 });
       }

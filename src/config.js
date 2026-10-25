@@ -87,6 +87,38 @@ const ENEMY_TYPE_CHANCE = 0.45;   // chance a snake is a special type once one i
 const ENEMY_FAVOR_CHANCE = 0.6;   // chance it is the room's favoured type while you are in that room
 const SPIT_COOLDOWN = 24, SPIT_RANGE = 10, SPIT_SPEED = 1; // ticks between spits, tiles, tiles per tick
 
+// Boss (boss.js): the wave 10 Great Serpent. Gridless: positions are floats in tile units.
+const BOSS_WAVE = 2;            // the wave that brings the boss (no boss in Pacifist)
+const BOSS_HP = 18;              // total hit points. A sword hit is 3, so a head crit (x2) is 6: three head hits kill it
+const BOSS_CRIT = 2;             // damage multiplier for a hit on the head
+const BOSS_BODY_DAMAGE = 1;      // a hit on the body (it is never cut in two)
+const BOSS_FLASH_MS = 400;       // after a head hit it flashes and freezes this long, then swaps ends
+const BOSS_IFRAMES_MS = 250;     // it ignores a second hit on the same part this soon (stops one blast counting twice)
+const BOSS_PTS = 14, BOSS_MAX_PTS = 22;   // points in its body at the start, and the most eating can make it
+const BOSS_SPACING = 0.85;       // tiles between body points (14 points is about 11 tiles long)
+const BOSS_RADIUS = 0.8;         // how close a tile's middle must be to a body point to count as hit / blocked
+const BOSS_WALL_RADIUS = 0.7;    // how close the head can get to a wall
+const BOSS_SCALE = 1.35;         // how big it is drawn (the head is 1.25x that)
+const BOSS_TPS = 3.2;            // base speed, tiles per second (the hero is 4)
+const BOSS_TURN = 2.4;           // turn rate, radians per second
+const BOSS_SPEED_MAX = 1.4, BOSS_EAT_SPEED = 0.03;   // eating a key, recruit or snake: +3% speed, up to x1.4
+const BOSS_HEAL = 1;             // hit points it regains for every snake it eats
+const BOSS_HUNT_DIST = 9;        // it goes for another snake's head this close (tiles)
+const BOSS_KEY_HUNT_DIST = 5;    // ...or for a key this close, if that is nearer than you
+const BOSS_EAT_DIST = 1;         // how close the head must be to eat something
+const BOSS_LEAD_MAX = 4;         // it aims up to this many tiles ahead of where you are heading
+const BOSS_PATH_MS = 200;        // how often it re-plans its way around walls
+const BOSS_REPEL = 1.3, BOSS_MINE_FEAR = 1.2;   // how strongly it steers away from walls and from mines
+const BOSS_ENRAGE_AT = 0.5, BOSS_ENRAGE_SPEED = 1.25;   // under half HP: faster, turns faster, charges more often
+const BOSS_FIRST_CHARGE_MS = 4000, BOSS_CHARGE_CD = 5000;   // time to its first charge, and between charges
+const BOSS_WINDUP_MS = 500, BOSS_CHARGE_MS = 700, BOSS_CHARGE_SPEED = 2.4;   // telegraph, charge length, charge speed (x)
+const BOSS_DAZE_MS = 900;        // dazed for this long after ramming a wall in a charge (free hits)
+const BOSS_HEAD_REACH = 1.0, BOSS_BODY_REACH = 0.8;   // how close counts as touching you
+const BOSS_CONTACT_MS = 800, BOSS_RECOIL_MS = 600;    // it can hurt you at most this often, and pauses after
+const BOSS_MEDUSA_DAMAGE = 3;    // touching its head with a Medusa in the chain (the crit makes it 6)
+const BOSS_COINS = 10, BOSS_SCORE = 500;
+const BOSS_AFTER_TICKS = 40;     // waves restart this many ticks after it dies
+
 // Followers, skills and mines
 const START_FOLLOWERS = []; // who follows the head at the start of a run (ids from followers.js)
 const MINE_COOLDOWN = 64;   // ticks (8 s) between mines dropped by each Miner in the chain

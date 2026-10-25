@@ -42,6 +42,7 @@ function step() {
     updateSpits();      // spitter orbs fly (enemies.js)
     refreshKey();       // puts the next key down unless enough characters are already waiting
     updateWaves();
+    updateBoss();
   }
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }
   if (S.wave > S.bestWave) S.bestWave = S.wave;
@@ -71,6 +72,7 @@ function loop(t) {
       }
       if (S.alive) stepEnemyTimers(t);   // enemies move on their own timers (enemies.js)
       if (S.alive) openBranchPick();     // a level-5 weapon branch pick (levels.js)
+      if (S.alive) openBossReward();     // reward pick after the boss (boss.js)
       if (S.alive) {
         S.alpha = Math.min(1, Math.max(0, (t - S.last) / TICK_MS));
         S.heroAlpha = Math.min(1, Math.max(0, (t - S.heroLast) / iv));

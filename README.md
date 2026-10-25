@@ -6,13 +6,13 @@ A small, fully vibecoded first game: code is written with AI help, and art, musi
 
 ## Status
 
-Early prototype with the core loop working. You pick a hero on the title screen, choose a run-start buff, then steer a chain of characters around a world that scrolls under a camera. Heroes attack automatically. Enemy snakes arrive in timed waves. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a distinct fusion follower.
+Early prototype with the core loop working. You pick a hero on the title screen, choose a run-start buff, then steer a chain of characters around a world that scrolls under a camera. Heroes attack automatically. Enemy snakes arrive in timed waves, and wave 10 brings a gridless boss. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a distinct fusion follower.
 
-Built but **not yet play-tested in a browser**: the movement-feel fixes, the halved speed system, timed waves, enemies that eat keys and recruits, the scarce-coin economy with fake joke ads, Pacifist and Challenge modes, hero levelling with weapon branches, the title-screen shop, and the scrolling camera over a 60x60 world whose view adapts to the device shape.
+Built but **not yet play-tested in a browser**: the movement-feel fixes, the halved speed system, timed waves, enemies that eat keys and recruits, four enemy types, the scarce-coin economy with fake joke ads, Pacifist and Challenge modes, hero levelling with weapon branches, the title-screen shop, the scrolling camera over a 60x60 world made of room templates (walls, hazards, mud, conveyors, gates, ice, push blocks, bumpers, crumbling floor, turrets), kick physics with the Goliath hero, and the wave 10 boss (the Great Serpent: a smooth, gridless snake with a crit-on-head, swap-ends fight).
 
-Heroes start with no followers. Hero prices: Swordsman free, Magician 50 coins, Gunman 100, Goliath 200, Summoner 200 (Goliath and Summoner are not built yet). Old saves that already own Gunman keep that unlock.
+Heroes start with no followers. Hero prices: Swordsman free, Magician 50 coins, Gunman 100, Goliath 200 (built), Summoner 200 (not built yet). Old saves that already own Gunman keep that unlock.
 
-Next up: play-testing, then the room system (curated room templates, walls, hazards: see [templates.md](templates.md)), then enemy types, temporary buff drops, kick physics, Goliath, Summoner, and the wave 10 boss. The wave 20 wizard is intentionally much later because it depends on the room system.
+Next up: play-testing, then temporary buff drops, Summoner, Goliath extras, and much later the wave 20 wizard.
 
 ## Run it
 
@@ -35,11 +35,11 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 - Three identical followers anywhere in the chain merge into one fusion follower with completely different abilities; you lose 2 characters, so merging is a choice.
 - Heroes start with no followers, making the Starting follower buff and the pity boost meaningful.
 - Enemy snakes arrive in timed waves and get tougher. They eat keys and recruits, and grow and speed up when they do. Later waves bring fast thin snakes, armored heads and spitters, and some rooms favour one type.
+- At wave 10 a giant snake that ignores the grid slides in. Hit its head for a crit: it flashes, swaps head and tail and keeps coming. It eats other snakes, charges at you after a red telegraph, and beating it opens a reward pick.
 - The world is 60x60 tiles and the camera follows you, so you never see all of it. The view adapts to the device: about 20 tiles on the short side, at most 32 on the long side.
 - Coins are scarce. A Pentakill can award 5 coins as a hidden mini-sidequest; wave milestones and bosses are the main income. Fake ads give small payouts on the hero select screen.
 - Modifier runs such as Pacifist, Glass cannon and Dev mode are legitimate leaderboard runs but are scored differently.
 - Hero levelling: kills give XP, and every 5 levels you pick a weapon branch (Gatling, Ricochet, Nova, Thunder).
-- The first planned boss is the wave 10 giant snake. The wizard comes much later.
 
 ## Heroes
 
@@ -48,7 +48,7 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 | Swordsman | Free                                  |
 | Magician  | 50 coins; locked at start             |
 | Gunman    | 100 coins                             |
-| Goliath   | 200 coins (planned, not built)        |
+| Goliath   | 200 coins (built, needs art)          |
 | Summoner  | 200 coins (planned, not built)        |
 
 ## Followers and fusions
@@ -59,7 +59,7 @@ The five base follower families are Miner, Keysman, Magneto, Raiden and Gorgon.
 - **Kingsman:** more likely Keysman summons, plus two permanent run modifiers: +1 damage and +1 key on the map (food presence).
 - **Mr.X:** eats nearby keys and rejects new recruits to shoot at enemies.
 - **Raiden Shogun:** lightning attacks and a permanent +10% speed run modifier.
-- **Medusa:** freezes enemies in the facing line and can kill a touched enemy head; its fusion leaves a shield (60 s recharge, shorter on later merges).
+- **Medusa:** freezes enemies in the facing line and can kill a touched enemy head; its fusion leaves a shield (60 s recharge, shorter on later merges). The boss can only be hurt by it, not frozen or killed outright.
 
 Exact balance is still subject to play-testing.
 
@@ -68,14 +68,13 @@ Exact balance is still subject to play-testing.
 The snake feel stays central.
 
 - Built: a two-entry input buffer, a configurable 0/1-tick grace window for an otherwise fatal wall/body move, halved base hero speed, enemies with their own move timers.
-- Built (untested): a 60x60 world with a smooth scrolling camera. Enemies and recruits come in from just outside your view. The world is a 3x3 grid of rooms with walls, hazards, mud, conveyors, one-way gates and ice. Three keys lie on the map at once (a Kingsman fusion adds one), and an arrow points to the nearest one.
-- Planned: more room tiles (push blocks, bumpers, turrets, crumbling floor) and more templates. Sketches are in [templates.md](templates.md). Room-snap/Zelda-style framing can be layered on the same structure later.
-- Planned: a Ghost Body temporary buff (followers stop colliding with your head for a short time).
+- Built (untested): a 60x60 world with a smooth scrolling camera, a 3x3 grid of 20x20 room templates (see [templates.md](templates.md)) with walls, hazards, mud, conveyors, one-way gates, ice, push blocks, bumpers, crumbling floor and wall turrets. Three keys lie on the map at once (a Kingsman fusion adds one), and an arrow points to the nearest one. Enemies and recruits come in from just outside your view.
+- Planned: more room templates, a Ghost Body temporary buff (followers stop colliding with your head for a short time). Room-snap/Zelda-style framing can be layered on the same structure later.
 
 ## Economy and retention
 
-- Coins are scarce. Pentakill: 5-coin optional sidequest reward, once per chain. Wave milestones (waves 5, 10, 15, 20) pay coins.
-- Fake joke ads: used for revives and the hero-select coin button (payouts 10, 5, 2, 1, then back to 10 after an hour). `ADS_ENABLED` in `config.js` switches them off, and players can buy "No ads" for 1000 coins.
+- Coins are scarce. Pentakill: 5-coin optional sidequest reward, once per chain. Wave milestones (waves 5, 10, 15, 20) and the wave 10 boss pay coins.
+- Fake joke ads: used for revives and the hero-select coin button (payouts 10, 5, 2, 1, then back to 10 after an hour). `ADS_ENABLED` in `config.js` switches them off, and players can buy "No ads".
 - Buff screen: 1 coin for the third card, 5 coins for a mulligan.
 - Shop: locked run buffs (Magician's gift, Everything is a bomb, Pacifist, Challenge, Dev mode, Glass cannon, +20% score) and permanent starting followers.
 - Retention: coin tiers (based on coins spent in recent runs), frustration/pity boost, high-score pressure, boast hooks. `RETENTION_ON` switches them all off.
@@ -86,17 +85,18 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 
 | File             | What lives there                                                                |
 | ---------------- | ------------------------------------------------------------------------------- |
-| `config.js`      | Constants and tuning numbers                                                    |
+| `config.js`      | Constants and tuning numbers (including `BOSS_*`)                               |
 | `sprites.js`     | Loads the shared sprite sheets                                                  |
 | `followers.js`   | Followers and fusions, their sheets, `newSlot()`                                |
 | `state.js`       | The `S` object holding all mutable game state, and `newRun()`                   |
 | `storage.js`     | Saves best score, best combo, best wave, coins, unlocks, shop and retention data |
 | `unlocks.js`     | Click-to-buy unlocks, prices from config.js                                     |
 | `audio.js`       | Sound effects and music: synthesized placeholders, real files can replace them  |
-| `world.js`       | Keys, hazards, free-tile checks, text-zone check, drop effects                  |
+| `world.js`       | Tiles, keys, push blocks, free-tile checks, text-zone check, drop effects       |
 | `rooms.js`       | Room templates, themes, world builder                                           |
 | `score.js`       | Points, combos, coin rewards, floating score text                               |
-| `player.js`      | Steering, movement, rings and damage                                            |
+| `player.js`      | Steering, movement, terrain, rings and damage                                   |
+| `camera.js`      | Scrolling camera, view size for the device, `viewTiles()`                       |
 | `attacks.js`     | Attack definitions, hit resolution, bullets                                     |
 | `heads.js`       | Hero definitions, weapons, passives and hero-select screen                      |
 | `levels.js`      | Hero levelling: XP, weapon branches                                             |
@@ -104,6 +104,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `mines.js`       | Mines and explosions                                                            |
 | `passives.js`    | Follower passives, hero speed, shields and freeze                               |
 | `recruits.js`    | Keys summon characters that walk in and wait to be recruited                    |
+| `kicks.js`       | Kick physics for mines, keys and recruits, Goliath rules                        |
 | `merge.js`       | Three identical followers fuse into a fusion follower                           |
 | `buffs.js`       | Run-start buffs and the pick screen                                             |
 | `shop.js`        | Title-screen shop, permanent starting followers                                 |
@@ -111,16 +112,17 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `ads.js`         | Fake joke ads (data in `assets/ads/ads_data.js`)                                |
 | `retention.js`   | High-score pressure, frustration/pity and coin tiers                            |
 | `leaderboard.js` | Shared online top 10 and initials box                                           |
-| `enemies.js`     | Enemy snakes, AI, waves and future enemy types                                  |
-| `camera.js`      | Scrolling camera, view size for the device, `viewTiles()`                       |
+| `enemies.js`     | Enemy snakes, AI, spitters, turrets and timed waves                             |
+| `boss.js`        | The wave 10 gridless boss, its AI, drawing and reward pick                      |
 | `scenery.js`     | Floor, wall and terrain tiles, and the story decor (no art files needed)        |
-| `render.js`      | All drawing, including title screen and HUD                                     |
+| `render.js`      | All drawing, including title screen                                             |
+| `hud.js`         | Window-corner HUD, buff list, level bar, key arrow                              |
 | `input.js`       | Keyboard, touch, swipe/tap zones and pause                                      |
 | `main.js`        | World tick, hero movement, frame loop and start-up                              |
 
 Rules of thumb: tuning numbers go in `config.js`, state goes in `S`, drawing goes in `render.js`. If the game code throws, it shows an error screen (details in the browser console) instead of freezing.
 
-There are two canvases: `#w` fills the window and draws the world (moved by the camera), and `#c` is a 640x640 square centred on top for the HUD, menus and overlays.
+There are two canvases: `#w` fills the window and draws the world (moved by the camera) and the in-game HUD, and `#c` is a 640x640 square centred on top for menus and overlays.
 
 ## Online leaderboard
 
@@ -135,7 +137,7 @@ src/                     game code
 assets/images/
   characters/            hero sheets, 4x4
   followers/             follower and fusion sheets, 4x4
-  enemies/               enemy head and body sheets, 4x4
+  enemies/               enemy head and body sheets, 4x4 (the boss reuses them, scaled up)
   attacks/               attack sheets, equal-sized frames
   food.png, hazard.png, mine.png, recruit.png   item sheets
 assets/audio/            optimized music and sfx

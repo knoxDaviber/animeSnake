@@ -88,7 +88,7 @@ function medusaGaze() {
     for (let x = h.x + d.x, y = h.y + d.y; inBounds(x, y) && !isWall(x, y); x += d.x, y += d.y) {   // the gaze stops at walls
     tiles.push({ x, y });
     const t = enemyAt(x, y);
-    if (t && t.i === 0) { if (t.e.stun <= 0) fresh = true; t.e.stun = Math.max(t.e.stun, MEDUSA_FREEZE_TICKS); }
+    if (t && t.i === 0 && !t.e.boss) { if (t.e.stun <= 0) fresh = true; t.e.stun = Math.max(t.e.stun, MEDUSA_FREEZE_TICKS); }
   }
   if (fresh) { S.zaps.push({ kind: 'gaze', tiles, age: 0 }); playSfx('gaze'); }
 }

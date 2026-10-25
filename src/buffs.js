@@ -75,7 +75,7 @@ function mulliganRect() { return { x: SCREEN_W / 2 - 120, y: 470, w: 240, h: 44 
 // ---- Buff-screen coin spending ----
 function spendCoins(n) { S.coins -= n; S.runSpend += n; saveProgress(); } // counts toward the retention coin tiers
 function pickNote(ok, text) { S.pickNote = { ok, text, until: performance.now() + CARD_NOTE_MS }; }
-function thirdCardLocked() { return !S.branchPicking && S.pickChoices.length > THIRD_CARD && !S.thirdUnlocked; }
+function thirdCardLocked() { return !S.branchPicking && !S.rewardPicking && S.pickChoices.length > THIRD_CARD && !S.thirdUnlocked; }
 
 function unlockThird() {
   S.pickAfter = performance.now() + PICK_LOCKOUT_MS;
@@ -84,7 +84,7 @@ function unlockThird() {
   playSfx('unlock'); pickNote(true, 'Unlocked!'); hud();
 }
 function mulligan() {
-  if (!S.picking || S.headPicking || S.branchPicking || performance.now() < S.pickAfter) return;
+  if (!S.picking || S.headPicking || S.branchPicking || S.rewardPicking || performance.now() < S.pickAfter) return;
   S.pickAfter = performance.now() + PICK_LOCKOUT_MS;
   if (S.coins < MULLIGAN_COST) { playSfx('deny'); pickNote(false, `Need ${MULLIGAN_COST - S.coins} more coin${MULLIGAN_COST - S.coins === 1 ? '' : 's'}`); return; }
   spendCoins(MULLIGAN_COST);

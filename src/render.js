@@ -283,6 +283,7 @@ function lerpPos(prevList, i, cur, a = S.alpha) {
 }
 function drawEnemies() {
   S.enemies.forEach(e => {
+    if (e.boss) { drawBossSnake(e); return; }   // boss.js: smooth, gridless
     if (e.stun > 0 && S.tick % 2 === 0) return; // blink while stunned
     const T = e.type || 'normal';
     e.segs.forEach((s, i) => {
@@ -515,7 +516,7 @@ function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Ent
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
-  ctx.fillText(S.branchPicking ? `Level ${S.level}: pick a weapon branch` : 'Pick a buff', cv.width / 2, 150);
+  ctx.fillText(S.rewardPicking ? 'Boss defeated! Pick a reward' : S.branchPicking ? `Level ${S.level}: pick a weapon branch` : 'Pick a buff', cv.width / 2, 150);
   ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'right';      // your coins, top right
   const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
   drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
@@ -540,7 +541,7 @@ function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Ent
     ctx.fillStyle = '#f3e9ff'; ctx.font = '16px system-ui';
     wrapText(b.desc, c.w - 30).forEach((line, n) => ctx.fillText(line, cx, c.y + 90 + n * 22));
   });
-  if (S.branchPicking) { ctx.restore(); return; }   // no mulligan on a weapon branch pick
+  if (S.branchPicking || S.rewardPicking) { ctx.restore(); return; }   // no mulligan here   // no mulligan on a weapon branch pick
   const m = mulliganRect(), afford = S.coins >= MULLIGAN_COST;      // the mulligan button
   ctx.fillStyle = '#211a3b'; ctx.fillRect(m.x, m.y, m.w, m.h);
   ctx.lineWidth = 2; ctx.strokeStyle = afford ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(m.x, m.y, m.w, m.h);
@@ -705,7 +706,7 @@ function draw() {
       drawKeyArrow();       // hud.js: arrow halfway to the window edge (world pixels)
       ctx.restore();
       ctx.setTransform(S.view.dpr, 0, 0, S.view.dpr, 0, 0);   // window pixels from here on
-      drawHud(); drawBuffList(); drawComboBar(); drawStallHint();
+      drawHud(); drawBuffList(); drawComboBar(); drawStallHint(); drawBossBar();
     } finally { ctx = ui; }
   }
   ctx.clearRect(0, 0, cv.width, cv.height);            // screen layers go on the UI square

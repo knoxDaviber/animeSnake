@@ -7,6 +7,7 @@
 
 function enemyAt(x, y) {
   for (const e of S.enemies) {
+    if (e.boss) { const i = bossIndexAt(e, x, y); if (i >= 0) return { e, i }; continue; }   // the gridless boss (boss.js)
     const i = e.segs.findIndex(s => s.x === x && s.y === y);
     if (i >= 0) return { e, i };
   }
@@ -29,6 +30,7 @@ function faceOf(e, i) {
 // Returns true if the enemy survived.
 function damageEnemyHead(e, n) {
   if (S.pacifist) return true;
+  if (e.boss) return bossHit(e, n * BOSS_CRIT, true);   // a head hit is a crit: flash, freeze, swap ends (boss.js)
   e.hp -= n;
   if (e.hp <= 0) { killEnemy(e); return false; }
   playSfx('hitEnemy');
@@ -36,6 +38,7 @@ function damageEnemyHead(e, n) {
   return true;
 }
 function killEnemy(e) {
+  if (e.boss) bossDefeated(e);
   S.enemies = S.enemies.filter(x => x !== e);
   e.segs.forEach((s, i) => {
     const f = faceOf(e, i);
@@ -46,6 +49,7 @@ function killEnemy(e) {
 // Breaks segment i and cuts off everything behind it.
 function cutEnemy(e, i) {
   if (S.pacifist) return;
+  if (e.boss) { bossHit(e, BOSS_BODY_DAMAGE, false); return; }   // the boss is chipped, never cut in two
   const faces = e.segs.map((_, k) => faceOf(e, k));
   const cut = e.segs.splice(i);
   cut.forEach((s, k) => {
@@ -155,6 +159,7 @@ function stepEnemyTimers(t) {
   for (const e of [...S.enemies]) {
     if (!S.alive) break;
     if (!S.enemies.includes(e)) continue;        // killed earlier this frame
+    if (e.boss) { bossFrame(e, t); continue; }   // the boss moves every frame, not on a tile timer (boss.js)
     const iv = enemyInterval(e);
     if (e.stun > 0) { e.last = t - iv; e.alpha = 1; continue; }
     if (t - e.last >= iv) {
@@ -264,7 +269,7 @@ function spawnEnemy() {
   return false;
 }
 // Boss hook: a boss fight (later) sets S.boss, which stops the wave timer.
-function wavesPaused() { return !!S.boss; }
+function wavesPaused() { return !!S.boss || S.bossWait; }
 
 function startWave() {
   S.wave++; S.giftCharges = S.giftPerWave;
@@ -276,6 +281,7 @@ function startWave() {
   }
   if (S.pacifist) addScore(PACIFIST_POINTS.wave, h.x, h.y);
   if (S.challenge && S.wave >= CHALLENGE_WAVE) { winRun(); return; }   // Challenge won (revive.js)
+  if (S.wave === BOSS_WAVE && !S.pacifist) { startBoss(); S.waveTimer = waveDuration(S.wave); return; }   // boss.js
   S.toSpawn = Math.min(ENEMY_QUEUE_MAX, S.toSpawn + waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()));
   S.spawnTimer = 0;
   S.waveTimer = waveDuration(S.wave);
