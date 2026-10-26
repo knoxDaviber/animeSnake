@@ -66,7 +66,7 @@ const TURRET_COOLDOWN = 32;   // ticks (4 s) between a wall turret's shots; it o
 // Kicking (kicks.js): mines, keys and waiting recruits can be kicked. A kicked item slides until it hits something.
 const KICK_ALL_HEROES = false;  // true: every hero kicks (for testing). false: Goliath only
 const KICK_SPEED = 2;           // tiles per world tick that a kicked item slides
-const KICK_FLOOR = '.*e~I';     // tiles a sliding item can cross
+const KICK_FLOOR = '.*e~IP';     // tiles a sliding item can cross
 const KICK_REWARD_EVERY = 5;    // Goliath: every Nth kick, a random fusion follower joins the chain
 const GOLIATH_SPEED = 0.75;     // Goliath's speed multiplier
 // Food presence (world.js)
@@ -82,6 +82,7 @@ const ENEMY_TYPES = {
   fast:    { speed: 1.6,  hp: 1, len: -1, from: 4 },
   armored: { speed: 0.85, hp: 2, len: 1,  from: 7 },
   spitter: { speed: 0.9,  hp: 1, len: 0,  from: 10 },
+  kamikaze: { speed: 1.25, hp: 1, len: -1, from: 8 },   // hunts bombs near you (bombs.js)
 };
 const ENEMY_TYPE_CHANCE = 0.45;   // chance a snake is a special type once one is unlocked
 const ENEMY_FAVOR_CHANCE = 0.6;   // chance it is the room's favoured type while you are in that room
@@ -89,7 +90,7 @@ const SPIT_COOLDOWN = 24, SPIT_RANGE = 10, SPIT_SPEED = 1; // ticks between spit
 
 // Boss (boss.js): the wave 10 Great Serpent. Gridless: positions are floats in tile units.
 const BOSS_WAVE = 10;            // the wave that brings the boss (no boss in Pacifist)
-const BOSS_HP = 36;              // total hit points. A sword hit is 3, so a head crit (x2) is 6: three head hits kill it
+const BOSS_HP = 48;              // total hit points. A sword hit is 3, so a head crit (x2) is 6: three head hits kill it
 const BOSS_CRIT = 2;             // damage multiplier for a hit on the head
 const BOSS_BODY_DAMAGE = 1;      // a hit on the body (it is never cut in two)
 const BOSS_FLASH_MS = 400;       // after a head hit it flashes and freezes this long, then swaps ends
@@ -137,7 +138,7 @@ const AGENT_MAX = 4;              // most spirits at once
 const AGENT_MOVE_TICKS = 2;       // ticks per tile (2 = same pace as the hero at base speed); Raiden and Shogun spirits move every tick
 const AGENT_SIGHT = 14;           // how far (tiles) a spirit looks for enemies
 const AGENT_DAMAGE = 1;           // melee hit (scales like weapon damage)
-const AGENT_HIT_CD = 4;           // ticks between a spirit's hits
+const AGENT_HIT_CD = 8;           // ticks between a spirit's hits
 const AGENT_MINE_CD = 16;         // Miner spirit: ticks between mines (Bomber: half)
 const AGENT_MINE_RANGE = 5;       // ...only when an enemy is this close
 const AGENT_SHOT_CD = 8;          // Mr.X spirit: ticks between shots
@@ -443,3 +444,35 @@ const DOOR_LOCK_MAX_TICKS = 480;   // lockdown failsafe: doors give way after 60
 const DOOR_LOCK_COINS = 2;         // lockdown reward
 const DOOR_CACHE_KEYS = 2, DOOR_CACHE_BUFFS = 2;   // cache twist contents
 const DOOR_CACHE_TTL = 400;        // ticks a cache buff block stays (50 s)
+
+// Wizard boss (wizard.js): wave 20. Times are world ticks (8 per second) unless it says ms.
+const WIZARD_WAVE = 20;
+const WIZARD_HP = 24;                  // hit points once the field is down (a sword hit is 3)
+const WIZARD_FIELD_R = 2;             // field reaches this many tiles from him (2 = 5x5)
+const WIZARD_FIELD_HITS = 5;          // hits that break the field
+const WIZARD_IFRAMES_MS = 450;        // one blast cannot count as several hits
+const WIZARD_EXPOSED_TICKS = 56;      // 7 s with the field down, then it reforms and he heals and blinks away
+const WIZARD_TP_TICKS = 96;           // 12 s between teleports while the field is up
+const WIZARD_MIN_DIST = 14;           // he teleports at least this far (tiles) from you
+const WIZARD_FIRST_LASER = 24;        // 3 s after he appears
+const WIZARD_LASER_EVERY = 40;        // 5 s from one shot to the next
+const WIZARD_CHARGE_TICKS = 16;       // 2 s of charge (the telegraph)
+const WIZARD_LOCK_TICKS = 4;          // the aim stops following you this long before the shot
+const WIZARD_LASER_ACTIVE = 24;       // 4 s the beam stays on the field
+const WIZARD_FAN = 0.45;              // radians between beams when there are several
+const WIZARD_LASER_MAX = 3;           // most beams in one volley (1 + one per field reform)
+const WIZARD_REFORM_HEAL = 0.6;   // share of his max HP he heals when the field reforms (1 = full heal)
+const WIZARD_COINS = 25, WIZARD_SCORE = 2000;
+
+// Fixed bombs, kamikaze snakes, Goliath balance (bombs.js)
+const PEDESTAL_FIRST = 8;             // ticks until a pedestal's first bomb
+const PEDESTAL_REGEN = 96;            // ticks (12 s) for a new bomb after the old one is gone
+const PEDESTAL_BLAST = 3;             // blast arm length of a pedestal bomb
+const PEDESTAL_BOMB_CAP = 8;          // most pedestal bombs lying around at once
+const GOLIATH_BLAST_RINGS = 2;        // rings Goliath loses when a blast reaches him
+const KAMI_SIGHT = 18;                // a kamikaze notices bombs this close to it (tiles)
+const KAMI_HERO_RANGE = 6;            // ...and only goes for bombs this close to YOU
+const KAMI_GOLIATH_CHANCE = 0.5;      // with Goliath, this share of special snakes is a kamikaze (when a bomb exists)
+// Boss banners (hud.js)
+const BANNER_TICKS = 24;      // 3 s on screen
+const BOSS_WARN_TICKS = 80;   // the warning appears this many ticks (10 s) before the boss wave starts

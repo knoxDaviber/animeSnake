@@ -283,6 +283,7 @@ function lerpPos(prevList, i, cur, a = S.alpha) {
 }
 function drawEnemies() {
   S.enemies.forEach(e => {
+    if (e.wizard) return;                       // wizard.js draws him (drawWizard)
     if (e.boss) { drawBossSnake(e); return; }   // boss.js: smooth, gridless
     if (e.stun > 0 && S.tick % 2 === 0) return; // blink while stunned
     const T = e.type || 'normal';
@@ -301,6 +302,7 @@ function drawEnemyMark(type, px, py) { // a small sign on the head of a special 
   ctx.save(); ctx.lineWidth = 2;
   if (type === 'armored') { ctx.strokeStyle = '#b8c2d6'; ctx.strokeRect(x + 3, y + 3, CELL - 6, CELL - 6); }
   else if (type === 'fast') { ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.moveTo(x + 8, y + 6); ctx.lineTo(x + 16, y + 11); ctx.lineTo(x + 8, y + 16); ctx.fill(); }
+  else if (type === 'kamikaze') { ctx.fillStyle = '#ff4d4d'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + 6, 5, 0, 6.3); ctx.fill(); ctx.fillStyle = '#ffd36b'; ctx.fillRect(x + 15, y, 2, 4); }   // a lit fuse
   else if (type === 'spitter') { ctx.fillStyle = '#8dff6b'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + 5, 4, 0, 6.3); ctx.fill(); }
   ctx.restore();
 }
@@ -695,8 +697,10 @@ function draw() {
       drawFood();
       drawPickups();
       drawMines();
+      drawFixedBombs();     // bombs.js
       drawRecruits();
       drawEnemies();
+      drawWizard();         // wizard.js
       drawPlayer();
       drawAgents();
       drawShield();
@@ -707,12 +711,13 @@ function draw() {
       drawSpits();
       drawBlasts();
       drawZaps();
+      drawLasers();         // wizard.js: telegraph and beams
       drawPopups();
       drawLevelBar();       // hud.js: small bar under the hero (world pixels)
       drawKeyArrow();       // hud.js: arrow halfway to the window edge (world pixels)
       ctx.restore();
       ctx.setTransform(S.view.dpr, 0, 0, S.view.dpr, 0, 0);   // window pixels from here on
-      drawHud(); drawBuffList(); drawComboBar(); drawStallHint(); drawBossBar();
+      drawHud(); drawBuffList(); drawComboBar(); drawStallHint(); drawBossBar(); drawWizardBar(); drawWizardPointer(); drawBanners();
     } finally { ctx = ui; }
   }
   ctx.clearRect(0, 0, cv.width, cv.height);            // screen layers go on the UI square

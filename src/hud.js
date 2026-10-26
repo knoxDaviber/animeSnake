@@ -121,3 +121,39 @@ function drawBuffList() {
   });
   ctx.restore();
 }
+// ---- Boss banners: big centred text for a few seconds (the warning 10 s ahead, and the boss's name when it appears) ----
+function showBanner(text, sub, color) { S.banners.push({ text, sub: sub || '', color: color || '#fff', age: 0, life: BANNER_TICKS }); }
+function ageBanners() { // once per world tick (step in main.js)
+  S.banners.forEach(b => b.age++);
+  S.banners = S.banners.filter(b => b.age < b.life);
+}
+// Which boss the NEXT wave to start brings: 'serpent', 'wizard' or null. (Pacifist has no bosses; Challenge ends at wave 20.)
+function bossWaveNext() {
+  if (S.pacifist) return null;
+  const n = S.wave + 1;
+  if (n === BOSS_WAVE) return 'serpent';
+  if (n === WIZARD_WAVE && !(S.challenge && n >= CHALLENGE_WAVE)) return 'wizard';
+  return null;
+}
+// Called every world tick from updateWaves (enemies.js) while the wave timer runs: shows the warning once, BOSS_WARN_TICKS before the boss wave.
+function updateBossWarning() {
+  const k = bossWaveNext();
+  if (!k || S.announced[k] || S.waveTimer > BOSS_WARN_TICKS) return;
+  S.announced[k] = true;
+  showBanner(k === 'serpent' ? 'Something huge is coming...' : 'The air goes still...', '', k === 'serpent' ? '#ff8a8a' : '#c78bff');
+  playSfx('waveStart');
+}
+function drawBanners() { // window pixels: fades in fast, holds, fades out
+  if (!S.banners.length || !S.view || S.picking || !S.alive) return;
+  const W = S.view.cssW, H = S.view.cssH, size = Math.max(18, Math.min(44, Math.round(W / 18)));
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
+  S.banners.forEach((b, i) => {
+    const t = Math.min(1, (b.age + S.alpha) / b.life), a = Math.max(0, Math.min(1, t / 0.12, (1 - t) / 0.25));
+    const y = H * 0.24 + i * (size + 14);
+    ctx.globalAlpha = 0.95 * a;
+    ctx.font = `bold ${size}px system-ui`; ctx.lineWidth = Math.round(size / 6); ctx.strokeStyle = '#14101f';
+    ctx.strokeText(b.text, W / 2, y); ctx.fillStyle = b.color; ctx.fillText(b.text, W / 2, y);
+  });
+  ctx.restore();
+}

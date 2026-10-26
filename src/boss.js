@@ -30,7 +30,7 @@ function bossDist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
 function startBoss() {
   S.toSpawn = 0;
   S.bossWait = true;
-  S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Something huge is coming...', age: 3 });
+  // (the "Something huge is coming..." banner is shown 10 s earlier by updateBossWarning in hud.js)
   playSfx('waveStart');
 }
 // Once per world tick.
@@ -38,7 +38,7 @@ function updateBoss() {
   if (!S.bossWait || !S.alive) return;
   if (spawnBoss()) {
     S.bossWait = false;
-    S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'The Great Serpent!', age: 0 });
+    showBanner('The Great Serpent!', '', '#ff6b6b');
   }
 }
 // A straight line of BOSS_PTS points, first just outside the camera view heading inward, then anywhere far away.

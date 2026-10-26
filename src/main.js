@@ -22,6 +22,7 @@ function step() {
   agePopups();
   ageBlasts();
   ageZaps();
+  ageBanners();
   if (S.alive) {
     mergeCheck();       // three identical followers fuse (merge.js)
     if (S.pacifist && ++S.stuckTicks >= PACIFIST_STUCK_TICKS) { // Pacifist stuck detector
@@ -44,6 +45,8 @@ function step() {
     refreshKey();       // puts the next key down unless enough characters are already waiting
     updateWaves();
     updateBoss();
+    updateWizard();     // wizard.js: the wave 20 wizard and his lasers
+    updatePedestals();  // bombs.js: bomb pedestals regrow their bomb
     updateDoors();      // ambush and lockdown triggers (doors.js)
   }
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }

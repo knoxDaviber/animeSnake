@@ -18,7 +18,7 @@ function newTempBuffs() { const o = {}; for (const id in TEMP_BUFFS) o[id] = 0; 
 // Called by killEnemy after the enemy is removed.
 function maybeDropBuff(e) {
   if (S.pacifist || !S.alive) return;
-  if (!e.boss && Math.random() >= TB_DROP_CHANCE) return;
+  if (!e.boss && !e.wizard && Math.random() >= TB_DROP_CHANCE) return;
   const ids = Object.keys(TEMP_BUFFS), pref = TB_PREFER[e.type];
   const id = pref && Math.random() < TB_PREFER_CHANCE ? pref : ids[Math.floor(Math.random() * ids.length)];
   const seg = e.segs.find(s => tileFree(s.x, s.y) && !noItems(s.x, s.y));   // first segment lying on free floor

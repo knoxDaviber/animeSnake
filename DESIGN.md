@@ -218,11 +218,16 @@ Original idea: a gigantic snake that does not follow the grid rules. Hitting the
 - **At least one more attack**, so it cannot be tanked face to face: a spit fan (3 orbs in a spread, reusing the spitter orbs) between charges is the cheapest; a wall-ram shockwave and a telegraphed tail sweep are alternatives. Enrage can add a second volley.
 - Aim for a fight of 20 to 40 seconds and tune HP, attack timing and crit rules together.
 
-### Wave 20 wizard
+### Wave 20: the Hollow Wizard (built)
 
-The wizard is not part of the first boss implementation. It comes after the room work is play-tested.
+A small robed wizard with a hollow face, summoned at wave 20 on a far open tile. He is not a snake: he stands still on one tile and moves only by teleporting. No regular snakes arrive while he lives. Pacifist skips him.
 
-Planned abilities: teleporting, a persistent map-wide laser, a forcefield that pushes the player out, firing across rooms. The wizard should become scarier because the player cannot see the entire map at once.
+- **Laser.** Every 5 s he charges for 2 s (a purple line follows you, then locks red for the last 0.5 s) and fires. Nothing blocks the beam, and it runs to the world edge, even if you are in another room. It stays on the field for 4 s and costs a ring while you stand in it. It also cuts enemy snakes.
+- **Teleport.** Every 12 s (while his field is up) he blinks at least 14 tiles from you. An arrow points to him when he is off-screen.
+- **Forcefield (5x5).** A soft wall: you stall against it, snakes cannot enter. Any weapon hit on it is a field hit (short immunity per hit). 3 field hits break it (Goliath headbutts it).
+- **Exposed.** Field down: 4 HP, no teleporting. After 7 s the field reforms at full strength, he heals and blinks away, and the next volley has one more beam (up to a fan of 3).
+- **Reward.** 25 coins, 2000 score, a reward pick. Waves restart soon after.
+- Open: does the Challenge win move from "reach wave 20" to "beat the wizard"? (one character in `startWave`, see edits).
 
 ## World, camera and rooms
 
@@ -384,17 +389,18 @@ Done:
 26. Temporary buff drops.
 27. Reverse direction when alone, for every hero.
 28. Summoner, first version (copies a follower, keeps the chain).
-
-Next:
 29. Goliath rework (front-only, terrain hurts, fixed bombs, kamikaze snakes).
-30. Boss pass (more HP, spirits cannot crit, one more attack).
 31. Summoner redesign (spend the tail, fusion spirit, permanent buff).
 32. Progressive room opening.
+
+Next:
+
+30. Boss pass (more HP, spirits cannot crit, one more attack).
 33. Necromancer (parked).
 
 ### Tier 5: hardest
 
-Wave 10 boss: gridless giant snake. **Built.** Wave 20 wizard: teleporting, persistent map-wide laser, forcefield that pushes the player out, and firing across rooms. Intentionally much later.
+Wave 10 boss: gridless giant snake. **Built.** Wave 20 wizard: teleporting, persistent map-wide laser, forcefield that pushes the player out, and firing across rooms. Intentionally much later.**Built.**
 
 ## Suggested implementation sequence
 

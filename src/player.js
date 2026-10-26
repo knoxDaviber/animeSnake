@@ -108,9 +108,10 @@ function playerMove() {
     return;
   }
     if (en && en.i === 0 && countFollower('medusa') > 0) {
-    if (en.e.boss) { damageEnemyHead(en.e, BOSS_MEDUSA_DAMAGE); en = enemyAt(nx, ny); }   // the boss is hurt, not killed outright
+    if (en.e.boss || en.e.wizard) { damageEnemyHead(en.e, BOSS_MEDUSA_DAMAGE); en = enemyAt(nx, ny); }   // the boss is hurt, not killed outright
     else { killEnemy(en.e); en = null; }
   } // Medusa: touching a head kills it at once
+  if (en && en.e.wizard && !isGoliath() && !wizardAt(en.e, h.x, h.y)) { S.waitDir = true; playSfx('stall'); return; }   // wizard.js: the field is a harmless wall (if you are already inside it you can walk out)
   const wallHit = !inBounds(nx, ny) || isWall(nx, ny) || gateBlocks(nx, ny, S.dir.x, S.dir.y);
   const blocked = wallHit || self || en || isHazardAt(nx, ny);
   if (blocked && isGoliath() && !self) {               // Goliath: whatever is in FRONT of him is harmless

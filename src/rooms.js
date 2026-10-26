@@ -10,7 +10,8 @@
 //   r l u d   one-way gate: can only be entered heading right / left / up / down, solid from every other side
 //   I  ice: the hero cannot turn while the head is on it
 //   *  key spot: new keys prefer these tiles (plain floor otherwise)      e  floor (enemy door, unused for now)
-//
+//   P  bomb pedestal
+
 // Decor is the "show, don't tell" layer: bones, a dead bonfire, swords stuck in the ground, headless statues...
 // Each template lists its decor as [kind, x, y]. buildWorld turns it into S.decor = { x, y, k, v } and scatters more
 // small decor on the floor from the room's theme. Drawing is in scenery.js.
@@ -384,6 +385,59 @@ const ROOM_TEMPLATES = [
     ],
     // a column of soldiers walked this lane, one lost helm and one sword at a time
     decor: [['banner', 4, 0], ['helm', 2, 1], ['sword', 17, 4], ['skull', 2, 7], ['bone', 16, 10], ['ribs', 3, 13], ['candle', 17, 16], ['bone', 9, 18]] },
+
+  // P = bomb pedestal (bombs.js). Four of them, each beside a pillar, so a bomb always has a place to be kicked from.
+  { id: 'powder', name: 'The Powder Store', tier: [1, 2], theme: 'barracks', favors: 'kamikaze',
+    rows: [
+      '#########..#########',
+      '#*................*#',
+      '#..................#',
+      '#..##..........##..#',
+      '#..##..........##..#',
+      '#....P........P....#',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '....................',
+      '....................',
+      '#..................#',
+      '#..................#',
+      '#..................#',
+      '#....P........P....#',
+      '#..##..........##..#',
+      '#..##..........##..#',
+      '#..................#',
+      '#*................*#',
+      '#########..#########',
+    ],
+    // the sappers left in a hurry, and the powder kept regrowing
+    decor: [['skull', 5, 6], ['bone', 14, 13], ['chain', 9, 1], ['banner', 4, 0], ['candle', 5, 4], ['ribs', 10, 9], ['sword', 16, 17]] },
+
+  { id: 'yard', name: "The Sapper's Yard", tier: [2], theme: 'keep', favors: 'kamikaze',
+    rows: [
+      '#########..#########',
+      '#..................#',
+      '#..................#',
+      '#....##......##....#',
+      '#....##......##....#',
+      '#..................#',
+      '#..................#',
+      '#.......P..P.......#',
+      '#..................#',
+      '....................',
+      '....................',
+      '#..................#',
+      '#.......P..P.......#',
+      '#..................#',
+      '#..................#',
+      '#....##......##....#',
+      '#....##......##....#',
+      '#..................#',
+      '#........*.........#',
+      '#########..#########',
+    ],
+    // a trench of pedestals, and a flag nobody bothered to take down
+    decor: [['banner', 4, 0], ['banner', 15, 0], ['helm', 3, 9], ['bone', 16, 11], ['skull', 10, 5], ['ribs', 9, 14]] },
 ];
 
 // ---- Rotating and mirroring templates ----------------------------------------------------------------------------
@@ -435,17 +489,19 @@ function noItems(x, y) { const r = roomAt(x, y); return !!(r && r.noItems); }
 // Builds a fresh world for a new run: S.map, S.rooms, S.decor, S.keySpots.
 function buildWorld() {
   const map = range(ROWS).map(() => Array(COLS).fill('#'));
-    const rooms = [], vignettes = [], spots = [], turrets = [];
+    const rooms = [], vignettes = [], spots = [], turrets = [], pedestals = [];
   let last = null;
+  const powderRoom = [1, 3, 5, 7][Math.floor(Math.random() * 4)];   // one near room always holds bomb pedestals
   for (let ry = 0; ry < 3; ry++) for (let rx = 0; rx < 3; rx++) {
     const start = rx === 1 && ry === 1, corner = rx !== 1 && ry !== 1;
-    const tpl = start ? START_ROOM : pickTemplate(corner ? 2 : 1, last);
+    const tpl = start ? START_ROOM : ry * 3 + rx === powderRoom ? ROOM_TEMPLATES.find(t => t.id === 'powder') : pickTemplate(corner ? 2 : 1, last);
     last = tpl.id;
         const rot = start ? 0 : pickRot(tpl, rx, ry), flip = !start && Math.random() < 0.5;
     const rows = transformRows(tpl.rows, rot, flip), ox = rx * ROOM, oy = ry * ROOM;
     for (let y = 0; y < ROOM; y++) for (let x = 0; x < ROOM; x++) {
       const c = rows[y][x];
       map[oy + y][ox + x] = c;
+      if (c === 'P') pedestals.push({ x: ox + x, y: oy + y, cd: PEDESTAL_FIRST });   // bombs.js
       if (c === '*') spots.push({ x: ox + x, y: oy + y });   // key spots (placeKey in world.js prefers these)
       if (c === 'T') {                                                          // a turret fires away from the room's edge it sits on
         const dx = x === 0 ? 1 : x === ROOM - 1 ? -1 : 0, dy = dx ? 0 : y === 0 ? 1 : y === ROOM - 1 ? -1 : 0;
@@ -468,7 +524,7 @@ function buildWorld() {
       if (map[y][x] === '.' && Math.random() < th.density)
         scatter.push({ x, y, k: th.scatter[Math.floor(Math.random() * th.scatter.length)], v: Math.random() });
   });
-  S.map = map; S.rooms = rooms; S.turrets = turrets;
+  S.map = map; S.rooms = rooms; S.turrets = turrets; S.pedestals = pedestals;
   S.decor = scatter.concat(vignettes);                                          // vignettes are drawn on top
   S.keySpots = spots.filter(s => map[s.y][s.x] === '*');
 }

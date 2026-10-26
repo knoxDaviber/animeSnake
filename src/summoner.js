@@ -118,7 +118,7 @@ function agentAct(a) {
     const hit = agentAdjacentEnemy(a);
     if (hit) {
       a.cd = AGENT_HIT_CD;
-      if (id === 'medusa' && !hit.e.boss) killEnemy(hit.e);                         // Medusa: a touch kills a snake outright
+      if (id === 'medusa' && !hit.e.boss && !hit.e.wizard) killEnemy(hit.e);                         // Medusa: a touch kills a snake outright
       else strikeEnemyAt(hit.x, hit.y, weaponDamage(AGENT_DAMAGE), true);           // (a boss only takes a minor hit)
     }
   }

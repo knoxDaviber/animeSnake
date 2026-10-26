@@ -2,7 +2,7 @@
 // steps on one sets it off. Enemies do not avoid mines, so the player can lure them in.
 // Blast = the mine's tile plus the four tiles around it. Enemy heads lose MINE_DAMAGE hit points, enemy body
 // segments are cut off (like the sword), and the player's head loses a character if it is inside the blast.
-function mineMax() { return MINE_MAX + S.mineMaxBonus; }
+function mineMax() { return MINE_MAX + S.mineMaxBonus + S.mines.filter(m => m.fixed).length; }   // pedestal bombs (bombs.js) are free
 function mineAt(x, y) { return S.mines.find(m => m.x === x && m.y === y) || null; }
 
 // Blast = the mine's tile plus an arm in each of the 4 directions. Arm length is 1 + MINER_BLAST_BONUS per Miner;
@@ -12,7 +12,7 @@ function blastRange() {
   return 1 + MINER_BLAST_BONUS * countFollower('miner');
 }
 function blastTiles(m) {
-  const tiles = [{ x: m.x, y: m.y }], reach = blastRange();
+  const tiles = [{ x: m.x, y: m.y }], reach = Math.max(m.reach || 0, blastRange());
   for (const d of DIRS) for (let k = 1; k <= reach; k++) {
     const x = m.x + d.x * k, y = m.y + d.y * k;
         if (!inBounds(x, y)) break;
@@ -33,7 +33,10 @@ function detonateMine(m) {
     if (hit.i === 0) damageEnemyHead(hit.e, MINE_DAMAGE, true); else cutEnemy(hit.e, hit.i);
   }
   const h = S.snake[0];
-  if (S.alive && S.invuln === 0 && tiles.some(t => t.x === h.x && t.y === h.y)) takeHit();
+  if (S.alive && S.invuln === 0 && tiles.some(t => t.x === h.x && t.y === h.y)) {
+    takeHit();
+    if (isGoliath()) for (let i = 1; i < GOLIATH_BLAST_RINGS && S.alive; i++) takeHit();   // Goliath is very weak to explosions
+  }
 }
 
 // Called once per tick: runs the explosion flash down.

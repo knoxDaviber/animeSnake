@@ -268,10 +268,8 @@ The shared top 10 stays off until the Supabase key is set (`LEADERBOARD` in `src
 
 ## Last session
 
-## Last session
+Built the wave 20 Hollow Wizard (`wizard.js`) and fixed bombs plus kamikaze snakes (`bombs.js`, the Goliath balance). Both are new files; the rest are small edits listed in edits.md. The wizard lives in S.enemies as `{ wizard: true }` with one tile; `enemyAt` answers for his whole 5x5 field while it is up, so every weapon works on him through the normal paths. He is never moved by `stepEnemy` (stepEnemyTimers skips him) and is drawn by `drawWizard`, not `drawEnemies`. Pedestal bombs are normal mines with `fixed: true` and a `reach`.
 
-Built progressive room opening (`doors.js`). The world starts with only the start room open. Doorways are sealed with `D` tiles (solid). At `DOOR_WAVES` the game pauses and offers up to 3 doors (the buff pick screen, reused via `S.doorPicking`). Each door has a twist: variety (a snake type joins the pool early), cache (keys and buff blocks), swarm (snakes burst out when you walk inside) or lockdown (doors seal until its snakes are dead, with a 60 s failsafe). Closed rooms are black fog, spawns and keys only use open rooms (`roomOpenAt`, part of `tileFree`), the enemy cap grows with open rooms (`enemyCap`), and spawns and recruits have in-room fallbacks. Goliath fix skipped on purpose: he will be balanced later with mines and other things. Docs were stale: the Summoner redesign and boss pass (HP 36, orb volley, minor hits) are already in the code.
+Untested: the assistant cannot run the game. Check: the wizard appears and teleports, the telegraph/beam line up with the tiles that hurt, field hits count once per weapon hit, the soft wall feels right (including the Magician portaling into it), Medusa does not one-touch him, the reform when you stand in it, Goliath kicking a pedestal bomb into the field, kamikazes (they need a bomb on the map), the Powder Store room. `BOSS_WAVE` is 10 now; to test, set `WIZARD_WAVE = 2` temporarily.
 
-Untested: the assistant cannot run the game. Check each twist, the boss with few rooms open, and the Magician at a door. `BOSS_WAVE` is still the test value 2.
-
-Next: a timed balance pass (tune `DOOR_WAVES` and twist weights), the config test values, then mines and fixed bombs.
+Next: a timed balance pass (laser timings, field hits, `WIZARD_EXPOSED_TICKS`), then the Goliath front-only rework, then the Necromancer.

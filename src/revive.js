@@ -53,6 +53,7 @@ function doRevive() {
   S.alpha = 1; S.last = performance.now(); S.heroLast = S.last;
   S.heroAlpha = 1; S.heroLast = S.last;
   resetEnemyClocks();
+  reviveBosses();   // wizard.js: bosses are back at full health
   hud();
 }
 

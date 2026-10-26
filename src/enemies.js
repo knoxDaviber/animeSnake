@@ -7,6 +7,7 @@
 
 function enemyAt(x, y) {
   for (const e of S.enemies) {
+    if (e.wizard) { if (wizardAt(e, x, y)) return { e, i: 0 }; continue; }   // wizard.js: his tile, or his whole field while it is up
     if (e.boss) { const i = bossIndexAt(e, x, y); if (i >= 0) return { e, i }; continue; }   // the gridless boss (boss.js)
     const i = e.segs.findIndex(s => s.x === x && s.y === y);
     if (i >= 0) return { e, i };
@@ -30,6 +31,7 @@ function faceOf(e, i) {
 // Returns true if the enemy survived.
 function damageEnemyHead(e, n, minor = false) {
   if (S.pacifist) return true;
+  if (e.wizard) return wizardHit(e, n);   // wizard.js
   if (e.boss) return minor ? bossHit(e, BOSS_BODY_DAMAGE, false) : bossHit(e, n * BOSS_CRIT, true);   // only major hits crit
   e.hp -= n;
   if (e.hp <= 0) { killEnemy(e); return false; }
@@ -39,6 +41,7 @@ function damageEnemyHead(e, n, minor = false) {
 }
 function killEnemy(e) {
   if (e.boss) bossDefeated(e);
+  if (e.wizard) wizardDefeated(e);
   S.enemies = S.enemies.filter(x => x !== e);
   e.segs.forEach((s, i) => {
     const f = faceOf(e, i);
@@ -107,8 +110,8 @@ function stepEnemy(e) {
   let pick;
   if (pushed) pick = pushed;
   else if (sliding) pick = sliding;
-  else if (Math.random() < enemyChase()) {
-    const tgt = chaseTarget(head, ph);          // the player's head, or a nearby recruit or key
+  else if (e.type === 'kamikaze' || Math.random() < enemyChase()) {
+    const tgt = e.type === 'kamikaze' ? kamikazeTarget(e, head, ph) : chaseTarget(head, ph);   // bombs.js          // the player's head, or a nearby recruit or key
     const dm = distField(tgt.x, tgt.y);
     const cost = o => { const v = dm[o.y * COLS + o.x]; return v < 0 ? 1000 + Math.abs(o.x - tgt.x) + Math.abs(o.y - tgt.y) : v; };
     pick = opts.reduce((a, b) => cost(b) < cost(a) ? b : a);
@@ -132,7 +135,7 @@ function stepEnemy(e) {
   if (ate) e.speed = Math.min(ENEMY_SPEED_MAX, e.speed + ENEMY_EAT_SPEED);
   if (!(ate && e.segs.length <= ENEMY_MAX_LEN)) e.segs.pop(); // growing = keep the tail this move
   const mine = mineAt(pick.x, pick.y);
-  if (mine) detonateMine(mine);               // enemies do not avoid mines: lure them in
+  if (mine) { detonateMine(mine); if (e.type === 'kamikaze' && S.enemies.includes(e)) killEnemy(e); }   // enemies do not avoid mines: lure them in. A kamikaze goes with it
 }
 function isOwnTail(e, x, y) { const t = e.segs[e.segs.length - 1]; return e.segs.length > 1 && t.x === x && t.y === y; }
 // Boxed in: the snake reverses end for end, so its tail becomes the head and it can leave the other way.
@@ -160,6 +163,7 @@ function stepEnemyTimers(t) {
   for (const e of [...S.enemies]) {
     if (!S.alive) break;
     if (!S.enemies.includes(e)) continue;        // killed earlier this frame
+    if (e.wizard) { e.alpha = 1; continue; }      // wizard.js moves him by teleporting, once per world tick
     if (e.boss) { bossFrame(e, t); continue; }   // the boss moves every frame, not on a tile timer (boss.js)
     const iv = enemyInterval(e);
     if (e.stun > 0) { e.last = t - iv; e.alpha = 1; continue; }
@@ -239,8 +243,9 @@ function updateTurrets() {
 // Which type the next snake is. Types unlock by wave (ENEMY_TYPES[type].from). While the hero is in a room that favours
 // an unlocked type, that type is likely (ENEMY_FAVOR_CHANCE). Otherwise ENEMY_TYPE_CHANCE of snakes are a random special.
 function pickEnemyType() {
-  const open = Object.keys(ENEMY_TYPES).filter(k => k !== 'normal' && (S.wave >= ENEMY_TYPES[k].from || S.extraTypes.includes(k)));
+  const open = Object.keys(ENEMY_TYPES).filter(k => k !== 'normal' && (S.wave >= ENEMY_TYPES[k].from || S.extraTypes.includes(k)) && (k !== 'kamikaze' || S.mines.length > 0));   // kamikazes need a bomb to hunt
   if (!open.length) return 'normal';
+  if (open.includes('kamikaze') && isGoliath() && Math.random() < KAMI_GOLIATH_CHANCE) return 'kamikaze';   // Goliath's counter
   const here = roomAt(S.snake[0].x, S.snake[0].y);
   if (here && here.favors && open.includes(here.favors) && Math.random() < ENEMY_FAVOR_CHANCE) return here.favors;
   return Math.random() < ENEMY_TYPE_CHANCE ? open[Math.floor(Math.random() * open.length)] : 'normal';
@@ -273,7 +278,7 @@ function spawnEnemy() {
   return false;
 }
 // Boss hook: a boss fight (later) sets S.boss, which stops the wave timer.
-function wavesPaused() { return !!S.boss || S.bossWait; }
+function wavesPaused() { return !!S.boss || S.bossWait || !!S.wizard || S.wizardWait; }
 
 function startWave() {
   S.wave++; S.giftCharges = S.giftPerWave;
@@ -286,6 +291,7 @@ function startWave() {
   if (S.pacifist) addScore(PACIFIST_POINTS.wave, h.x, h.y);
   if (DOOR_WAVES.includes(S.wave)) S.pendingDoor = true;   // doors.js: pick a door
   if (S.challenge && S.wave >= CHALLENGE_WAVE) { winRun(); return; }   // Challenge won (revive.js)
+  if (S.wave === WIZARD_WAVE && !S.pacifist) { startWizard(); S.waveTimer = waveDuration(S.wave); return; }   // wizard.js
   if (S.wave === BOSS_WAVE && !S.pacifist) { startBoss(); S.waveTimer = waveDuration(S.wave); return; }   // boss.js
   S.toSpawn = Math.min(ENEMY_QUEUE_MAX, S.toSpawn + waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()));
   S.spawnTimer = 0;
@@ -296,7 +302,8 @@ function updateWaves() {
     if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = SPAWN_GAP; }
   }
   if (wavesPaused()) return;
+  updateBossWarning();   // hud.js: the boss warning, 10 s ahead
   const clear = S.toSpawn === 0 && S.enemies.length === 0;
-  if (clear && S.wave > 0 && WAVE_CLEAR_SKIP > 0 && S.waveTimer > WAVE_CLEAR_SKIP) S.waveTimer = WAVE_CLEAR_SKIP;
+  if (clear && S.wave > 0 && !bossWaveNext() && WAVE_CLEAR_SKIP > 0 && S.waveTimer > WAVE_CLEAR_SKIP) S.waveTimer = WAVE_CLEAR_SKIP;
   if (--S.waveTimer <= 0) startWave();
 }

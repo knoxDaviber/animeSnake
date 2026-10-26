@@ -27,6 +27,7 @@ T   turret in a wall: fires along its row every few seconds (the planned spitter
 e   enemy door: a snake can spawn here
 *   key spawn point (the key is the recruit item)
 1-9 portal pairs (same digit = one pair)
+P   bomb pedestal: holds a bomb that regrows after it is gone (kickable by Goliath, set off by anything that steps on it)
 ```
 
 ## Design rules for every template
