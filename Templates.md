@@ -1,6 +1,6 @@
 # animeSnake: Room templates (sketches)
 
-Sample room templates for the rooms/walls/hazards work (DESIGN.md, "Larger map, camera and rooms"). Built so far (untested): templates 1, 2, 3, 9, 10 and 11 (as the gauntlet, garden, mill, chapel, keep and barracks) plus two extra rooms (the start room and the ruins), using walls, hazards, mud, conveyors, one-way gates, ice and key spots. They differ a little from the sketches below (key spots, some floor rows). Not built: push blocks, bumpers, turrets, crumbling floor and the serpentine (4, 5, 7, 8, 6; the serpentine has no side doors). These are design sketches to react to, so change, merge or throw away anything.
+Sample room templates for the rooms/walls/hazards work (DESIGN.md, "Larger map, camera and rooms"). Built so far: the start room, ruins, the gauntlet (1), garden (2), mill (3), chapel (ice, 9), keep (10), barracks (11), vault (push blocks, 4), pinball (bumpers, 5), bridges (crumbling floor, 7), alley (turrets, 8) and serpentine (6). Every sketch below now exists in some form; they differ a little from the sketches (key spots, some floor rows). These are design sketches to react to, so change, merge or throw away anything. These are design sketches to react to, so change, merge or throw away anything.
 
 ## How rooms fit
 
@@ -366,10 +366,12 @@ Put `*` at the centre of the island (row 9, column 9) and `e` doors at its corne
 - **Gravity or magnet tiles:** pull keys, mines and recruits toward a spot (Magneto already pulls keys).
 - **Rotating wall segments:** a bar that turns 90 degrees every wave (like Tetris pieces locking), changing the route in a room you have already learned.
 - **Mine fields with a shape:** pre-laid mines in a pattern (a spiral or a checkerboard) to use with kicking later.
+- **Fixed bomb pedestals:** a tile that holds a bomb and regenerates it after a set time. Goliath cannot kick this bomb, and kamikaze snakes can set it off.
+- **Door tile (progressive rooms):** wall until opened by a wave, a cleared room or a key.
 
 ## Technical notes (for when this is built)
 
-- Store a template as an array of 20 strings and stamp it into a room cell. The stamping code turns each character into world data: walls into a wall grid, `H` into hazards, and so on. Today there is one `S.hazard`, so this needs a hazard **list** and a wall grid.
+- Store a template as an array of 20 strings and stamp it into a room cell. The stamping code turns each character into world data: walls into a wall grid, `H` into hazards, and so on. Hazards, walls and every other tile type already live in the tile map S.map.
 - New tile types need handling in `playerMove` (player.js), `enemyCanEnter` and `stepEnemy` (enemies.js), `tileFree` (world.js) and bullets (attacks.js), plus drawing in render.js. Keep per-tile rules in one table so adding a tile type is one entry.
 - Conveyors and ice change the heading, so they interact with the input queue (`S.dirQueue`) and the grace tick.
 - Spawns (keys, recruits, enemies) must never land inside a wall, on a hazard or inside a locked pen.

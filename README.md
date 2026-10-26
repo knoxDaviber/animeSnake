@@ -6,13 +6,13 @@ A small, fully vibecoded first game: code is written with AI help, and art, musi
 
 ## Status
 
-Early prototype with the core loop working. You pick a hero on the title screen, choose a run-start buff, then steer a chain of characters around a world that scrolls under a camera. Heroes attack automatically. Enemy snakes arrive in timed waves, and wave 10 brings a gridless boss. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a distinct fusion follower.
+Early prototype with the core loop working. You pick a hero on the title screen, choose a run-start buff, then steer a chain of characters around a world that scrolls under a camera. Heroes attack automatically. Enemy snakes arrive in timed waves and sometimes drop temporary buffs, and wave 10 brings a gridless boss. Eat a key to summon a character, touch it to add it to your chain, and merge three identical followers into a distinct fusion follower.
 
-Built but **not yet play-tested in a browser**: the movement-feel fixes, the halved speed system, timed waves, enemies that eat keys and recruits, four enemy types, the scarce-coin economy with fake joke ads, Pacifist and Challenge modes, hero levelling with weapon branches, the title-screen shop, the scrolling camera over a 60x60 world made of room templates (walls, hazards, mud, conveyors, gates, ice, push blocks, bumpers, crumbling floor, turrets), kick physics with the Goliath hero, and the wave 10 boss (the Great Serpent: a smooth, gridless snake with a crit-on-head, swap-ends fight).
+It is played and fixed in a browser before every commit, but there has been no structured balance pass yet, so numbers (speeds, wave lengths, boss health, prices) are still first guesses.
 
-Heroes start with no followers. Hero prices: Swordsman free, Magician 50 coins, Gunman 100, Goliath 200 (built), Summoner 200 (not built yet). Old saves that already own Gunman keep that unlock.
+Heroes start with no followers. Hero prices: Swordsman free, Magician 50 coins, Gunman 100, Goliath 200, Summoner 200 (a first version; a redesign is decided). Old saves that already own Gunman keep that unlock.
 
-Next up: play-testing, then temporary buff drops, Summoner, Goliath extras, and much later the wave 20 wizard.
+Next up: a Goliath fix, a tougher boss, the Summoner redesign and rooms that open gradually. See [Handover.md](Handover.md).
 
 ## Run it
 
@@ -20,6 +20,7 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 
 - Desktop: arrow keys or WASD
 - Phone: swipe, or just tap. A tap steers: the screen is split into four zones by an X (top, bottom, left, right), and the X sits a bit below the middle so a thumb near the bottom reaches every direction. A tap anywhere on the screen counts, also outside the square UI area. There is no on-screen feedback, and text on the page cannot be selected.
+- Reversing: you cannot turn straight back on yourself, except when you have no followers (any hero).
 - Hero select (the title screen): tap a card, or press its number, or use the arrows and Enter. Locked heroes are bought with coins. The "i" button (or I) toggles flavour text and stat details. Shop button (or B) opens the shop.
 - Buff screen: tap a card, press 1/2/3, or use arrows and Enter. The third card costs 1 coin to reveal; R (or the button) is a mulligan for 5 coins.
 - Mute: M (or the speaker icon on the hero select screen). Sound starts after your first tap or key press.
@@ -32,10 +33,11 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 - Your snake is a chain of characters: a hero at the front, followers behind it.
 - Characters act as rings: a hit drops one, and you die when none are left.
 - Heroes auto-attack in the direction they face. Followers add passives, and some have active skills or change hero speed.
+- Each hero breaks one snake rule: the Magician walks through walls, Goliath's head is safe from the front, the Summoner spends followers.
 - Three identical followers anywhere in the chain merge into one fusion follower with completely different abilities; you lose 2 characters, so merging is a choice.
-- Heroes start with no followers, making the Starting follower buff and the pity boost meaningful.
 - Enemy snakes arrive in timed waves and get tougher. They eat keys and recruits, and grow and speed up when they do. Later waves bring fast thin snakes, armored heads and spitters, and some rooms favour one type.
-- At wave 10 a giant snake that ignores the grid slides in. Hit its head for a crit: it flashes, swaps head and tail and keeps coming. It eats other snakes, charges at you after a red telegraph, and beating it opens a reward pick.
+- Dead snakes can drop temporary buffs: Ghost body, Haste, Magnet, Bubble and Frenzy.
+- At wave 10 a giant snake that ignores the grid slides in. Hit its head for a crit: it flashes, swaps head and tail and keeps coming. It eats other snakes and charges at you after a red telegraph. Beating it opens a reward pick.
 - The world is 60x60 tiles and the camera follows you, so you never see all of it. The view adapts to the device: about 20 tiles on the short side, at most 32 on the long side.
 - Coins are scarce. A Pentakill can award 5 coins as a hidden mini-sidequest; wave milestones and bosses are the main income. Fake ads give small payouts on the hero select screen.
 - Modifier runs such as Pacifist, Glass cannon and Dev mode are legitimate leaderboard runs but are scored differently.
@@ -43,13 +45,13 @@ No install needed. Open `src/index.html` in any browser (desktop or phone). Spri
 
 ## Heroes
 
-| Hero      | Cost / state                          |
-| --------- | ------------------------------------- |
-| Swordsman | Free                                  |
-| Magician  | 50 coins; locked at start             |
-| Gunman    | 100 coins                             |
-| Goliath   | 200 coins (built, needs art)          |
-| Summoner  | 200 coins (planned, not built)        |
+| Hero      | Cost / state                                          |
+| --------- | ----------------------------------------------------- |
+| Swordsman | Free                                                  |
+| Magician  | 50 coins; locked at start                             |
+| Gunman    | 100 coins                                             |
+| Goliath   | 200 coins; hurt only from behind, kicks, cannot recruit (keys give shields). A rework is planned |
+| Summoner  | 200 coins; releases spirits (first version, redesign decided) |
 
 ## Followers and fusions
 
@@ -67,9 +69,9 @@ Exact balance is still subject to play-testing.
 
 The snake feel stays central.
 
-- Built: a two-entry input buffer, a configurable 0/1-tick grace window for an otherwise fatal wall/body move, halved base hero speed, enemies with their own move timers.
-- Built (untested): a 60x60 world with a smooth scrolling camera, a 3x3 grid of 20x20 room templates (see [templates.md](templates.md)) with walls, hazards, mud, conveyors, one-way gates, ice, push blocks, bumpers, crumbling floor and wall turrets. Three keys lie on the map at once (a Kingsman fusion adds one), and an arrow points to the nearest one. Enemies and recruits come in from just outside your view.
-- Planned: more room templates, a Ghost Body temporary buff (followers stop colliding with your head for a short time). Room-snap/Zelda-style framing can be layered on the same structure later.
+- Built: a two-entry input buffer, a configurable 0/1-tick grace window for an otherwise fatal wall/body move, halved base hero speed, enemies with their own move timers, and reversing when alone.
+- Built: a 60x60 world with a smooth scrolling camera, a 3x3 grid of 20x20 room templates (see [Templates.md](Templates.md)) with walls, hazards, mud, conveyors, one-way gates, ice, push blocks, bumpers, crumbling floor and wall turrets. Three keys lie on the map at once (a Kingsman fusion adds one), and an arrow points to the nearest one. Enemies and recruits come in from just outside your view.
+- Planned: rooms that open gradually with a purpose, fixed regenerating bombs, kamikaze snakes, more room templates. Room-snap/Zelda-style framing can be layered on the same structure later.
 
 ## Economy and retention
 
@@ -85,7 +87,7 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 
 | File             | What lives there                                                                |
 | ---------------- | ------------------------------------------------------------------------------- |
-| `config.js`      | Constants and tuning numbers (including `BOSS_*`)                               |
+| `config.js`      | Constants and tuning numbers (including `BOSS_*`, `TB_*`, `AGENT_*`)            |
 | `sprites.js`     | Loads the shared sprite sheets                                                  |
 | `followers.js`   | Followers and fusions, their sheets, `newSlot()`                                |
 | `state.js`       | The `S` object holding all mutable game state, and `newRun()`                   |
@@ -103,8 +105,10 @@ Plain script files, no build step and no server: `src/index.html` loads them in 
 | `skills.js`      | Active follower skills                                                          |
 | `mines.js`       | Mines and explosions                                                            |
 | `passives.js`    | Follower passives, hero speed, shields and freeze                               |
+| `tempbuffs.js`   | Temporary buff drops from dead enemy snakes                                     |
+| `summoner.js`    | The Summoner hero: spirits                                                      |
 | `recruits.js`    | Keys summon characters that walk in and wait to be recruited                    |
-| `kicks.js`       | Kick physics for mines, keys and recruits, Goliath rules                        |
+| `kicks.js`       | Kick physics for mines, keys and recruits, Goliath rules and key shields        |
 | `merge.js`       | Three identical followers fuse into a fusion follower                           |
 | `buffs.js`       | Run-start buffs and the pick screen                                             |
 | `shop.js`        | Title-screen shop, permanent starting followers                                 |
@@ -149,12 +153,12 @@ tools/                   placeholder generator and Supabase scripts
 ## More docs
 
 - [DESIGN.md](DESIGN.md): the design, pillars, systems and build order.
-- [Handover.md](Handover.md): the current state for whoever picks this up next.
+- [Handover.md](Handover.md): the current state, an honest review of the game and the decisions waiting to be built.
 - [ART_SPEC.md](ART_SPEC.md): sprite formats.
-- [templates.md](templates.md): sample room templates for the room system.
+- [Templates.md](Templates.md): sample room templates for the room system.
 
 ## Workflow habits
 
-- Commit every time something works.
+- Play it in a browser and commit every time something works.
 - Commit before asking AI for a big change, so `git restore .` or `git reset --hard HEAD` can undo it.
 - Keep originals in `assets/_raw/`; commit only optimized assets.

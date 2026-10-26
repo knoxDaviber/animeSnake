@@ -129,6 +129,23 @@ const TB_HASTE = 0.5;               // Haste: +50% hero speed
 const TB_FRENZY_MULT = 0.5;         // Frenzy: weapon cooldowns are multiplied by this
 const GOLIATH_SHIELD_MAX = 3;       // most key shields Goliath can hold
 
+// Summoner (summoner.js): every SUMMONER_COOLDOWN ticks a copy of a random follower leaves the chain as a spirit
+const SUMMONER_COOLDOWN = 40;     // ticks (5 s) between summons (Quick hands, Frenzy and levels speed it up)
+const AGENT_TICKS = 35;           // ticks (8 s) a spirit lives
+const AGENT_FUSION_TICKS = 40;    // ticks (5 s) for a fusion spirit
+const AGENT_MAX = 4;              // most spirits at once
+const AGENT_MOVE_TICKS = 2;       // ticks per tile (2 = same pace as the hero at base speed); Raiden and Shogun spirits move every tick
+const AGENT_SIGHT = 14;           // how far (tiles) a spirit looks for enemies
+const AGENT_DAMAGE = 1;           // melee hit (scales like weapon damage)
+const AGENT_HIT_CD = 4;           // ticks between a spirit's hits
+const AGENT_MINE_CD = 16;         // Miner spirit: ticks between mines (Bomber: half)
+const AGENT_MINE_RANGE = 5;       // ...only when an enemy is this close
+const AGENT_SHOT_CD = 8;          // Mr.X spirit: ticks between shots
+const AGENT_SHOGUN_CD = 5;        // Shogun spirit: ticks between lightning strikes
+const AGENT_GAZE_RANGE = 8;       // Medusa spirit: freeze range along rows and columns
+const AGENT_MAGNET_RANGE = 3;     // Magneto spirit: keys this close to it are pulled toward you
+const AGENT_GORGON_STUN = 4;      // Gorgon spirit: stun ticks added by each hit
+
 // Followers, skills and mines
 const START_FOLLOWERS = []; // who follows the head at the start of a run (ids from followers.js)
 const MINE_COOLDOWN = 64;   // ticks (8 s) between mines dropped by each Miner in the chain

@@ -698,6 +698,7 @@ function draw() {
       drawRecruits();
       drawEnemies();
       drawPlayer();
+      drawAgents();
       drawShield();
       drawTempAuras();
       drawDrops();

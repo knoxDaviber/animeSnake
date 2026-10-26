@@ -11,7 +11,7 @@ FOLLOWERS = {'miner': (255, 179, 107), 'raiden': (107, 197, 255), 'keysman': (25
              'bomber': (255, 138, 60), 'kingsman': (255, 227, 107), 'mrx': (154, 75, 214),
              'shogun': (58, 141, 255), 'medusa': (47, 191, 113)}
 LABELS = {'mrx': 'X'}   # the letter drawn on the sheet; defaults to the first letter of the name
-HEADS = {'magician': (120, 110, 255), 'gunman': (255, 120, 120)}   # the Swordsman is character1.png (real art)
+HEADS = {'magician': (120, 110, 255), 'gunman': (255, 120, 120), 'summoner': (190, 120, 255)}   # the Swordsman is character1.png (real art)
 
 def follower_sheet(name, rgb):
     img = Image.new('RGBA', (128, 128), (0, 0, 0, 0))

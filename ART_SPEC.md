@@ -7,7 +7,7 @@ All sprites follow this. Numbers are starting values and can be tuned, but keep 
 | Thing | Value |
 |-------|-------|
 | Sprite / grid cell | 32x32 px (1 character = 1 tile) |
-| Starting grid | 20x20 tiles = 640x640 logical px |
+| World | 60x60 tiles (a 3x3 grid of 20x20 rooms). The camera shows about 20 tiles on the short side of the window. Menus use a fixed 640x640 UI square |
 | Logic tick | 125 ms (8 tiles per second at base speed) |
 | Render rate | 60 fps, positions interpolated between ticks |
 | Animation clock | 1 animation frame = 1 tick (8 fps) |
@@ -33,6 +33,7 @@ The character sheet is only about movement. Each segment plays the row for the d
 - Hit, stun and drop effects (flash, recoil, fall-off) are done in code for now, not drawn per character.
 
 File: `assets/images/characters/<name>.png`
+Heroes: `character1.png` (Swordsman), `magician.png`, `gunman.png`, `goliath.png`, `summoner.png`. Followers and fusions live in `assets/images/followers/<id>.png` with the same 4x4 layout.
 
 ## Attack sheets
 
