@@ -19,10 +19,10 @@ const HEAD_DEFS = [
     detail: `Bullets fly out ahead and to each side every ${secs(GUNMAN_COOLDOWN)} s.` },
   { id: 'goliath', name: 'Goliath', update: updateGoliath, weapon: 'Swipe', cd: GOLIATH_SWIPE_COOLDOWN,
     desc: 'Stares down everything. Kicks the rest.',
-    detail: `Hurt only from behind. Swipes the 3 tiles in front every ${secs(GOLIATH_SWIPE_COOLDOWN)} s (6 from level ${GOLIATH_WIDE_LEVEL}). Kicks keys, mines and characters. Every ${KICK_REWARD_EVERY} kicks a fusion follower joins. ${Math.round(GOLIATH_SPEED * 100)}% speed.` },
+    detail: `Hurt only from behind. Swipes the 3 tiles in front every ${secs(GOLIATH_SWIPE_COOLDOWN)} s (6 from level ${GOLIATH_WIDE_LEVEL}). Kicks keys, mines and characters. Every ${KICK_REWARD_EVERY} kicks a fusion follower joins. ${Math.round(GOLIATH_SPEED * 100)}% speed. Cannot recruit: each key is a one-hit shield (max ${GOLIATH_SHIELD_MAX}).` },
   { id: 'summoner', name: 'Summoner', update: () => updateSummoner(), weapon: 'Spirits', cd: SUMMONER_COOLDOWN,
     desc: 'Your friends have friends. Briefly.',
-    detail: `Every ${secs(SUMMONER_COOLDOWN)} s a copy of a random follower leaves the chain as a spirit for ${secs(AGENT_TICKS)} s (${secs(AGENT_FUSION_TICKS)} s for fusions) and fights on its own. An empty chain calls a random base follower. Max ${AGENT_MAX} spirits.` },
+    detail: `Every ${secs(SUMMONER_COOLDOWN)} s the tail follower is spent and comes back as an upgraded spirit for ${secs(AGENT_TICKS)} s, leaving that fusion's permanent bonus behind. Needs followers: alone he cannot attack. Max ${AGENT_MAX} spirits.` },
 ];
 
 function heroText(def) { return S.heroDetail ? def.detail : def.desc; } // hero select: flavour by default, stats when toggled

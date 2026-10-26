@@ -42,11 +42,11 @@ function resolveHit(a) {
 
 // Hits whatever enemy is on (x, y): a head loses `dmg` hit points, a body segment is cut (with everything behind it).
 // Used by shockwaves and bullets. Returns true if an enemy was there.
-function strikeEnemyAt(x, y, dmg) {
+function strikeEnemyAt(x, y, dmg, minor = false) {
   if (S.pacifist) return false;
   const t = enemyAt(x, y);
   if (!t) return false;
-  if (t.i === 0) damageEnemyHead(t.e, dmg); else cutEnemy(t.e, t.i);
+  if (t.i === 0) damageEnemyHead(t.e, dmg, minor); else cutEnemy(t.e, t.i);
   return true;
 }
 

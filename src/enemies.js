@@ -28,9 +28,9 @@ function faceOf(e, i) {
 
 // ---- Damage ------------------------------------------------------------------
 // Returns true if the enemy survived.
-function damageEnemyHead(e, n) {
+function damageEnemyHead(e, n, minor = false) {
   if (S.pacifist) return true;
-  if (e.boss) return bossHit(e, n * BOSS_CRIT, true);   // a head hit is a crit: flash, freeze, swap ends (boss.js)
+  if (e.boss) return minor ? bossHit(e, BOSS_BODY_DAMAGE, false) : bossHit(e, n * BOSS_CRIT, true);   // only major hits crit
   e.hp -= n;
   if (e.hp <= 0) { killEnemy(e); return false; }
   playSfx('hitEnemy');

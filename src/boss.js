@@ -252,6 +252,7 @@ function bossRepel(e) {
 // Decides this frame's heading and speed (e.curSpeed). Phases: move -> windup (stands, faces you, telegraph) -> charge (fast, straight).
 function bossSteer(e, now, dt) {
   const h = e.pts[0], enraged = e.hp <= e.maxHp * BOSS_ENRAGE_AT, goal = bossGoal(e);
+  if (e.volleyReady === undefined) e.volleyReady = now + BOSS_FIRST_VOLLEY_MS;
   let speed = BOSS_TPS * e.speed * (enraged ? BOSS_ENRAGE_SPEED : 1), turn = BOSS_TURN * (enraged ? 1.25 : 1), v;
   if (e.phase === 'windup') {
     speed = 0; turn = BOSS_TURN * 2.5; v = { x: goal.x - h.x, y: goal.y - h.y };
@@ -259,10 +260,15 @@ function bossSteer(e, now, dt) {
   } else if (e.phase === 'charge') {
     speed *= BOSS_CHARGE_SPEED; turn = BOSS_TURN * 0.35; v = { x: goal.x - h.x, y: goal.y - h.y };
     if (now >= e.phaseUntil) { e.phase = 'move'; e.chargeReady = now + BOSS_CHARGE_CD * (enraged ? 0.6 : 1); }
+  } else if (e.phase === 'volley') {                  // stands still, faces you, then fires a fan of orbs
+    speed = 0; turn = BOSS_TURN * 2.5; v = { x: goal.x - h.x, y: goal.y - h.y };
+    if (now >= e.phaseUntil) { bossVolley(e, goal, enraged); e.phase = 'move'; e.volleyReady = now + BOSS_VOLLEY_CD * (enraged ? 0.6 : 1); }
   } else {
     v = bossSeek(e, goal, now);
     if (goal.kind === 'hero' && now >= e.chargeReady && goal.d >= 4 && goal.d <= 11 && bossLOS(h.x, h.y, goal.x, goal.y)) {
       e.phase = 'windup'; e.phaseUntil = now + BOSS_WINDUP_MS; playSfx('gaze');
+    } else if (goal.kind === 'hero' && now >= e.volleyReady && goal.d >= 3 && goal.d <= 12 && bossLOS(h.x, h.y, goal.x, goal.y)) {
+      e.phase = 'volley'; e.phaseUntil = now + BOSS_VOLLEY_WINDUP_MS; playSfx('gaze');
     }
   }
   const len = Math.hypot(v.x, v.y) || 1;
@@ -273,6 +279,15 @@ function bossSteer(e, now, dt) {
     e.ang += Math.max(-maxTurn, Math.min(maxTurn, diff));
   }
   e.curSpeed = speed;
+}
+// Fires spitter orbs (S.spits) from the head: 5 in a fan toward you, or all 8 directions when enraged.
+function bossVolley(e, goal, enraged) {
+  const h = e.pts[0], hx = Math.round(h.x), hy = Math.round(h.y);
+  const ring = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];          // clockwise on screen
+  const k = ((Math.round(Math.atan2(goal.y - h.y, goal.x - h.x) / (Math.PI / 4)) % 8) + 8) % 8;   // direction nearest to you
+  const picks = enraged ? range(8) : [k - 2, k - 1, k, k + 1, k + 2].map(i => (i + 8) % 8);
+  for (const i of picks) S.spits.push({ x: hx, y: hy, px: hx, py: hy, dx: ring[i][0], dy: ring[i][1], dead: false, col: '#ff4d4d' });
+  playSfx('shoot');
 }
 // Moves the head along its heading, sliding along walls. Returns true if a wall got in the way.
 function bossMove(e, dt) {
@@ -340,6 +355,10 @@ function drawBossSnake(e) {
     ctx.beginPath(); ctx.arc(hx, hy, CELL * (0.9 + 0.2 * pulse), 0, 6.3); ctx.stroke();
     ctx.globalAlpha = 0.35; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(hx, hy);
     ctx.lineTo(hx + Math.cos(e.ang) * CELL * 7, hy + Math.sin(e.ang) * CELL * 7); ctx.stroke();
+  } else if (e.phase === 'volley') {                      // telegraph: an orange ring that tightens before the orbs fly
+    const t = 1 - Math.max(0, Math.min(1, (e.phaseUntil - now) / BOSS_VOLLEY_WINDUP_MS));
+    ctx.strokeStyle = `rgba(255,170,60,${0.5 + 0.4 * t})`; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.arc(hx, hy, CELL * (1.6 - 0.7 * t), 0, 6.3); ctx.stroke();
   } else if (e.hp <= e.maxHp * BOSS_ENRAGE_AT) {          // enraged: a red ring on the head
     ctx.strokeStyle = 'rgba(255,77,77,.8)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(hx, hy, CELL * 0.95, 0, 6.3); ctx.stroke();
   }

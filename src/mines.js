@@ -30,7 +30,7 @@ function detonateMine(m) {
   for (const t of tiles) {          // look up each tile fresh: an earlier hit can cut or kill a snake
     const hit = enemyAt(t.x, t.y);
     if (!hit) continue;
-    if (hit.i === 0) damageEnemyHead(hit.e, MINE_DAMAGE); else cutEnemy(hit.e, hit.i);
+    if (hit.i === 0) damageEnemyHead(hit.e, MINE_DAMAGE, true); else cutEnemy(hit.e, hit.i);
   }
   const h = S.snake[0];
   if (S.alive && S.invuln === 0 && tiles.some(t => t.x === h.x && t.y === h.y)) takeHit();

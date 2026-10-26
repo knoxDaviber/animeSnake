@@ -86,8 +86,10 @@ function activeBuffs() { // [{ text, color }]
   if (S.gift) add(`Portals ${S.giftCharges}/${S.giftPerWave}`, '#c78bff');
   if (headId() === 'magician') add(`Charges ${S.shockCharges}/${SHOCK_MAX_CHARGES}`, '#c78bff',
   S.shockCharges < SHOCK_MAX_CHARGES ? Math.min(1, (S.shockTimer + S.alpha) / weaponCooldown(SHOCK_COOLDOWN)) : undefined);   // the thin bar under the chip is the reload
-  if (headId() === 'summoner') add(`Spirits ${S.agents.length}/${AGENT_MAX}`, '#c78bff',
-    S.agents.length < AGENT_MAX ? Math.min(1, (S.tick - S.lastSwing + S.alpha) / weaponCooldown(SUMMONER_COOLDOWN)) : undefined);   // the thin bar is the next summon
+  if (headId() === 'summoner') {
+    if (S.snake.length < 2) add('Spirits: needs a follower', '#c78bff');
+    else add(`Spirits ${S.agents.length}/${AGENT_MAX}`, '#c78bff', S.agents.length < AGENT_MAX ? Math.min(1, (S.tick - S.lastSwing + S.alpha) / weaponCooldown(SUMMONER_COOLDOWN)) : undefined);   // the thin bar is the next summon
+  }
   if (headId() === 'swordsman') add(S.shield ? 'Block ready' : `Block ${Math.ceil(S.shieldTimer * TICK_MS / 1000)}s`, '#6bc5ff');
   if (S.freeRevive) add('Free revive', '#8dff6b');
   const gs = gorgonSlots().length;

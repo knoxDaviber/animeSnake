@@ -35,7 +35,7 @@ function castShogun(r, i) {
   S.zaps.push({ kind: 'bolt', x1: from.x, y1: from.y, x2: best.x, y2: best.y, age: 0,
                 jig: range(3).map(() => (Math.random() - 0.5) * 24) });
   playSfx('lightning');
-  strikeEnemyAt(best.x, best.y, dmg);                       // a head loses `dmg` hit points, a body segment is cut off
+  strikeEnemyAt(best.x, best.y, dmg, true);                       // a head loses `dmg` hit points, a body segment is cut off
   return true;
 }
 

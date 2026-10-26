@@ -89,7 +89,7 @@ const SPIT_COOLDOWN = 24, SPIT_RANGE = 10, SPIT_SPEED = 1; // ticks between spit
 
 // Boss (boss.js): the wave 10 Great Serpent. Gridless: positions are floats in tile units.
 const BOSS_WAVE = 2;            // the wave that brings the boss (no boss in Pacifist)
-const BOSS_HP = 18;              // total hit points. A sword hit is 3, so a head crit (x2) is 6: three head hits kill it
+const BOSS_HP = 36;              // total hit points. A sword hit is 3, so a head crit (x2) is 6: three head hits kill it
 const BOSS_CRIT = 2;             // damage multiplier for a hit on the head
 const BOSS_BODY_DAMAGE = 1;      // a hit on the body (it is never cut in two)
 const BOSS_FLASH_MS = 400;       // after a head hit it flashes and freezes this long, then swaps ends
@@ -115,9 +115,10 @@ const BOSS_WINDUP_MS = 500, BOSS_CHARGE_MS = 700, BOSS_CHARGE_SPEED = 2.4;   // 
 const BOSS_DAZE_MS = 900;        // dazed for this long after ramming a wall in a charge (free hits)
 const BOSS_HEAD_REACH = 1.0, BOSS_BODY_REACH = 0.8;   // how close counts as touching you
 const BOSS_CONTACT_MS = 800, BOSS_RECOIL_MS = 600;    // it can hurt you at most this often, and pauses after
-const BOSS_MEDUSA_DAMAGE = 3;    // touching its head with a Medusa in the chain (the crit makes it 6)
+const BOSS_MEDUSA_DAMAGE = 2;    // touching its head with a Medusa in the chain (the crit makes it 6)
 const BOSS_COINS = 10, BOSS_SCORE = 500;
 const BOSS_AFTER_TICKS = 40;     // waves restart this many ticks after it dies
+const BOSS_VOLLEY_CD = 4000, BOSS_FIRST_VOLLEY_MS = 6000, BOSS_VOLLEY_WINDUP_MS = 600;   // orb volley: gap between volleys, first volley, telegraph
 
 // Temporary buffs (tempbuffs.js): enemies drop a block, touch it with the hero to get the buff
 const TB_DROP_CHANCE = 0.25;        // chance a dead enemy drops one (the boss always does)
@@ -131,8 +132,7 @@ const GOLIATH_SHIELD_MAX = 3;       // most key shields Goliath can hold
 
 // Summoner (summoner.js): every SUMMONER_COOLDOWN ticks a copy of a random follower leaves the chain as a spirit
 const SUMMONER_COOLDOWN = 40;     // ticks (5 s) between summons (Quick hands, Frenzy and levels speed it up)
-const AGENT_TICKS = 35;           // ticks (8 s) a spirit lives
-const AGENT_FUSION_TICKS = 40;    // ticks (5 s) for a fusion spirit
+const AGENT_TICKS = 32;           // ticks (8 s) a spirit lives
 const AGENT_MAX = 4;              // most spirits at once
 const AGENT_MOVE_TICKS = 2;       // ticks per tile (2 = same pace as the hero at base speed); Raiden and Shogun spirits move every tick
 const AGENT_SIGHT = 14;           // how far (tiles) a spirit looks for enemies
@@ -143,8 +143,7 @@ const AGENT_MINE_RANGE = 5;       // ...only when an enemy is this close
 const AGENT_SHOT_CD = 8;          // Mr.X spirit: ticks between shots
 const AGENT_SHOGUN_CD = 5;        // Shogun spirit: ticks between lightning strikes
 const AGENT_GAZE_RANGE = 8;       // Medusa spirit: freeze range along rows and columns
-const AGENT_MAGNET_RANGE = 3;     // Magneto spirit: keys this close to it are pulled toward you
-const AGENT_GORGON_STUN = 4;      // Gorgon spirit: stun ticks added by each hit
+const AGENT_BONUS_MAX = 99;   // times one fusion's permanent bonus can be granted per run
 
 // Followers, skills and mines
 const START_FOLLOWERS = []; // who follows the head at the start of a run (ids from followers.js)
