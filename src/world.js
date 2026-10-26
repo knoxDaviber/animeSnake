@@ -4,7 +4,7 @@
 
 // ---- Tiles ----
 function tileAt(x, y) { return inBounds(x, y) && S.map ? S.map[y][x] : '#'; }   // outside the world counts as wall
-function isWall(x, y) { const t = tileAt(x, y); return t === '#' || t === 'B' || t === 'T'; }   // push blocks and wall turrets are solid too
+function isWall(x, y) { const t = tileAt(x, y); return t === '#' || t === 'B' || t === 'T' || t === 'D'; }   // push blocks and wall turrets are solid too
 function isHazardAt(x, y) { return tileAt(x, y) === 'H'; }
 const GATE_DIR = { r: { x: 1, y: 0 }, l: { x: -1, y: 0 }, u: { x: 0, y: -1 }, d: { x: 0, y: 1 } };
 const CONVEYOR_DIR = { '>': { x: 1, y: 0 }, '<': { x: -1, y: 0 }, '^': { x: 0, y: -1 }, v: { x: 0, y: 1 } };
@@ -18,7 +18,7 @@ const ITEM_FLOOR = '.*e~';
 // Everything that spawns something on the map asks this first. (Enemies walk over food and mines on purpose,
 // so enemyCanEnter in enemies.js has its own rules.)
 function tileFree(x, y) {
-  return inBounds(x, y) && ITEM_FLOOR.includes(S.map[y][x]) &&
+  return inBounds(x, y) && ITEM_FLOOR.includes(S.map[y][x]) && roomOpenAt(x, y) &&
     !S.keys.some(k => k.x === x && k.y === y) &&
     !S.mines.some(m => m.x === x && m.y === y) &&
     !S.pickups.some(p => p.x === x && p.y === y) &&

@@ -17,7 +17,7 @@ function enemyAt(x, y) {
 function enemyCanEnter(x, y, dx = 0, dy = 0) {
   if (!inBounds(x, y)) return false;
   const t = tileAt(x, y);
-  return t !== '#' && t !== 'B' && t !== 'T' && t !== 'H' && !gateBlocks(x, y, dx, dy) &&
+  return t !== '#' && t !== 'B' && t !== 'T' && t !== 'H' && t !== 'D' && !gateBlocks(x, y, dx, dy) &&
     !S.snake.some(s => s.x === x && s.y === y) && !enemyAt(x, y);
 }
 // Which way segment i is facing (the head faces its heading, the rest face the segment ahead of them).
@@ -79,7 +79,7 @@ function distField(tx, ty) {
       const j = ny * COLS + nx;
       if (DIST[j] >= 0) continue;
       const t = S.map[ny][nx];
-      if (t === '#' || t === 'B' || t === 'T' || t === 'H' || GATE_DIR[t]) continue;
+      if (t === '#' || t === 'B' || t === 'T' || t === 'H' || t === 'D' || GATE_DIR[t]) continue;
       DIST[j] = d; BFS_QUEUE[tail++] = j;
     }
   }
@@ -239,7 +239,7 @@ function updateTurrets() {
 // Which type the next snake is. Types unlock by wave (ENEMY_TYPES[type].from). While the hero is in a room that favours
 // an unlocked type, that type is likely (ENEMY_FAVOR_CHANCE). Otherwise ENEMY_TYPE_CHANCE of snakes are a random special.
 function pickEnemyType() {
-  const open = Object.keys(ENEMY_TYPES).filter(k => k !== 'normal' && S.wave >= ENEMY_TYPES[k].from);
+  const open = Object.keys(ENEMY_TYPES).filter(k => k !== 'normal' && (S.wave >= ENEMY_TYPES[k].from || S.extraTypes.includes(k)));
   if (!open.length) return 'normal';
   const here = roomAt(S.snake[0].x, S.snake[0].y);
   if (here && here.favors && open.includes(here.favors) && Math.random() < ENEMY_FAVOR_CHANCE) return here.favors;
@@ -248,6 +248,9 @@ function pickEnemyType() {
 // A new snake starts in a straight line just OUTSIDE the camera view, heading inward (a side that falls outside the
 // world, or lands in a wall, just tries again).
 function spawnEnemy() {
+     return spawnEnemyViewEdge() || spawnEnemyInRoom();   // doors.js has the in-room fallback
+   }
+   function spawnEnemyViewEdge() {
   const type = pickEnemyType(), T = ENEMY_TYPES[type];
   const len = Math.max(2, enemyLength(S.wave) + T.len), v = viewTiles();
   for (let tries = 0; tries < 40; tries++) {
@@ -261,7 +264,7 @@ function spawnEnemy() {
     else                 { d = DIRS[3]; segs = range(len).map(i => ({ x: lane, y: v.y1 + 1 + i })); }
     const head = S.snake[0];
     const far = Math.abs(segs[0].x - head.x) + Math.abs(segs[0].y - head.y) >= ENEMY_SPAWN_MIN_DIST;
-    if (far && segs.every(s => enemyCanEnter(s.x, s.y) && !recruitAt(s.x, s.y) && !inTextZone(s.x, s.y) && !noItems(s.x, s.y))) {
+    if (far && segs.every(s => enemyCanEnter(s.x, s.y) && roomOpenAt(s.x, s.y) && !recruitAt(s.x, s.y) && !inTextZone(s.x, s.y) && !noItems(s.x, s.y))) {
       S.enemies.push({ segs, prev: segs.map(s => ({ ...s })), dir: d, hp: hitsToKill(S.wave) * T.hp, stun: 0, type, fire: SPIT_COOLDOWN,
                       speed: Math.min(ENEMY_SPEED_MAX, enemyWaveSpeed(S.wave) * T.speed), last: performance.now(), alpha: 1 });
       return true;
@@ -281,6 +284,7 @@ function startWave() {
     playSfx('unlock');
   }
   if (S.pacifist) addScore(PACIFIST_POINTS.wave, h.x, h.y);
+  if (DOOR_WAVES.includes(S.wave)) S.pendingDoor = true;   // doors.js: pick a door
   if (S.challenge && S.wave >= CHALLENGE_WAVE) { winRun(); return; }   // Challenge won (revive.js)
   if (S.wave === BOSS_WAVE && !S.pacifist) { startBoss(); S.waveTimer = waveDuration(S.wave); return; }   // boss.js
   S.toSpawn = Math.min(ENEMY_QUEUE_MAX, S.toSpawn + waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()));
@@ -288,7 +292,7 @@ function startWave() {
   S.waveTimer = waveDuration(S.wave);
 }
 function updateWaves() {
-  if (S.toSpawn > 0 && S.enemies.length < ENEMY_CAP) {   // snakes of the queue walk in one by one, up to the cap
+  if (S.toSpawn > 0 && S.enemies.length < enemyCap()) {   // snakes of the queue walk in one by one, up to the cap
     if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = SPAWN_GAP; }
   }
   if (wavesPaused()) return;

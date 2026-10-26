@@ -456,10 +456,11 @@ function buildWorld() {
       const p = transformPoint(x, y, rot, flip);
       vignettes.push({ x: ox + p.x, y: oy + p.y, k, v: Math.random() });
     });
-        rooms.push({ id: tpl.id, theme: tpl.theme, favors: tpl.favors || null, noItems: !!tpl.noItems });
+        rooms.push({ id: tpl.id, name: tpl.name, theme: tpl.theme, favors: tpl.favors || null, noItems: !!tpl.noItems });
   }
   for (let x = 0; x < COLS; x++) { if (map[0][x] !== 'T') map[0][x] = '#'; if (map[ROWS - 1][x] !== 'T') map[ROWS - 1][x] = '#'; }   // the edge of the world is always wall
   for (let y = 0; y < ROWS; y++) { if (map[y][0] !== 'T') map[y][0] = '#'; if (map[y][COLS - 1] !== 'T') map[y][COLS - 1] = '#'; }
+  S.doors = buildDoors(map);   // doors.js: every doorway starts sealed
   const scatter = [];                                                           // small decor from each room's theme
   rooms.forEach((r, i) => {
     const th = ROOM_THEMES[r.theme], ox = (i % 3) * ROOM, oy = Math.floor(i / 3) * ROOM;
@@ -467,7 +468,7 @@ function buildWorld() {
       if (map[y][x] === '.' && Math.random() < th.density)
         scatter.push({ x, y, k: th.scatter[Math.floor(Math.random() * th.scatter.length)], v: Math.random() });
   });
-    S.map = map; S.rooms = rooms; S.turrets = turrets;
+  S.map = map; S.rooms = rooms; S.turrets = turrets;
   S.decor = scatter.concat(vignettes);                                          // vignettes are drawn on top
   S.keySpots = spots.filter(s => map[s.y][s.x] === '*');
 }

@@ -73,7 +73,7 @@ function pickAtPoint(clientX, clientY) {
   const rect = S.headPicking ? headCardRect : pickCardRect, n = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
   return range(n).findIndex(i => { const c = rect(i); return p.x >= c.x && p.x <= c.x + c.w && p.y >= c.y && p.y <= c.y + c.h; });
 }
-function chooseCard(i) { return S.headPicking ? chooseHead(i) : S.branchPicking ? chooseBranch(i) : S.rewardPicking ? chooseReward(i) : startRun(i); }
+function chooseCard(i) { return S.headPicking ? chooseHead(i) : S.doorPicking ? chooseDoor(i) : S.branchPicking ? chooseBranch(i) : S.rewardPicking ? chooseReward(i) : startRun(i); }
 // Tap on the hero select screen: the speaker icon mutes, anything else is a card.
 function tapPick(clientX, clientY) {
   if (S.shopping) return;   // the shop handles its own taps (bottom of this file)

@@ -85,7 +85,7 @@ function playerMove() {
       const tx = h.x + S.dir.x * k, ty = h.y + S.dir.y * k;
       if (!inBounds(tx, ty)) break;
       if (isWall(tx, ty)) continue;                      // still inside the wall
-      if (tileAt(tx, ty) !== 'H' && !gateBlocks(tx, ty, S.dir.x, S.dir.y) && !S.snake.some(s => s.x === tx && s.y === ty) && !enemyAt(tx, ty)) {
+      if (roomOpenAt(tx, ty) && tileAt(tx, ty) !== 'H' && !gateBlocks(tx, ty, S.dir.x, S.dir.y) && !S.snake.some(s => s.x === tx && s.y === ty) && !enemyAt(tx, ty)) {
         if (gift) S.giftCharges--;                       // Magician's gift: a limited number of portals per wave
         portal = { x1: h.x, y1: h.y, x2: tx, y2: ty }; nx = tx; ny = ty;
       }

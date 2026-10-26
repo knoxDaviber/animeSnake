@@ -54,9 +54,9 @@ function spawnBoss() {
       sy = side === 2 ? v.y0 - 1 : side === 3 ? v.y1 + 1 : lane;
     } else { d = DIRS[Math.floor(Math.random() * 4)]; const t = randomTile(); sx = t.x; sy = t.y; }
     const pts = range(n).map(i => ({ x: sx - d.x * i * BOSS_SPACING, y: sy - d.y * i * BOSS_SPACING }));
-    const far = Math.abs(sx - head.x) + Math.abs(sy - head.y) >= (tries < 80 ? ENEMY_SPAWN_MIN_DIST : 12);
+    const far = Math.abs(sx - head.x) + Math.abs(sy - head.y) >= (tries < 80 ? ENEMY_SPAWN_MIN_DIST : tries < 130 ? 12 : 6);
     if (far && !bossBlocked(pts[0].x, pts[0].y, pts) &&
-        pts.every(p => { const x = Math.round(p.x), y = Math.round(p.y); return enemyCanEnter(x, y) && !recruitAt(x, y) && !noItems(x, y); })) {
+        pts.every(p => { const x = Math.round(p.x), y = Math.round(p.y); return enemyCanEnter(x, y) && roomOpenAt(x, y) && !recruitAt(x, y) && !noItems(x, y); })) {
       const boss = { pts, segs: [], prev: [], dir: d, hp: BOSS_HP, maxHp: BOSS_HP, stun: 0, type: 'boss', boss: true, fire: 0,
                      speed: 1, last: now, alpha: 1, ang: Math.atan2(d.y, d.x), lastT: now,
                      phase: 'move', phaseUntil: 0, chargeReady: now + BOSS_FIRST_CHARGE_MS, pauseUntil: 0, flashUntil: 0, swapPending: false,

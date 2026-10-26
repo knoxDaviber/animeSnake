@@ -88,7 +88,7 @@ const ENEMY_FAVOR_CHANCE = 0.6;   // chance it is the room's favoured type while
 const SPIT_COOLDOWN = 24, SPIT_RANGE = 10, SPIT_SPEED = 1; // ticks between spits, tiles, tiles per tick
 
 // Boss (boss.js): the wave 10 Great Serpent. Gridless: positions are floats in tile units.
-const BOSS_WAVE = 2;            // the wave that brings the boss (no boss in Pacifist)
+const BOSS_WAVE = 10;            // the wave that brings the boss (no boss in Pacifist)
 const BOSS_HP = 36;              // total hit points. A sword hit is 3, so a head crit (x2) is 6: three head hits kill it
 const BOSS_CRIT = 2;             // damage multiplier for a hit on the head
 const BOSS_BODY_DAMAGE = 1;      // a hit on the body (it is never cut in two)
@@ -214,7 +214,7 @@ const LEVEL_XP_KILL = 2;         // XP per enemy kill
 const LEVEL_XP_BASE = 2, LEVEL_XP_STEP = 2; // XP to leave level l = BASE + STEP * l
 function xpNeed(l) { return LEVEL_XP_BASE + LEVEL_XP_STEP * l; }
 const LEVEL_XP_PASSIVE = 0.2;       // XP per second that trickles in just for surviving, at level 1
-const LEVEL_XP_PASSIVE_FADE = 15;   // ...shrinking each level, and gone at this level (0 = no passive XP at all)
+const LEVEL_XP_PASSIVE_FADE = 50;   // ...shrinking each level, and gone at this level (0 = no passive XP at all)
 const LEVEL_BRANCH_EVERY = 5;    // every Nth level you pick a weapon branch
 const BRANCH_CHOICES = 3;        // cards offered on a branch pick
 const BRANCH_LOCKOUT_MS = 600;   // the branch pick ignores input this long after it appears
@@ -289,11 +289,11 @@ const WAVE_COINS = { 5: 3, 10: 10, 15: 5, 20: 20 }; // wave number -> coins when
 const PENTAKILL_AT = 5;             // the Nth kill in one chain pays the coins below, once per chain
 const PENTAKILL_COINS = 5;
 const ADS_ENABLED = true;          // false = normal coin-priced revives, no ads. true = fake joke ads (ads.js)
-const AD_SECONDS = 20;              // how long an ad lasts if you do NOT hold the fast-forward button
-const AD_HOLD_SPEED = 4;            // holding the button runs the ad this many times faster (20 s -> 5 s)
+const AD_SECONDS = 60;              // how long an ad lasts if you do NOT hold the fast-forward button
+const AD_HOLD_SPEED = 8;            // holding the button runs the ad this many times faster (20 s -> 5 s)
 const AD_HOLD_DELAY_MS = 300;       // a hold only counts this long after the ad starts (the tap that began it cannot hold)               // how long an ad really takes
 const AD_FAKE_SECONDS = 60;         // how long the ad claims to be (it "fast-forwards", and cannot be skipped)
-const AD_PAYOUTS = [10, 5, 2, 1];   // hero-select ad button: each ad pays the next number
+const AD_PAYOUTS = [100, 50, 50, 25];   // hero-select ad button: each ad pays the next number
 const AD_RESET_MS = 60 * 60 * 1000; // an hour after the last coin ad, payouts start again at 10
 const AD_FREE_PRICE = 99999;         // coins for the "No ads" toggle on the hero select screen
 const ADS = [
@@ -432,3 +432,14 @@ const COLORS = ['#ff6b9d', '#6bc5ff', '#ffd36b', '#8dff6b', '#c78bff']; // fallb
 const DIRS = [{ x: 1, y: 0 }, { x: -1, y: 0 }, { x: 0, y: 1 }, { x: 0, y: -1 }];
 const range = n => [...Array(n).keys()];
 function inBounds(x, y) { return x >= 0 && y >= 0 && x < COLS && y < ROWS; }
+
+// Progressive rooms (doors.js)
+const DOOR_WAVES = [3, 5, 7, 9, 12, 14, 16, 18];  // at the start of these waves you pick a door to open
+const DOOR_CHOICES = 3;            // doors offered per pick
+const ENEMY_CAP_BASE = 2;          // enemy cap = this + open rooms, up to ENEMY_CAP
+const DOOR_SWARM_SNAKES = 4;       // swarm twist: snakes that burst out
+const DOOR_LOCK_SNAKES = 3;        // lockdown twist: snakes you must kill
+const DOOR_LOCK_MAX_TICKS = 480;   // lockdown failsafe: doors give way after 60 s
+const DOOR_LOCK_COINS = 2;         // lockdown reward
+const DOOR_CACHE_KEYS = 2, DOOR_CACHE_BUFFS = 2;   // cache twist contents
+const DOOR_CACHE_TTL = 400;        // ticks a cache buff block stays (50 s)

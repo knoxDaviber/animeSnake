@@ -268,6 +268,10 @@ The shared top 10 stays off until the Supabase key is set (`LEADERBOARD` in `src
 
 ## Last session
 
-Added temporary buff drops, Goliath key shields (no recruiting), the reverse-when-alone rule for every hero and a first Summoner. Then took stock: the dev reported that play-testing happens before every commit, decided the Summoner redesign (spend the tail, release the fusion form, gain its permanent buff), wanted the boss to be tougher (more HP, one more attack, spirits cannot crit), judged Goliath too strong (front-only invulnerability, fixed bombs, kamikaze snakes), and wants rooms to open gradually with a purpose. The Necromancer is parked. This file now holds an honest review of the game and the decisions above. Docs were brought in line with the code.
+## Last session
 
-Next: the Goliath fix, the boss pass, the Summoner redesign, progressive rooms, then a short timed balance pass.
+Built progressive room opening (`doors.js`). The world starts with only the start room open. Doorways are sealed with `D` tiles (solid). At `DOOR_WAVES` the game pauses and offers up to 3 doors (the buff pick screen, reused via `S.doorPicking`). Each door has a twist: variety (a snake type joins the pool early), cache (keys and buff blocks), swarm (snakes burst out when you walk inside) or lockdown (doors seal until its snakes are dead, with a 60 s failsafe). Closed rooms are black fog, spawns and keys only use open rooms (`roomOpenAt`, part of `tileFree`), the enemy cap grows with open rooms (`enemyCap`), and spawns and recruits have in-room fallbacks. Goliath fix skipped on purpose: he will be balanced later with mines and other things. Docs were stale: the Summoner redesign and boss pass (HP 36, orb volley, minor hits) are already in the code.
+
+Untested: the assistant cannot run the game. Check each twist, the boss with few rooms open, and the Magician at a door. `BOSS_WAVE` is still the test value 2.
+
+Next: a timed balance pass (tune `DOOR_WAVES` and twist weights), the config test values, then mines and fixed bombs.

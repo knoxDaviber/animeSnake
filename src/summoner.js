@@ -35,7 +35,7 @@ function agentNeed(id) { return id === 'shogun' ? 1 : AGENT_MOVE_TICKS; }   // S
 function agentCanEnter(x, y, dx, dy) {
   if (!inBounds(x, y)) return false;
   const t = tileAt(x, y);
-  return t !== '#' && t !== 'B' && t !== 'T' && t !== 'H' && !gateBlocks(x, y, dx, dy);
+  return t !== '#' && t !== 'B' && t !== 'T' && t !== 'H' && t !== 'D' && !gateBlocks(x, y, dx, dy);
 }
 
 function updateAgents() {

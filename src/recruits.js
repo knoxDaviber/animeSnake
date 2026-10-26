@@ -21,6 +21,10 @@ function refreshKey() {
 // Picks a random edge, a random lane, and a walking distance, and starts a character walking in.
 // Returns false (the key is wasted) only if no valid lane is found after many tries.
 function summonRecruit(exceptId) {
+  if (isGoliath()) return false;
+  return summonRecruitFromView(exceptId) || summonRecruitInRoom(exceptId);   // doors.js has the in-room fallback
+}
+function summonRecruitFromView(exceptId) {
   if (isGoliath()) return false;           // Goliath cannot recruit: keys give him shields instead
   for (let tries = 0; tries < 60; tries++) {
     const side = Math.floor(Math.random() * 4);

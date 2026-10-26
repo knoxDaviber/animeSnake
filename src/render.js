@@ -519,14 +519,14 @@ function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Ent
   ctx.save();
   ctx.fillStyle = 'rgba(10,6,20,.85)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center'; ctx.fillStyle = '#fff'; ctx.font = '28px system-ui';
-  ctx.fillText(S.rewardPicking ? 'Boss defeated! Pick a reward' : S.branchPicking ? `Level ${S.level}: pick a weapon branch` : 'Pick a buff', cv.width / 2, 150);
+  ctx.fillText(S.doorPicking ? `Wave ${S.wave}: choose a door` : S.rewardPicking ? 'Boss defeated! Pick a reward' : S.branchPicking ? `Level ${S.level}: pick a weapon branch` : 'Pick a buff', cv.width / 2, 150);
   ctx.font = 'bold 18px system-ui'; ctx.textAlign = 'right';      // your coins, top right
   const label = `${S.coins} coins`, lw = ctx.measureText(label).width;
   drawCoinIcon(cv.width - 16 - lw - 12, 24, 7);
   ctx.fillStyle = '#f3e9ff'; ctx.fillText(label, cv.width - 16, 30);
   ctx.textAlign = 'center';
   S.pickChoices.forEach((k, i) => {
-    const b = S.branchPicking ? BRANCHES[k] : BUFFS[k], c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
+    const b = S.doorPicking ? doorCard(k) : S.branchPicking ? BRANCHES[k] : BUFFS[k], c = pickCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
     const locked = i === THIRD_CARD && thirdCardLocked();
     ctx.fillStyle = locked ? (sel ? '#251e3d' : '#1a1530') : (sel ? '#2c2250' : '#211a3b'); ctx.fillRect(c.x, c.y, c.w, c.h);
     ctx.lineWidth = 3; ctx.strokeStyle = sel ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(c.x, c.y, c.w, c.h);
@@ -544,7 +544,7 @@ function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Ent
     ctx.fillStyle = '#f3e9ff'; ctx.font = '16px system-ui';
     wrapText(b.desc, c.w - 30).forEach((line, n) => ctx.fillText(line, cx, c.y + 90 + n * 22));
   });
-  if (S.branchPicking || S.rewardPicking) { ctx.restore(); return; }   // no mulligan here   // no mulligan on a weapon branch pick
+  if (S.branchPicking || S.rewardPicking || S.doorPicking) { ctx.restore(); return; }   // no mulligan here   // no mulligan on a weapon branch pick
   const m = mulliganRect(), afford = S.coins >= MULLIGAN_COST;      // the mulligan button
   ctx.fillStyle = '#211a3b'; ctx.fillRect(m.x, m.y, m.w, m.h);
   ctx.lineWidth = 2; ctx.strokeStyle = afford ? '#ffd36b' : '#3a2d5c'; ctx.strokeRect(m.x, m.y, m.w, m.h);

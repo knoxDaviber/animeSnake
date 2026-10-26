@@ -8,9 +8,10 @@ function themeAt(x, y) { const r = roomAt(x, y); return ROOM_THEMES[r ? r.theme 
 
 function drawScenery() {
   const v = viewTiles(), x0 = Math.max(0, v.x0), y0 = Math.max(0, v.y0), x1 = Math.min(COLS - 1, v.x1), y1 = Math.min(ROWS - 1, v.y1);
-  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) drawTile(x, y);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (roomOpenAt(x, y) || S.map[y][x] === 'D') drawTile(x, y);
   for (const d of S.decor) {
-    if (d.x < x0 || d.x > x1 || d.y < y0 || d.y > y1) continue;
+       if (d.x < x0 || d.x > x1 || d.y < y0 || d.y > y1) continue;
+       if (!roomOpenAt(d.x, d.y)) continue;
     const f = DECOR[d.k];
     if (f) f(d.x * CELL, d.y * CELL, d.v);
   }
@@ -21,6 +22,7 @@ function drawTile(x, y) {
   const t = S.map[y][x], th = themeAt(x, y), px = x * CELL, py = y * CELL;
   if (t === '#') return drawWallTile(x, y, th, px, py);
   if (t === 'T') return drawTurretTile(x, y, th, px, py);
+  if (t === 'D') return drawDoorTile(x, y, th, px, py);
   ctx.fillStyle = (x * 7 + y * 13) % 5 === 0 ? th.alt : th.floor;   // a few lighter flagstones so the floor is not flat
   ctx.fillRect(px, py, CELL, CELL);
   if (t === 'H') drawHazardTile(px, py);
