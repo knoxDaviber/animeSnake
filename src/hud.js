@@ -79,6 +79,9 @@ function activeBuffs() { // [{ text, color }]
   const out = [], add = (text, color, prog) => out.push({ text, color, prog });
   const b = BUFFS.find(x => x.id === S.buff);
   if (b) add(b.name, '#ffd36b');
+  for (const id in TEMP_BUFFS) if (S.tb[id] > 0)
+    add(`${TEMP_BUFFS[id].name} ${Math.ceil(S.tb[id] * TICK_MS / 1000)}s`, TEMP_BUFFS[id].color, S.tb[id] / TEMP_BUFFS[id].ticks);
+  if (headId() === 'goliath') add(`Shields ${S.keyShields}/${GOLIATH_SHIELD_MAX}`, '#8dff6b');
   if (S.pity) add('Pity boost', '#9a8cc4');
   if (S.gift) add(`Portals ${S.giftCharges}/${S.giftPerWave}`, '#c78bff');
   if (headId() === 'magician') add(`Charges ${S.shockCharges}/${SHOCK_MAX_CHARGES}`, '#c78bff',

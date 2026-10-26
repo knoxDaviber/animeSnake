@@ -119,6 +119,16 @@ const BOSS_MEDUSA_DAMAGE = 3;    // touching its head with a Medusa in the chain
 const BOSS_COINS = 10, BOSS_SCORE = 500;
 const BOSS_AFTER_TICKS = 40;     // waves restart this many ticks after it dies
 
+// Temporary buffs (tempbuffs.js): enemies drop a block, touch it with the hero to get the buff
+const TB_DROP_CHANCE = 0.25;        // chance a dead enemy drops one (the boss always does)
+const TB_PREFER_CHANCE = 0.6;       // chance the drop is that enemy type's favourite
+const TB_PREFER = { armored: 'bubble', fast: 'haste', spitter: 'frenzy' };
+const TB_PICKUP_TICKS = 96;         // ticks (12 s) a block stays on the map
+const TB_GHOST_TICKS = 64, TB_HASTE_TICKS = 48, TB_MAGNET_TICKS = 80, TB_BUBBLE_TICKS = 160, TB_FRENZY_TICKS = 64;
+const TB_HASTE = 0.5;               // Haste: +50% hero speed
+const TB_FRENZY_MULT = 0.5;         // Frenzy: weapon cooldowns are multiplied by this
+const GOLIATH_SHIELD_MAX = 3;       // most key shields Goliath can hold
+
 // Followers, skills and mines
 const START_FOLLOWERS = []; // who follows the head at the start of a run (ids from followers.js)
 const MINE_COOLDOWN = 64;   // ticks (8 s) between mines dropped by each Miner in the chain

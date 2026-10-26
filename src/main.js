@@ -33,6 +33,7 @@ function step() {
     if (!S.pacifist) updateSkills();
     S.tailLeft = null;  // the Miner only gets the tile the tail left since the last tick
     updatePassives();   // Magneto pulls the key toward you
+    updateTempBuffs();
     updateAttacks();
     if (!S.pacifist) { updateHead(); updateBranches(); }   // the hero's weapon (heads.js) and level branches (levels.js)
     updateRecruits();   // summoned characters walk in (before enemies move, so enemies can catch them)

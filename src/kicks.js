@@ -78,3 +78,19 @@ function updateKicks() {
   }
   S.kicks = S.kicks.filter(k => !k.settled);
 }
+// ---- Goliath's key shields: eating a key gives a one-hit shield (max GOLIATH_SHIELD_MAX) instead of a recruit ----
+function goliathKeyShield(k) {
+  if (S.keyShields < GOLIATH_SHIELD_MAX) {
+    S.keyShields++;
+    S.popups.push({ x: k.x, y: k.y, text: 'Shield +1', age: 0 });
+    playSfx('shieldReady');
+  } else S.popups.push({ x: k.x, y: k.y, text: 'Shields full', age: 0 });
+}
+// Asked by takeHit (player.js). Shields are used up for good.
+function goliathShieldAbsorbs() {
+  if (!isGoliath() || S.keyShields <= 0) return false;
+  S.keyShields--;
+  S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Shielded!', age: 0 });
+  playSfx('shield');
+  return true;
+}

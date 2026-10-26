@@ -9,7 +9,7 @@
 function setDir(x, y) {
   if (S.picking || !S.alive) return; // the run has not started yet, or you are dead
   const ref = S.dirQueue.length ? S.dirQueue[S.dirQueue.length - 1] : S.dir; // compare with the last queued heading
-    if (x === -ref.x && y === -ref.y && !(isGoliath() && S.snake.length === 1)) return; // no instant reverse (Goliath alone may)
+      if (x === -ref.x && y === -ref.y && S.snake.length > 1) return; // reversing is only allowed with no follower tails && S.snake.length === 1)) return; // no instant reverse (Goliath alone may)
   S.waitDir = false;                        // any steering input ends a stall
   if (x === ref.x && y === ref.y) { if (S.devMode) S.devStep = true; return; } // same heading: nothing to queue (Dev mode: it is still a step)
   if (S.dirQueue.length >= INPUT_BUFFER) return;        // buffer full
@@ -30,7 +30,7 @@ function faceSegments() {
 function takeHit(source) {
   S.invuln = INVULN_TICKS + S.invulnBonus;
   if (source === 'enemyHead' && shieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // blocked: no blink
-  if (gorgonAbsorbs() || medusaShieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
+  if (bubbleAbsorbs() || goliathShieldAbsorbs() || gorgonAbsorbs() || medusaShieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
   S.quietHit = false;
   playSfx('hit');
   if (S.snake.length === 1 || S.glass) { S.alive = false; return; } // last character lost (Glass cannon: any hit that lands)
@@ -92,7 +92,7 @@ function playerMove() {
       break;                                             // the first open tile decides: land there, or the wall wins
     }
   }
-  if (S.snake.length > 1 && nx === tail.x && ny === tail.y) {
+  if (S.tb.ghost <= 0 && S.snake.length > 1 && nx === tail.x && ny === tail.y) {
     // Own tail: no hit, but the snake stops. It waits for a new direction, so enemies get time to close in.
     S.dir = { x: wrapStep(h.x - S.snake[1].x), y: wrapStep(h.y - S.snake[1].y) }; // back to the real heading
     S.waitDir = true;
@@ -100,7 +100,7 @@ function playerMove() {
     bombContact(nx, ny);
     return;
   }
-  const self = S.snake.some(s => s.x === nx && s.y === ny);
+  const self = S.tb.ghost <= 0 && S.snake.some(s => s.x === nx && s.y === ny);
   let en = enemyAt(nx, ny);
   if (S.pacifist && en) {                                // Pacifist: enemies are solid. Touching one is a stall, like your own tail
     if (S.snake.length > 1) S.dir = { x: wrapStep(h.x - S.snake[1].x), y: wrapStep(h.y - S.snake[1].y) };
@@ -157,6 +157,7 @@ function playerMove() {
   if (S.tailLeft && tileAt(S.tailLeft.x, S.tailLeft.y) === 'C') S.map[S.tailLeft.y][S.tailLeft.x] = 'H';   // crumbling floor: gone once the tail has left it
   if (tileAt(nx, ny) === 'Z') bumperTurn(nx, ny);                                                          // bumper: the heading turns
   faceSegments();
+  collectPickup(nx, ny);
   const mine = mineAt(nx, ny);
   if (mine) detonateMine(mine); // stepped on a mine
   else if (key || rec) bombContact(nx, ny); // Everything is a bomb: eating a key or recruiting

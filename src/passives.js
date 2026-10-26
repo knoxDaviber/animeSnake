@@ -21,11 +21,11 @@ function enemyChase() { return Math.min(0.95, ENEMY_CHASE + MAGNETO_CHASE_BONUS 
 // Magneto: keys near your head are pulled one tile closer each tick (range 3, +1 per extra Magneto, max 4).
 // Mr.X: pulls from the max range and eats any key within the 3x3 around your head.
 function magnetRange() {
-  if (countFollower('mrx') > 0) return MAGNETO_MAX_RANGE;
+  if (countFollower('mrx') > 0 || S.tb.magnet > 0) return MAGNETO_MAX_RANGE;
   return Math.min(MAGNETO_MAX_RANGE, MAGNETO_RANGE + countFollower('magneto') - 1);
 }
 function magnetPull() {
-  if (!S.keys.length || !(countFollower('magneto') + countFollower('mrx'))) return;
+  if (!S.keys.length || !(countFollower('magneto') + countFollower('mrx') + (S.tb.magnet > 0 ? 1 : 0))) return;
   const h = S.snake[0], reach = magnetRange(), mrx = countFollower('mrx') > 0;
   for (const k of [...S.keys]) {
     if (mrx && Math.abs(k.x - h.x) <= 1 && Math.abs(k.y - h.y) <= 1) { eatKey(k); continue; }
@@ -46,7 +46,7 @@ function magnetPull() {
 function heroSpeed() {
   const raiden = Math.min(RAIDEN_MAX_BONUS, RAIDEN_SPEED_BONUS * countFollower('raiden'));
   const gorgon = Math.min(GORGON_MAX_SLOW, GORGON_SLOW * countFollower('gorgon'));
-  const m = HERO_SPEED_TEST * (1 + raiden + S.speedBonus + SHOGUN_SPEED_BONUS * countFollower('shogun') - gorgon - MEDUSA_SLOW * countFollower('medusa'));
+  const m = HERO_SPEED_TEST * (1 + raiden + S.speedBonus + (S.tb.haste > 0 ? TB_HASTE : 0) + SHOGUN_SPEED_BONUS * countFollower('shogun') - gorgon - MEDUSA_SLOW * countFollower('medusa'));
     const mud = S.map && tileAt(S.snake[0].x, S.snake[0].y) === '~' ? MUD_SLOW : 1;
   return Math.min(HERO_SPEED_MAX, Math.max(HERO_SPEED_MIN, HERO_BASE_SPEED * m * mud * (isGoliath() ? GOLIATH_SPEED : 1)));
 }

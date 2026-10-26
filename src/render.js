@@ -327,7 +327,10 @@ function drawPlayer() {
   if (S.invuln > 0 && !S.quietHit && S.tick % 2 === 0) return; // chain blinks while invulnerable
   S.snake.forEach((s, i) => {
     const p = lerpPos(S.prev, i, s, S.heroAlpha);
+    ctx.save();
+    if (i > 0 && S.tb.ghost > 0) ctx.globalAlpha = 0.55;
     drawSegment(S.roster[i], p.x, p.y, i === 0);
+    ctx.restore();
   });
 }
 function drawDrops() { // dropped characters and dead enemies fade out and float up
@@ -690,11 +693,13 @@ function draw() {
       ctx.translate(-Math.round(S.cam.x), -Math.round(S.cam.y));
       drawWorld();
       drawFood();
+      drawPickups();
       drawMines();
       drawRecruits();
       drawEnemies();
       drawPlayer();
       drawShield();
+      drawTempAuras();
       drawDrops();
       S.attacks.forEach(drawAttack); // attack layer sits on top of everything else
       drawBullets();

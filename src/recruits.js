@@ -21,6 +21,7 @@ function refreshKey() {
 // Picks a random edge, a random lane, and a walking distance, and starts a character walking in.
 // Returns false (the key is wasted) only if no valid lane is found after many tries.
 function summonRecruit(exceptId) {
+  if (isGoliath()) return false;           // Goliath cannot recruit: keys give him shields instead
   for (let tries = 0; tries < 60; tries++) {
     const side = Math.floor(Math.random() * 4);
     const d = DIRS[side];                  // inward heading: 0 = from the left edge, 1 = right, 2 = top, 3 = bottom
@@ -83,6 +84,7 @@ function eatKey(k) {
   S.keys = S.keys.filter(x => x !== k);
   addScore(POINTS.food, k.x, k.y);
   playSfx('key');
+  if (isGoliath()) { goliathKeyShield(k); return; }     // the trade-off: a shield instead of a character
   summonRecruit();
   if (S.recruits.length < RECRUIT_MAX && Math.random() < keyDoubleChance()) summonRecruit(); // Keysman bonus
 }

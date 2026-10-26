@@ -68,7 +68,7 @@ function newRun() {
     gift: false, giftCharges: 0, freeRevive: false, thirdUnlocked: false, pickNote: null,
     giftPerWave: 1, bombChance: BOMB_CHANCE, shopping: false, giveAskUntil: 0,
     challenge: false, pacifist: false, won: false, winCoins: 0, stuckTicks: 0, pentaPaid: false, ad: null,
-    boss: null, bossWait: false, pendingReward: false, rewardPicking: false, keys: [], kicks: [], kickCount: 0, growQueue: [], recruits: [], map: null, rooms: [], decor: [], keySpots: [], spits: [], keyBonus: 0, mines: [], blasts: [], zaps: [],
+    boss: null, bossWait: false, pendingReward: false, rewardPicking: false, keys: [], kicks: [], kickCount: 0, tb: newTempBuffs(), pickups: [], keyShields: 0, growQueue: [], recruits: [], map: null, rooms: [], decor: [], keySpots: [], spits: [], keyBonus: 0, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
     tick: 0, alpha: 1, last: performance.now(), heroLast: performance.now(), heroAlpha: 1,

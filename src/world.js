@@ -21,6 +21,7 @@ function tileFree(x, y) {
   return inBounds(x, y) && ITEM_FLOOR.includes(S.map[y][x]) &&
     !S.keys.some(k => k.x === x && k.y === y) &&
     !S.mines.some(m => m.x === x && m.y === y) &&
+    !S.pickups.some(p => p.x === x && p.y === y) &&
     !S.recruits.some(r => (r.x === x && r.y === y) || (r.tx === x && r.ty === y)) && // a recruit, or where one is heading
     !S.snake.some(s => s.x === x && s.y === y) &&
     !enemyAt(x, y);
