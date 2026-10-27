@@ -29,6 +29,7 @@ addEventListener('keydown', e => {
   const k = e.key.toLowerCase();
   if (S.crashed) { if (k === ' ' || k === 'enter') newRun(); return; }
   if (k === 'm' && !e.repeat && !e.ctrlKey && !e.metaKey) return toggleMute();
+  if ((k === '-' || k === '=' || k === '+') && !e.ctrlKey && !e.metaKey) { setVolume(S.volume + (k === '-' ? -0.1 : 0.1)); saveProgress(); playSfx('tick'); return; }
   if (S.ad) return;                     // an ad is playing: nothing works
   if (!S.alive) {
     if (S.reviving) {                    // revive countdown: Q / Backspace give up, any other key revives
@@ -123,7 +124,8 @@ addEventListener('touchstart', e => {
   if (S.ad) return;
   if (S.crashed) return newRun();
   if (!S.alive) return tapWhileDead(touchX, touchY);
-  if (S.picking) return tapPick(touchX, touchY);
+  if (S.picking) return tapPick(touchX, touchY);  if (S.paused && tapVolume(touchX, touchY)) return;   // the volume slider on the pause screen
+  if (S.paused && tapGiveUp(touchX, touchY)) return;
   if (S.paused && tapGiveUp(touchX, touchY)) return;   // the Give up button on the pause screen
   tapArmed = !S.paused;                // a tap that only resumes from pause must not also steer
   resume();
@@ -150,7 +152,7 @@ addEventListener('mousedown', e => {
   if (performance.now() - S.lastTouchAt < 700) return; // the fake click that follows a touch
   if (!S.alive) tapWhileDead(e.clientX, e.clientY);
   else if (S.picking) tapPick(e.clientX, e.clientY);
-  else if (S.paused) { if (!tapGiveUp(e.clientX, e.clientY)) resume(); }
+    else if (S.paused) { if (!tapVolume(e.clientX, e.clientY) && !tapGiveUp(e.clientX, e.clientY)) resume(); }
 });
 addEventListener('mousemove', e => {
   if (!S.picking || S.shopping || inNameBox(e)) return;
@@ -204,3 +206,16 @@ addEventListener('touchend', e => {
 addEventListener('mousedown', e => { if (S.shopping && !S.ad && !inNameBox(e) && performance.now() - S.lastTouchAt >= 700) shopTap(e.clientX, e.clientY); });
 addEventListener('mousemove', e => { if (!S.shopping) return; const i = shopRowAt(canvasPoint(e.clientX, e.clientY)); if (i >= 0) S.shopIndex = i; });
 addEventListener('wheel', e => { if (S.shopping) setShopScroll(S.shopScroll + e.deltaY); }, { passive: true });
+// ---- Volume slider on the pause screen ----
+function volumeHit(p) { const r = volumeRect(); return p.x >= r.x - 12 && p.x <= r.x + r.w + 12 && p.y >= r.y - 14 && p.y <= r.y + r.h + 14; }
+function volumeFromPoint(clientX) { const p = canvasPoint(clientX, 0), r = volumeRect(); setVolume((p.x - r.x) / r.w); }
+function tapVolume(clientX, clientY) {
+  if (!S.paused || !volumeHit(canvasPoint(clientX, clientY))) return false;
+  S.volDrag = true; volumeFromPoint(clientX); return true;
+}
+addEventListener('mousemove', e => { if (S.volDrag) volumeFromPoint(e.clientX); });
+addEventListener('touchmove', e => { if (S.volDrag) volumeFromPoint(e.touches[0].clientX); }, { passive: true });
+const endVolDrag = () => { if (S.volDrag) { S.volDrag = false; saveProgress(); playSfx('tick'); } };
+addEventListener('mouseup', endVolDrag);
+addEventListener('touchend', endVolDrag, { passive: true });
+addEventListener('touchcancel', endVolDrag, { passive: true });

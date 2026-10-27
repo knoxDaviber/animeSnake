@@ -36,7 +36,7 @@
 //   ret            retention meter (saved): frustration 0-100, deathStreak, spendHist (revive coins per recent run), runs
 //   coinMult       this run's coin payout multiplier (coin tiers); runSpend = revive coins spent this run
 //   runStart / deathAt / lastEndAt   ms stamps: run began / last death / last run ended. pity = got the pity boost
-const S = { best: 0, bestCombo: 0, bestWave: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false, heroDetail: false,
+const S = { best: 0, bestCombo: 0, bestWave: 0, coins: 0, unlocked: {}, lastTouchAt: 0, muted: false, heroDetail: false, volume: 1, hintMerge: false, volDrag: false,
             adStep: 0, adLastAt: 0, adsOff: false, ad: null, adNote: null,
             buffLv: {}, startPick: null, shopScroll: 0, shopIndex: 1, shopNote: null, adHold: false, adKey: false,
             ret: { frustration: 0, deathStreak: 0, spendHist: [], runs: 0 }, lastEndAt: 0, coinMult: 1 };
@@ -63,7 +63,7 @@ function newRun() {
     headPicking: true,                          // first pick screen: choose the head. The buff pick follows
     shield: true, shieldTimer: 0, bullets: [], shockCharges: SHOCK_MAX_CHARGES, shockTimer: 0, mineMaxBonus: 0, damageBonus: 0, speedBonus: 0, medMerges: 0, medShieldCd: 0,  // Swordsman block ready / ticks until it is back; Gunman bullets
     invulnBonus: 0, swingMult: 1, comboWindow: COMBO_WINDOW, cdMult: 1, bounty: 0, richBonus: 0, coinsStart: 0, richPaid: 0, reviveBonus: REVIVE_SCORE_BONUS, // set by buffs
-    dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false,
+    dir: { x: 1, y: 0 }, nextDir: { x: 1, y: 0 }, waitDir: false, holdStart: false,
     dirQueue: [], graceUsed: 0, devMode: false, devStep: false, glass: false, dmgMult: 1, bombAll: false,
     gift: false, giftCharges: 0, freeRevive: false, thirdUnlocked: false, pickNote: null,
     giftPerWave: 1, bombChance: BOMB_CHANCE, shopping: false, giveAskUntil: 0,
@@ -80,5 +80,5 @@ function newRun() {
     level: 1, xp: 0, weapons: ['base'], wlv: { base: 0 }, bt: {}, pendingBranch: false, branchPicking: false, // levels.js
     enemies: [], wave: 0, toSpawn: 0, spawnTimer: 0, waveTimer: START_DELAY,
   });
-  buildWorld(); placeFood(); hud();
+  buildWorld(); placeChests(); placeFood(); hud();
 }

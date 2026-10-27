@@ -18,7 +18,7 @@ const TEXT_ZONES = [
   { ax: 'c', ay: 't', w: 150, h: 56 },   // wave and "next wave" timer
   { ax: 'r', ay: 't', w: 110, h: 34 },   // coins
   { ax: 'c', ay: 'b', w: 240, h: 44 },   // "Choose a direction"
-  { ax: 'l', ay: 'b', w: 200, h: 130 },  // buff list
+  { ax: 'l', ay: 'b', w: 230, h: 280 },  // buff and weapon list
 ];
 
 // Rings and damage
@@ -133,7 +133,7 @@ const GOLIATH_SHIELD_MAX = 3;       // most key shields Goliath can hold
 
 // Summoner (summoner.js): every SUMMONER_COOLDOWN ticks a copy of a random follower leaves the chain as a spirit
 const SUMMONER_COOLDOWN = 40;     // ticks (5 s) between summons (Quick hands, Frenzy and levels speed it up)
-const AGENT_TICKS = 32;           // ticks (8 s) a spirit lives
+const AGENT_TICKS = 32;           // ticks (4 s) a spirit lives
 const AGENT_MAX = 4;              // most spirits at once
 const AGENT_MOVE_TICKS = 2;       // ticks per tile (2 = same pace as the hero at base speed); Raiden and Shogun spirits move every tick
 const AGENT_SIGHT = 14;           // how far (tiles) a spirit looks for enemies
@@ -239,7 +239,7 @@ const COMBO_KEEPER_TICKS = 12; // ticks added to the combo window
 const SKILL_HASTE_MULT = 0.7;  // follower skill cooldowns are multiplied by this
 const BOUNTY_POINTS = 10;      // extra base points per kill (before the combo multiplier)
 const SECOND_WIND_BONUS = 0.25;// revive bonus instead of REVIVE_SCORE_BONUS
-const MINEFIELD_COUNT = 2;     // mines placed at the start (MINE_MAX is 3, so a Miner can still add one)
+const MINEFIELD_COUNT = 2;     // mines placed at the start (MINE_MAX is 8, so a Miner can still add one)
 
 // Batch B: movement feel, flag buffs, buff-screen coins
 const INPUT_BUFFER = 2;          // steering inputs that can queue between two hero moves
@@ -291,7 +291,7 @@ const PENTAKILL_AT = 5;             // the Nth kill in one chain pays the coins 
 const PENTAKILL_COINS = 5;
 const ADS_ENABLED = true;          // false = normal coin-priced revives, no ads. true = fake joke ads (ads.js)
 const AD_SECONDS = 60;              // how long an ad lasts if you do NOT hold the fast-forward button
-const AD_HOLD_SPEED = 8;            // holding the button runs the ad this many times faster (20 s -> 5 s)
+const AD_HOLD_SPEED = 10;            // holding the button runs the ad this many times faster (60 s -> 5 s)
 const AD_HOLD_DELAY_MS = 300;       // a hold only counts this long after the ad starts (the tap that began it cannot hold)               // how long an ad really takes
 const AD_FAKE_SECONDS = 60;         // how long the ad claims to be (it "fast-forwards", and cannot be skipped)
 const AD_PAYOUTS = [100, 50, 50, 25];   // hero-select ad button: each ad pays the next number
@@ -362,7 +362,6 @@ const ZERO_SCORE_LINES = [
   'Even the hazard felt bad for you.',
 ];
 
-// TEST ONLY, remove later. Leave at 0 / false for normal play.
 // TEST ONLY, remove later. Leave at 0 / false for normal play.
 const TEST_START_COINS = 0;    // above 0: coins are set to this on every page load (try 30, then 100)
 const TEST_RELOCK = false;     // true: all bought unlocks are forgotten on every page load
@@ -444,6 +443,13 @@ const DOOR_LOCK_MAX_TICKS = 480;   // lockdown failsafe: doors give way after 60
 const DOOR_LOCK_COINS = 2;         // lockdown reward
 const DOOR_CACHE_KEYS = 2, DOOR_CACHE_BUFFS = 2;   // cache twist contents
 const DOOR_CACHE_TTL = 400;        // ticks a cache buff block stays (50 s)
+const DOOR_READY_PER_WAVE = 2;     // at a door wave this many closed rooms get a glowing, breakable door (9 = every door at once)
+
+// Weapon chests (chests.js): at most CHESTS_NEAR + CHESTS_FAR = 4 per run
+const CHESTS_NEAR = 1;             // chests in rooms ONE door from the start room
+const CHESTS_FAR = 3;              // chests in rooms TWO doors from the start room (the corners)
+const CHEST_START_SHARE = 0.5;     // a weapon from a chest starts at this share of your hero level, so a late chest is not a dud
+const CHEST_PACIFIST_COINS = 3;    // Pacifist has no weapons: a chest pays this many coins instead
 
 // Wizard boss (wizard.js): wave 20. Times are world ticks (8 per second) unless it says ms.
 const WIZARD_WAVE = 20;

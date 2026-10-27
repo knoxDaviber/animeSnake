@@ -23,7 +23,12 @@ const AUDIO = {
 const MUSIC_MODES = ['title', 'run', 'battle', 'tense']; // title = hero/buff pick, run = calm, battle = enemies about, tense = revive countdown
 
 function muteButtonRect() { return { x: 8, y: 8, w: 36, h: 36 }; } // the speaker icon on the hero select screen (render.js draws it, input.js taps it)
-
+function masterVol() { return MASTER_VOLUME * S.volume; }   // the player's slider scales the master volume
+function volumeRect() { return { x: 220, y: 456, w: 200, h: 14 }; }   // the slider on the pause screen (render.js draws it, input.js drags it)
+function setVolume(v) {
+  S.volume = Math.max(0, Math.min(1, v));
+  if (AUDIO.ctx && AUDIO.master && !S.muted) AUDIO.master.gain.setTargetAtTime(masterVol(), AUDIO.ctx.currentTime, 0.02);
+}
 // ---- Setup ------------------------------------------------------------------------
 function loadAudioFile(src, loop) {
   const a = new Audio();
@@ -45,7 +50,7 @@ function audioBuild() { // the Web Audio graph: sfx and music buses -> master ->
   if (!AC) { AUDIO.dead = true; return; }
   const c = new AC();
   AUDIO.ctx = c;
-  AUDIO.master = c.createGain(); AUDIO.master.gain.value = S.muted ? 0 : MASTER_VOLUME;
+  AUDIO.master = c.createGain(); AUDIO.master.gain.value = S.muted ? 0 : masterVol();
   const comp = c.createDynamicsCompressor();
   AUDIO.master.connect(comp); comp.connect(c.destination);
   AUDIO.sfxBus = c.createGain(); AUDIO.sfxBus.gain.value = SFX_VOLUME; AUDIO.sfxBus.connect(AUDIO.master);
@@ -80,7 +85,7 @@ document.addEventListener('visibilitychange', () => { // silence while the tab i
 function toggleMute() { // M key anywhere, or the speaker icon on the hero select screen
   S.muted = !S.muted;
   saveProgress();
-  if (AUDIO.ctx && AUDIO.master) AUDIO.master.gain.setTargetAtTime(S.muted ? 0 : MASTER_VOLUME, AUDIO.ctx.currentTime, 0.03);
+  if (AUDIO.ctx && AUDIO.master) AUDIO.master.gain.setTargetAtTime(S.muted ? 0 : masterVol(), AUDIO.ctx.currentTime, 0.03);
   if (!S.muted) playSfx('tick');
 }
 
@@ -190,7 +195,7 @@ function playSfx(name, p) {
     if (AUDIO_LOG) console.log('sfx', name, p === undefined ? '' : p);
     const f = AUDIO.files[name];
     if (f && f.ready && !f.failed) {                       // a real recording replaces the placeholder
-      const c = f.cloneNode(); c.volume = Math.min(1, MASTER_VOLUME * SFX_VOLUME); c.play().catch(() => {});
+      const c = f.cloneNode(); c.volume = Math.min(1, masterVol() * SFX_VOLUME); c.play().catch(() => {});
       return;
     }
     if (SYNTH[name] && AUDIO.ctx) SYNTH[name](p);
@@ -244,7 +249,7 @@ function fileMusicUpdate() { // real music files: fade by hand (they are plain <
   for (const k of MUSIC_MODES) {
     const a = AUDIO.musicFiles[k];
     if (!a || !a.ready || a.failed) continue;
-    const want = AUDIO.mode === k && !S.muted ? MASTER_VOLUME * MUSIC_VOLUME * (S.paused ? PAUSE_DUCK : 1) : 0;
+    const want = AUDIO.mode === k && !S.muted ? masterVol() * MUSIC_VOLUME * (S.paused ? PAUSE_DUCK : 1) : 0;
     a.fade = (a.fade || 0) + (want - (a.fade || 0)) * 0.06;
     a.volume = Math.max(0, Math.min(1, a.fade));
     if (want > 0 && a.paused) a.play().catch(() => {});

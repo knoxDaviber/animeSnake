@@ -37,7 +37,7 @@ function buildDoors(map) {
         tiles.push({ x, y, c: map[y][x] });
       }
       if (tiles.some(t => wall(t.c))) return;
-      doors.push({ a: ry * 3 + rx, b: ny * 3 + nx, tiles, open: false });
+      doors.push({ a: ry * 3 + rx, b: ny * 3 + nx, tiles, open: false, ready: false });
     });
   }
   doors.forEach(d => d.tiles.forEach(t => { map[t.y][t.x] = 'D'; }));
@@ -82,19 +82,23 @@ function doorCandidates() {
   });
   return out;
 }
-// Called every frame from loop() in main.js. Opens the pick once it is safe (alive, nothing else picking, not locked in).
+// No pick screen any more. At a door wave a few doors just become READY: they glow, and walking into one breaks it (breakDoor).
+// Called every frame from loop() in main.js.
 function openDoorPick() {
   if (!S.pendingDoor || S.picking || !S.alive || S.lockdown) return;
   S.pendingDoor = false;
-  const list = doorCandidates();
-  if (!list.length) return;
+  const isReady = ri => S.doors.some(d => d.ready && !d.open && (d.a === ri || d.b === ri));
+  const list = doorCandidates().filter(c => !isReady(c.room));
   for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
-  S.doorChoices = list.slice(0, DOOR_CHOICES).map(c => ({ ...c, twist: rollTwist(c.room) }));
-  S.pickChoices = range(S.doorChoices.length);
-  S.pickIndex = 0; S.pickAfter = performance.now() + BRANCH_LOCKOUT_MS;
-  S.dirQueue = [];
-  S.picking = true; S.doorPicking = true; S.branchPicking = false; S.rewardPicking = false; S.headPicking = false;
-  playSfx('merge');
+  const rooms = list.slice(0, DOOR_READY_PER_WAVE).map(c => c.room);
+  if (!rooms.length) return;
+  S.doors.forEach(d => {                          // every doorway from an open room into one of the chosen rooms
+    if (d.open || d.ready) return;
+    const ao = S.openRooms.includes(d.a), bo = S.openRooms.includes(d.b);
+    if (ao !== bo && rooms.includes(ao ? d.b : d.a)) d.ready = true;
+  });
+  showBanner('A door is ready!', '', '#ffd36b', true);
+  playSfx('waveClear');
 }
 function doorCard(k) { // what a card shows (render.js drawPick)
   const c = S.doorChoices[k];
@@ -253,6 +257,18 @@ function updateLockdown(lk) {
   if (t) S.pickups.push({ x: t.x, y: t.y, id: pickRand(Object.keys(TEMP_BUFFS)), ttl: DOOR_CACHE_TTL });
 }
 
+// ---- Breaking a door (playerMove calls this when the next tile is a door) ----
+function doorAt(x, y) { return S.doors.find(d => d.tiles.some(t => t.x === x && t.y === y)) || null; }
+// True if (x, y) belonged to a READY door and it broke. Its room opens (with a surprise twist) and you walk on through.
+function breakDoor(x, y) {
+  const d = S.doors.find(q => q.ready && !q.open && q.tiles.some(t => t.x === x && t.y === y));
+  if (!d) return false;
+  const ri = S.openRooms.includes(d.a) ? d.b : d.a;
+  if (S.openRooms.includes(ri)) { d.open = true; d.tiles.forEach(t => { S.map[t.y][t.x] = t.c; }); return true; }
+  openRoom(ri, rollTwist(ri));
+  return true;
+}
+
 // ---- Drawing a door tile (scenery.js drawTile calls this) ----
 function drawDoorTile(x, y, th, px, py) {
   const locked = !!S.lockdown;                      // doors glow red while you are locked in
@@ -261,4 +277,13 @@ function drawDoorTile(x, y, th, px, py) {
   for (let i = 0; i < 4; i++) ctx.fillRect(px + 2 + i * 8, py, 6, CELL);      // planks
   ctx.fillStyle = '#8a8aa3'; ctx.fillRect(px, py + 5, CELL, 3); ctx.fillRect(px, py + 24, CELL, 3);   // iron bands
   ctx.fillStyle = '#c9a64b'; ctx.fillRect(px + 13, py + 13, 6, 6);            // lock
+  const d = doorAt(x, y);
+  if (d && d.ready && !d.open) {                    // ready to break: a faint pulsing golden outline
+    const a = 0.45 + 0.25 * Math.sin(performance.now() / 300);
+    ctx.save();
+    ctx.shadowColor = '#ffd36b'; ctx.shadowBlur = 8;
+    ctx.strokeStyle = `rgba(255,211,107,${a})`; ctx.lineWidth = 2;
+    ctx.strokeRect(px + 1.5, py + 1.5, CELL - 3, CELL - 3);
+    ctx.restore();
+  }
 }

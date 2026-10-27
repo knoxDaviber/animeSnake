@@ -103,6 +103,8 @@ function startRun(i) {
   applyPermanentStart();   // shop: permanent starting followers (shop.js)
   S.buff = buff.id;
   S.picking = false;
+  S.holdStart = true; S.waitDir = true;   // the world waits for the first move (setDir in player.js, loop in main.js)
+  placeNearKey();                         // world.js: one key close to the start
   retentionRunStart(); // run timer, fast-restart check and the pity boost (retention.js)
   S.last = performance.now();
   hud();

@@ -416,20 +416,38 @@ function drawStallHint() { // after running into your own tail (or reviving): th
   ctx.fillStyle = '#fff'; ctx.fillText('Choose a direction', cv.width / 2, cv.height - 24);
   ctx.restore();
 }
+function drawVolumeSlider() { // pause screen: drag to set the volume (volumeRect in audio.js, input in input.js)
+  const r = volumeRect(), x = r.x + r.w * S.volume;
+  ctx.save();
+  ctx.textAlign = 'center'; ctx.fillStyle = '#c9bde6'; ctx.font = '16px system-ui';
+  ctx.fillText(S.muted ? 'Volume (muted: press M)' : `Volume ${Math.round(S.volume * 100)}%  (- / +)`, cv.width / 2, r.y - 10);
+  ctx.fillStyle = '#3a2d5c'; ctx.fillRect(r.x, r.y, r.w, r.h);
+  ctx.fillStyle = S.muted ? '#8a8aa3' : '#ffd36b'; ctx.fillRect(r.x, r.y, Math.round(r.w * S.volume), r.h);
+  ctx.strokeStyle = '#ffd36b'; ctx.lineWidth = 2; ctx.strokeRect(r.x, r.y, r.w, r.h);
+  ctx.fillStyle = '#fff'; ctx.fillRect(Math.round(x) - 3, r.y - 4, 6, r.h + 8);
+  ctx.restore();
+}
 function drawOverlay() {
-  if (S.alive && !S.paused) return;
+  if (S.alive && !S.paused && !S.holdStart) return;
   ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.fillRect(0, 0, cv.width, cv.height);
   ctx.textAlign = 'center';
   if (S.alive) {
+    const start = S.holdStart && !S.paused;         // the opening screen: the pause look, different words, no buttons
     ctx.fillStyle = '#fff'; ctx.font = '36px system-ui';
-    ctx.fillText('Paused', cv.width / 2, cv.height / 2 - 30);
+    ctx.fillText(start ? 'Ready?' : 'Paused', cv.width / 2, cv.height / 2 - 30);
     ctx.font = '20px system-ui';
+    if (start) {
+      ctx.fillText('WASD, arrows or swipe to move', cv.width / 2, cv.height / 2 + 20);
+      if (S.ret.runs < 5) { ctx.fillStyle = '#c9bde6'; ctx.font = '16px system-ui'; ctx.fillText('Eat a key, then touch the character that walks in', cv.width / 2, cv.height / 2 + 52); }
+      return;
+    }
     ctx.fillText('Tap or press P to resume', cv.width / 2, cv.height / 2 + 20);
     const g = pauseGiveUpRect(), ask = performance.now() < S.giveAskUntil;   // Give up button
     ctx.fillStyle = '#211a3b'; ctx.fillRect(g.x, g.y, g.w, g.h);
     ctx.lineWidth = 2; ctx.strokeStyle = ask ? '#ff8a8a' : '#3a2d5c'; ctx.strokeRect(g.x, g.y, g.w, g.h);
     ctx.fillStyle = ask ? '#ff8a8a' : '#f3e9ff'; ctx.font = '16px system-ui';
     ctx.fillText(ask ? 'Sure? Press Q / tap again to give up' : 'Give up  (Q)', cv.width / 2, g.y + 26);
+    drawVolumeSlider();
   } else if (S.reviving) drawRevive();
   else drawGameOver();
 }
@@ -677,7 +695,7 @@ function drawWorld() { // floors, walls, terrain and decor (scenery.js), then a 
 function worldOpacity() {
   if (S.ad || (S.picking && (S.headPicking || S.shopping))) return 0;
   if (S.picking) return 0.15;
-  if (!S.alive || S.paused) return 0.4;
+    if (!S.alive || S.paused || S.holdStart) return 0.4;
   return 1;
 }
 function draw() {
@@ -696,6 +714,7 @@ function draw() {
       drawWorld();
       drawFood();
       drawPickups();
+      drawChests();         // chests.js
       drawMines();
       drawFixedBombs();     // bombs.js
       drawRecruits();

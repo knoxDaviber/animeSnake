@@ -4,10 +4,10 @@
 // S.weapons = ids in the order picked ('base' = the hero's own weapon), S.wlv[id] = that weapon's level (can be fractional).
 
 const BRANCHES = [
-  { id: 'gatling',  name: 'Gatling',  desc: 'Rapid bullets straight ahead.',            update: updateGatling },
-  { id: 'ricochet', name: 'Ricochet', desc: 'A heavy shot that bounces off the walls.', update: updateRicochet },
-  { id: 'nova',     name: 'Nova',     desc: 'A blast around you when enemies get close.', update: updateNova },
-  { id: 'thunder',  name: 'Thunder',  desc: 'Lightning strikes the nearest enemies.',   update: updateThunder },
+  { id: 'gatling',  name: 'Gatling',  desc: 'Rapid bullets straight ahead.',            cd: GATLING_COOLDOWN,  update: updateGatling },
+  { id: 'ricochet', name: 'Ricochet', desc: 'A heavy shot that bounces off the walls.', cd: RICOCHET_COOLDOWN, update: updateRicochet },
+  { id: 'nova',     name: 'Nova',     desc: 'A blast around you when enemies get close.', cd: NOVA_COOLDOWN,   update: updateNova },
+  { id: 'thunder',  name: 'Thunder',  desc: 'Lightning strikes the nearest enemies.',   cd: THUNDER_COOLDOWN,  update: updateThunder },
 ];
 
 function addXp(n) {
@@ -28,7 +28,7 @@ function levelUp() {
   const h = S.snake[0];
   S.popups.push({ x: h.x, y: h.y, text: `Level ${S.level}!`, age: 0 });
   playSfx('recruit');
-  if (S.level % LEVEL_BRANCH_EVERY === 0 && S.weapons.length - 1 < BRANCHES.length) S.pendingBranch = true;
+  // weapons now come from chests (chests.js), so levelling no longer opens a pick screen
 }
 
 // Called every frame from loop() (main.js). Opens the branch pick once it is safe (alive, nothing else picking).

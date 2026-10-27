@@ -8,6 +8,7 @@ function mergeCheck() { // called once per tick (step in main.js)
     const c = S.roster[i].c;
     if (!FOLLOWERS[c].merge) continue;
     (seen[c] = seen[c] || []).push(i);
+    if (seen[c].length === 2 && !S.hintMerge) { S.hintMerge = true; saveProgress(); showBanner('One more of the same merges them!', '', '#ffd36b'); }   // taught once, at the moment it matters
     if (seen[c].length === 3) { mergeAt(seen[c]); return; }
   }
 }

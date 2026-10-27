@@ -21,7 +21,7 @@ function tileFree(x, y) {
   return inBounds(x, y) && ITEM_FLOOR.includes(S.map[y][x]) && roomOpenAt(x, y) &&
     !S.keys.some(k => k.x === x && k.y === y) &&
     !S.mines.some(m => m.x === x && m.y === y) &&
-    !S.pickups.some(p => p.x === x && p.y === y) &&
+        !(S.chests || []).some(c => c.x === x && c.y === y) &&   // nothing spawns on a chest
     !S.recruits.some(r => (r.x === x && r.y === y) || (r.tx === x && r.ty === y)) && // a recruit, or where one is heading
     !S.snake.some(s => s.x === x && s.y === y) &&
     !enemyAt(x, y);
@@ -66,7 +66,14 @@ function placeKey() { // one new key: on a key spot of a room if there is a free
   return false;
 }
 function placeFood() { while (S.keys.length < keyTarget() && placeKey()) { /* top up */ } }
-
+// Start of a run: one extra key close ahead of the hero, so the first thing a new player sees is something to eat.
+function placeNearKey() {
+  const h = S.snake[0];
+  for (let tries = 0; tries < 60; tries++) {
+    const x = h.x + 4 + Math.floor(Math.random() * 4), y = h.y - 3 + Math.floor(Math.random() * 7);
+    if (tileFree(x, y) && !noItems(x, y)) { S.keys.push({ x, y }); return; }
+  }
+}
 // The key closest to the hero (straight-line tiles), for the arrow on the HUD. null if there is none.
 function nearestKey() {
   const h = S.snake[0];

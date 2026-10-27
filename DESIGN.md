@@ -432,6 +432,7 @@ Wave 10 boss: gridless giant snake. **Built.** Wave 20 wizard: teleporting, pers
 - Joke ads: absurd fake products, fully fake and with no tracking.
 - Room ideas: see Templates.md (soft blocks, pressure plates, shrinking arena, darkness, tunnels, teleporters, wind, locked rooms, mirror room, magnet tiles, rotating walls, patterned minefields, fixed bomb pedestals).
 - Daily challenge: a seeded run on the existing Supabase board. Parked, low priority.
+-In the future we should also change overall world type so it's not always 3x3 square. Can have the rooms form different shapes.
 
 ## Open questions / tuning notes
 

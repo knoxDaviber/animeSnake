@@ -62,7 +62,8 @@ function loop(t) {
   updateAd();     // a finished ad gives its reward (ads.js)
   updateRevive(); // ends the revive countdown when the time is up
   audioUpdate();
-  if (S.alive && !S.paused && !S.crashed && !S.picking) {
+  if (S.holdStart && S.alive && !S.picking) { S.last = t; S.heroLast = t; S.alpha = 1; S.heroAlpha = 1; }   // waiting for the first input: the world is frozen
+  else if (S.alive && !S.paused && !S.crashed && !S.picking) {
     try {
       const iv = heroInterval();
       if (t - S.heroLast >= iv) {

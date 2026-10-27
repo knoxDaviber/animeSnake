@@ -32,13 +32,19 @@ function drawComboBar() { // thin bar along the top of the window: time left to 
   ctx.fillRect(0, 0, Math.round(S.view.cssW * S.comboTimer / S.comboWindow), 4);
 }
 
-function drawStallHint() { // after running into your own tail (or reviving): the snake waits for a direction
-  if (!S.alive || S.paused || S.picking || !S.waitDir || !S.view) return;
+function drawStallHint() { // the snake waits for a direction: after a tail stall or a revive, and at the very start of a run
+    if (!S.alive || S.paused || S.picking || !S.waitDir || !S.view || S.holdStart) return;   // the opening screen is drawn by drawOverlay in render.js
+  const start = S.holdStart, W = S.view.cssW, H = S.view.cssH;
+  const lines = !start ? ['Choose a direction']
+    : S.ret.runs < 5 ? ['WASD, arrows or swipe to move', 'Eat a key, then touch the character that walks in']
+    : ['WASD, arrows or swipe to move'];   // the second line is for the first few runs only
   ctx.save();
   ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#14101f'; ctx.lineJoin = 'round';
-  ctx.globalAlpha = TEXT_ALPHA;
-  ctx.strokeText('Choose a direction', S.view.cssW / 2, S.view.cssH - 24);
-  ctx.fillStyle = '#fff'; ctx.fillText('Choose a direction', S.view.cssW / 2, S.view.cssH - 24);
+  ctx.globalAlpha = start ? 0.9 : TEXT_ALPHA;
+  lines.forEach((s, i) => {
+    const y = H - 24 - (lines.length - 1 - i) * 28;
+    ctx.strokeText(s, W / 2, y); ctx.fillStyle = '#fff'; ctx.fillText(s, W / 2, y);
+  });
   ctx.restore();
 }
 
@@ -75,8 +81,35 @@ function drawKeyArrow() {
 }
 
 // ---- Buff list: small chips in the bottom-left corner, far from the hero, faded like the other HUD text ----
-function activeBuffs() { // [{ text, color }]
+function activeBuffs() { // [{ text, color, prog }]. prog = 0..1, the thin bar under a chip: cooldowns fill up, timed buffs run down
   const out = [], add = (text, color, prog) => out.push({ text, color, prog });
+  const secs = t => (Math.max(0, t) * TICK_MS / 1000).toFixed(1);
+  const cool = (name, lv, left, need, color) =>
+    add(`${name} Lv ${lv}` + (left > 0.05 ? `  ${secs(left)}s` : ''), color, Math.max(0, Math.min(1, 1 - left / Math.max(1, need))));
+
+  // 1. Attacks: the hero's own weapon, the weapons from chests, then follower skills.
+  const hd = HEAD_DEFS[S.roster[0].c];
+  if (!S.pacifist && (hd.id === 'swordsman' || hd.id === 'gunman' || hd.id === 'goliath')) {   // Magician and Summoner have their own chips below
+    const need = weaponCooldown(hd.cd);
+    cool(hd.weapon, 1 + Math.floor(S.wlv.base || 0), need - (S.tick - S.lastSwing + S.alpha), need, '#ffd36b');
+  }
+  S.weapons.forEach(id => {
+    const w = id === 'base' ? null : BRANCHES.find(x => x.id === id);
+    if (!w) return;
+    const need = weaponCooldown(w.cd, id);
+    cool(w.name, 1 + Math.floor(S.wlv[id] || 0), need - ((S.bt[id] || 0) + S.alpha), need, '#6bc5ff');
+  });
+  const groups = {};                                  // follower skills, one chip per family (the soonest-ready copy sets the bar)
+  for (let i = 1; i < S.roster.length; i++) {
+    const f = FOLLOWERS[S.roster[i].c], sk = SKILLS[f.skill];
+    if (!sk) continue;
+    const g = groups[f.id] = groups[f.id] || { f, n: 0, best: Infinity, total: Math.max(1, Math.round(sk.cooldown * S.cdMult)) };
+    g.n++; g.best = Math.min(g.best, Math.max(0, S.roster[i].cd));
+  }
+  Object.values(groups).forEach(g =>
+    add(`${g.f.name}${g.n > 1 ? ' x' + g.n : ''}` + (g.best > 0 ? `  ${secs(g.best)}s` : ''), g.f.color, Math.max(0, Math.min(1, 1 - g.best / g.total))));
+
+  // 2. Buffs and hero state.
   const b = BUFFS.find(x => x.id === S.buff);
   if (b) add(b.name, '#ffd36b');
   for (const id in TEMP_BUFFS) if (S.tb[id] > 0)
@@ -85,25 +118,23 @@ function activeBuffs() { // [{ text, color }]
   if (S.pity) add('Pity boost', '#9a8cc4');
   if (S.gift) add(`Portals ${S.giftCharges}/${S.giftPerWave}`, '#c78bff');
   if (headId() === 'magician') add(`Charges ${S.shockCharges}/${SHOCK_MAX_CHARGES}`, '#c78bff',
-  S.shockCharges < SHOCK_MAX_CHARGES ? Math.min(1, (S.shockTimer + S.alpha) / weaponCooldown(SHOCK_COOLDOWN)) : undefined);   // the thin bar under the chip is the reload
+    S.shockCharges < SHOCK_MAX_CHARGES ? Math.min(1, (S.shockTimer + S.alpha) / weaponCooldown(SHOCK_COOLDOWN)) : undefined);
   if (headId() === 'summoner') {
     if (S.snake.length < 2) add('Spirits: needs a follower', '#c78bff');
-    else add(`Spirits ${S.agents.length}/${AGENT_MAX}`, '#c78bff', S.agents.length < AGENT_MAX ? Math.min(1, (S.tick - S.lastSwing + S.alpha) / weaponCooldown(SUMMONER_COOLDOWN)) : undefined);   // the thin bar is the next summon
+    else add(`Spirits ${S.agents.length}/${AGENT_MAX}`, '#c78bff', S.agents.length < AGENT_MAX ? Math.min(1, (S.tick - S.lastSwing + S.alpha) / weaponCooldown(SUMMONER_COOLDOWN)) : undefined);
   }
-  if (headId() === 'swordsman') add(S.shield ? 'Block ready' : `Block ${Math.ceil(S.shieldTimer * TICK_MS / 1000)}s`, '#6bc5ff');
+  if (headId() === 'swordsman') add(S.shield ? 'Block ready' : `Block ${Math.ceil(S.shieldTimer * TICK_MS / 1000)}s`, '#6bc5ff', S.shield ? undefined : Math.max(0, 1 - S.shieldTimer / SHIELD_RECHARGE));
   if (S.freeRevive) add('Free revive', '#8dff6b');
   const gs = gorgonSlots().length;
   if (gs) add(`Shields ${gorgonReady()}/${gs}`, '#8dff6b');
   if (S.medMerges > 0) add(S.medShieldCd > 0 ? `Medusa shield ${Math.ceil(S.medShieldCd * TICK_MS / 1000)}s` : 'Medusa shield', '#2fbf71');
-  S.weapons.forEach(id => {
-  const w = id === 'base' ? null : BRANCHES.find(x => x.id === id);
-  if (w) add(`${w.name} Lv ${1 + Math.floor(S.wlv[id] || 0)}`, '#6bc5ff');
-  });
   if (S.speedBonus > 0) add(`+${Math.round(S.speedBonus * 100)}% speed`, '#6bc5ff');
   if (S.keyBonus > 0) add(`+${S.keyBonus} key`, '#ffd36b');
   if (S.mineMaxBonus > 0) add(`+${S.mineMaxBonus} mine`, '#ff8a3c');
   if (S.damageBonus > 0) add(`+${S.damageBonus} damage`, '#ff8a8a');
-  return out.slice(0, 9);
+  const closed = (S.chests || []).length, opened = S.chestsOpened || 0;   // how many chests are hiding in this run
+  if (closed + opened > 0) add(`Chests ${opened}/${closed + opened}`, '#ffd36b');
+  return out.slice(0, 12);
 }
 function drawBuffList() {
   if (S.picking || !S.alive || !S.view) return;
@@ -122,7 +153,7 @@ function drawBuffList() {
   ctx.restore();
 }
 // ---- Boss banners: big centred text for a few seconds (the warning 10 s ahead, and the boss's name when it appears) ----
-function showBanner(text, sub, color) { S.banners.push({ text, sub: sub || '', color: color || '#fff', age: 0, life: BANNER_TICKS }); }
+function showBanner(text, sub, color, small) { S.banners.push({ text, sub: sub || '', color: color || '#fff', age: 0, life: BANNER_TICKS, small: !!small }); }
 function ageBanners() { // once per world tick (step in main.js)
   S.banners.forEach(b => b.age++);
   S.banners = S.banners.filter(b => b.age < b.life);
@@ -143,17 +174,18 @@ function updateBossWarning() {
   showBanner(k === 'serpent' ? 'Something huge is coming...' : 'The air goes still...', '', k === 'serpent' ? '#ff8a8a' : '#c78bff');
   playSfx('waveStart');
 }
-function drawBanners() { // window pixels: fades in fast, holds, fades out
+function drawBanners() { // window pixels: fades in fast, holds, fades out. A small banner is one quiet line.
   if (!S.banners.length || !S.view || S.picking || !S.alive) return;
-  const W = S.view.cssW, H = S.view.cssH, size = Math.max(18, Math.min(44, Math.round(W / 18)));
+  const W = S.view.cssW, H = S.view.cssH, big = Math.max(18, Math.min(44, Math.round(W / 18)));
+  let y = H * 0.24;
   ctx.save();
   ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic'; ctx.lineJoin = 'round';
-  S.banners.forEach((b, i) => {
-    const t = Math.min(1, (b.age + S.alpha) / b.life), a = Math.max(0, Math.min(1, t / 0.12, (1 - t) / 0.25));
-    const y = H * 0.24 + i * (size + 14);
-    ctx.globalAlpha = 0.95 * a;
+  S.banners.forEach(b => {
+    const size = b.small ? 20 : big, t = Math.min(1, (b.age + S.alpha) / b.life), a = Math.max(0, Math.min(1, t / 0.12, (1 - t) / 0.25));
+    ctx.globalAlpha = (b.small ? 0.85 : 0.95) * a;
     ctx.font = `bold ${size}px system-ui`; ctx.lineWidth = Math.round(size / 6); ctx.strokeStyle = '#14101f';
     ctx.strokeText(b.text, W / 2, y); ctx.fillStyle = b.color; ctx.fillText(b.text, W / 2, y);
+    y += size + 14;
   });
   ctx.restore();
 }
