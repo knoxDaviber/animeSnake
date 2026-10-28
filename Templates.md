@@ -4,7 +4,7 @@ Sample room templates for the rooms/walls/hazards work (DESIGN.md, "Larger map, 
 
 ## How rooms fit
 
-- The world is 60x60 tiles, so it holds a **3x3 grid of 20x20 rooms**. A template is a 20x20 grid of characters, stamped into one cell of that grid.
+- The world is a **5x5 grid of 20x20 cells** (100x100 tiles). Each run picks a SHAPE (`LAYOUTS` in rooms.js: cross, keyhole, long L, serpent, stairs, keep, crossbar) that says which cells hold a room, and the rest is rock. A template is a 20x20 grid of characters, stamped into one room cell. Rooms are 1 door from the start room (tier 1) or 2+ doors away (tier 2). `tb` templates only sit on straight stretches or dead ends of the shape.
 - Every room has openings in the middle of the sides it connects to: **columns 9-10** on the top and bottom walls, **rows 9-10** on the left and right walls. A template that does not use an opening leaves it as wall.
 - The outer edge of the whole world is always wall.
 - A room is a template plus tags: difficulty tier, which enemy types it favours, how many keys it may hold, and which doors it uses.

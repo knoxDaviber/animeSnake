@@ -52,11 +52,21 @@ const ENEMY_MAX_LEN = 10;          // an eating enemy stops growing at this leng
 const ENEMY_KEY_HUNT_DIST = 4;     // a chasing enemy goes for a key this close (0 = never)
 const SPAWN_GAP = 10;              // ticks between enemies inside one wave
 function hitsToKill(w) { return w <= 5 ? 1 : w <= 9 ? 2 : w <= 13 ? 3 : w <= 17 ? 4 : 5 + Math.floor((w - 18) / 4); } // keeps going: +1 hit every 4 waves after 17
-// Timed waves: a new wave starts this many ticks after the last one. ~10 s at wave 1, ~30 s at wave 10, ~60 s from wave 20.
+// Logarithmic timed waves: starts fast, increases toward a max of ~40s.
 function waveDuration(w) {
-  if (w > 20) return Math.max(WAVE_MIN_TICKS, Math.round(480 - WAVE_SHRINK * (w - 20)));
-  const n = Math.min(Math.max(w, 1), 20);
-  return Math.round(n <= 10 ? 80 + 160 * (n - 1) / 9 : 240 + 240 * (n - 10) / 10);
+  const n = Math.max(w, 1);
+
+  const START_TICKS = 40;  // 5s
+  const MAX_TICKS = 400;   // 50s
+  const SCALE = 10;        // controls how quickly it rises
+
+  const duration =
+    START_TICKS +
+    (MAX_TICKS - START_TICKS) *
+    Math.log(1 + n / SCALE) /
+    Math.log(1 + 20 / SCALE);
+
+  return Math.min(MAX_TICKS, Math.round(duration));
 }
 function enemyWaveSpeed(w) { return 1 + Math.min(ENEMY_WAVE_SPEED_MAX, ENEMY_WAVE_SPEED * (w - 1)); }
 function waveSize(w) { return Math.min(1 + Math.floor(w / 2), WAVE_SIZE_MAX); }   // wave 10: 6, wave 20: 11, wave 30: 16
@@ -194,7 +204,7 @@ const BULLET_SPEED = 2;         // tiles per tick
 // Follower passives (passives.js)
 const KEYSMAN_DOUBLE_CHANCE = 0.1;  // per Keysman: chance that eating a key summons a second character
 const MAGNETO_RANGE = 3;            // tiles: a key this close to your head is pulled one tile closer per tick (+1 per extra Magneto)
-const GORGON_SLOW = 0.05;           // per Gorgon: hero speed -5%
+const GORGON_SLOW = 0.01;           // per Gorgon: hero speed -1%
 const GORGON_MAX_SLOW = 0.50;       // cap on the Gorgon slowdown
 const GORGON_SHIELD_RECHARGE = 0; // ticks until a used Gorgon shield is ready again. 0 = never (shields are one-use)
 const GORGON_MAX_SHIELDS = 5;       // most Gorgon shields that count
@@ -537,3 +547,12 @@ const ENEMY_EAT_HP = 1;           // hit points a snake gains each time it eats 
 const RUNNER_FOOD_DIST = 7;       // a runner heads for a key or recruit this close (if you are not next to it)
 const RUNNER_EAT_GROWTH = 2;      // a runner grows this many segments per key or recruit it eats
 const BUMP_TILES = 1;             // a headbutt pushes the shorter chain back this many tiles
+// ---- Boss minions and the armoured serpent (waves.js) ----
+const BOSS_MINION_BASE = 4;       // snakes that may be alive at once during the first boss fight (wave 10)
+const BOSS_MINION_WAVES = 5;      // one more allowed every this many waves after that
+const BOSS_MINION_MAX = 12;       // never more than this
+const BOSS_MINION_GAP = 24;       // ticks (3 s) between two minions spawning
+const BOSS_MINION_TYPES = ['normal', 'fast', 'armored', 'runner', 'spitter', 'kamikaze'];   // order in which types join the mix
+const BOSS_MINION_VARIETY_START = 2;      // types in the mix at boss tier 1 (the first two above)...
+const BOSS_MINION_VARIETY_PER_TIER = 2;   // ...and this many more each tier
+const WIZARD_MINIONS = false;     // true: snakes also keep coming while only the wizard is up

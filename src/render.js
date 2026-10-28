@@ -443,7 +443,7 @@ function drawOverlay() {
     ctx.fillText(start ? 'Ready?' : 'Paused', cv.width / 2, cv.height / 2 - 30);
     ctx.font = '20px system-ui';
     if (start) {
-      ctx.fillText('WASD, arrows or swipe to move', cv.width / 2, cv.height / 2 + 20);
+      ctx.fillText('WASD, arrows or swipe to move, ', cv.width / 2, cv.height / 2 + 20);
       if (S.ret.runs < 5) { ctx.fillStyle = '#c9bde6'; ctx.font = '16px system-ui'; ctx.fillText('Eat a key, then touch the character that walks in', cv.width / 2, cv.height / 2 + 52); }
       return;
     }

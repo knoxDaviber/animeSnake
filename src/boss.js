@@ -335,7 +335,7 @@ function bossFrame(e, t) {
 // ---- Drawing ----------------------------------------------------------------------------------------------
 // A smooth big snake: every point drawn with the enemy sprites, scaled up, tail first so the head sits on top.
 function drawBossSnake(e) {
-  const now = performance.now(), n = e.pts.length, flash = now < e.flashUntil && Math.floor(now / 70) % 2 === 0;
+  const now = performance.now(), n = e.pts.length, flash = now < e.flashUntil && Math.floor(now / 70) % 2 === 0, armored = bossArmored(e);
   for (let i = n - 1; i >= 0; i--) {
     const p = e.pts[i], k = i === 0 ? BOSS_SCALE * 1.25 : BOSS_SCALE * (1 - 0.35 * i / (n - 1));
     let fx = e.dir.x, fy = e.dir.y;
@@ -345,6 +345,7 @@ function drawBossSnake(e) {
     ctx.translate(cx, cy); ctx.scale(k, k); ctx.translate(-cx, -cy);
     drawEnemySeg(i === 0, fx, fy, p.x * CELL, p.y * CELL);
     if (flash) { ctx.fillStyle = 'rgba(255,255,255,.75)'; ctx.beginPath(); ctx.arc(cx, cy, CELL * 0.46, 0, 6.3); ctx.fill(); }
+    if (armored && i > 0) { ctx.strokeStyle = '#b8c2d6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(cx, cy, CELL * 0.5, 0, 6.3); ctx.stroke(); }   // enraged: the body is armoured
     ctx.restore();
   }
   const h = e.pts[0], hx = h.x * CELL + CELL / 2, hy = h.y * CELL + CELL / 2;

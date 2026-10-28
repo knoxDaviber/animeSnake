@@ -53,7 +53,7 @@ function killEnemy(e) {
 // Breaks segment i and cuts off everything behind it.
 function cutEnemy(e, i) {
   if (S.pacifist) return;
-  if (e.boss) { bossHit(e, BOSS_BODY_DAMAGE, false); return; }   // the boss is chipped, never cut in two
+  if (e.boss) { if (bossArmored(e)) bossClang(e); else bossHit(e, BOSS_BODY_DAMAGE, false); return; }   // chipped, never cut in two. Enraged: the body is armoured, only the head hurts
   const faces = e.segs.map((_, k) => faceOf(e, k));
   const cut = e.segs.splice(i);
   cut.forEach((s, k) => {
@@ -244,6 +244,7 @@ function updateTurrets() {
 // Which type the next snake is. Types unlock by wave (ENEMY_TYPES[type].from). While the hero is in a room that favours
 // an unlocked type, that type is likely (ENEMY_FAVOR_CHANCE). Otherwise ENEMY_TYPE_CHANCE of snakes are a random special.
 function pickEnemyType() {
+  if (S.minionSpawn) return bossMinionType();   // waves.js: a boss fight spawns a limited mix of snakes
   const open = Object.keys(ENEMY_TYPES).filter(k => k !== 'normal' && (S.wave >= ENEMY_TYPES[k].from || S.extraTypes.includes(k)) && (k !== 'kamikaze' || S.mines.length > 0));   // kamikazes need a bomb to hunt
   if (!open.length) return 'normal';
   if (open.includes('kamikaze') && isGoliath() && Math.random() < KAMI_GOLIATH_CHANCE) return 'kamikaze';   // Goliath's counter
@@ -303,7 +304,7 @@ function updateWaves() {
   if (S.toSpawn > 0 && S.enemies.length < enemyCap()) {   // snakes of the queue walk in one by one, up to the cap
     if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = spawnGap(); }
   }
-  if (wavesPaused()) return;
+  if (wavesPaused()) { updateBossMinions(); return; }   // waves.js: snakes keep coming during a boss fight, a few at a time
   updateBossWarning();   // hud.js: the boss warning, 10 s ahead
   const clear = S.toSpawn === 0 && S.enemies.length === 0;
   if (clear && S.wave > 0 && !bossWaveNext() && WAVE_CLEAR_SKIP > 0 && S.waveTimer > WAVE_CLEAR_SKIP) S.waveTimer = WAVE_CLEAR_SKIP;
