@@ -432,7 +432,13 @@ Wave 10 boss: gridless giant snake. **Built.** Wave 20 wizard: teleporting, pers
 - Joke ads: absurd fake products, fully fake and with no tracking.
 - Room ideas: see Templates.md (soft blocks, pressure plates, shrinking arena, darkness, tunnels, teleporters, wind, locked rooms, mirror room, magnet tiles, rotating walls, patterned minefields, fixed bomb pedestals).
 - Daily challenge: a seeded run on the existing Supabase board. Parked, low priority.
--In the future we should also change overall world type so it's not always 3x3 square. Can have the rooms form different shapes.
+- 
+Ask cluade how to render nicer looking environments.
+100 to 1 score conversion to coin
+Special unlocks tornado hero (ricochet hero, cant control urself), Razor from dota type attack
+raiden needs to telegraph what bomb she explodes. must be a bomb player can see.
+tell it to add to design which files it needs for specific batches so it doesnt need to read all the files. so it would need a baseline description of every file, which i think is already in the header of each file.
+Was thinking that the latest swordsman update may have been better if swordsman the class could also be upgraded with coin, so he gets riposte through that
 
 ## Open questions / tuning notes
 
@@ -449,3 +455,6 @@ Wave 10 boss: gridless giant snake. **Built.** Wave 20 wizard: teleporting, pers
 ## Current status
 
 The prototype has the core Snake loop, recruitment, merging, five heroes (the fifth in a first version), five follower families, buffs and temporary buffs, a scarce-coin economy with joke-ad revives, Pacifist and Challenge, hero levelling, a shop, retention hooks, title-screen hero selection, touch controls, audio placeholders and the basic leaderboard. On top of that: halved hero speed, enemy move timers, timed waves, enemies that eat keys, the scrolling camera over a 60x60 world of room templates with rich terrain, four enemy types, kick physics, a window-corner HUD and the wave 10 gridless boss. The dev plays it in a browser before every commit; there has been no structured balance pass. The next work is the Goliath fix, the boss pass, the Summoner redesign and progressive rooms.
+
+
+

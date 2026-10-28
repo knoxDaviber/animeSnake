@@ -134,6 +134,7 @@ function activeBuffs() { // [{ text, color, prog }]. prog = 0..1, the thin bar u
   if (S.damageBonus > 0) add(`+${S.damageBonus} damage`, '#ff8a8a');
   const closed = (S.chests || []).length, opened = S.chestsOpened || 0;   // how many chests are hiding in this run
   if (closed + opened > 0) add(`Chests ${opened}/${closed + opened}`, '#ffd36b');
+  if (!S.pacifist) add(`Weapons ${S.weapons.length - 1}/${weaponSlots()}`, '#6bc5ff');   // chest weapons held / slots
   return out.slice(0, 12);
 }
 function drawBuffList() {

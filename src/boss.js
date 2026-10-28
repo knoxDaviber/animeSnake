@@ -20,7 +20,7 @@
 // State (state.js): S.boss = the boss enemy while it lives, S.bossWait = waiting for a place to spawn,
 // S.pendingReward / S.rewardPicking = the reward pick.
 
-const BOSS_REWARD_POOL = ['thickSkin', 'quickHands', 'comboKeeper', 'skillHaste', 'secondWind', 'welcomeParty'];
+const BOSS_REWARD_POOL = ['thickSkin', 'quickHands', 'comboKeeper', 'skillHaste', 'secondWind', 'welcomeParty', 'relicSlot'];
 
 function angDiff(a, b) { let d = b - a; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; return d; }
 function bossDist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }

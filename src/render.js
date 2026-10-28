@@ -293,17 +293,23 @@ function drawEnemies() {
       if (T === 'fast') { const cx = p.x + CELL / 2, cy = p.y + CELL / 2; ctx.translate(cx, cy); ctx.scale(0.7, 0.7); ctx.translate(-cx, -cy); } // thin
       drawEnemySeg(i === 0, f.fx, f.fy, p.x, p.y);
       ctx.restore();
-      if (i === 0 && T !== 'normal') drawEnemyMark(T, p.x, p.y);
+            if (i === 0 && (T !== 'normal' || isBigSnake(e))) drawEnemyMark(T, p.x, p.y, e);
     });
   });
 }
-function drawEnemyMark(type, px, py) { // a small sign on the head of a special enemy
-  const x = Math.round(px), y = Math.round(py);
+function drawEnemyMark(type, px, py, e) { // a small sign on the head of a special enemy, and a red ring on a big one
+  const x = Math.round(px), y = Math.round(py), big = !!e && isBigSnake(e);
   ctx.save(); ctx.lineWidth = 2;
   if (type === 'armored') { ctx.strokeStyle = '#b8c2d6'; ctx.strokeRect(x + 3, y + 3, CELL - 6, CELL - 6); }
   else if (type === 'fast') { ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.moveTo(x + 8, y + 6); ctx.lineTo(x + 16, y + 11); ctx.lineTo(x + 8, y + 16); ctx.fill(); }
   else if (type === 'kamikaze') { ctx.fillStyle = '#ff4d4d'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + 6, 5, 0, 6.3); ctx.fill(); ctx.fillStyle = '#ffd36b'; ctx.fillRect(x + 15, y, 2, 4); }   // a lit fuse
   else if (type === 'spitter') { ctx.fillStyle = '#8dff6b'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + 5, 4, 0, 6.3); ctx.fill(); }
+  else if (type === 'runner') {                       // two cyan chevrons while it runs, red once it is big and hunting
+    ctx.strokeStyle = big ? '#ff4d4d' : '#6bf0ff'; ctx.beginPath();
+    ctx.moveTo(x + 6, y + 4); ctx.lineTo(x + 11, y + 8); ctx.lineTo(x + 6, y + 12);
+    ctx.moveTo(x + 13, y + 4); ctx.lineTo(x + 18, y + 8); ctx.lineTo(x + 13, y + 12); ctx.stroke();
+  }
+  if (big) { ctx.strokeStyle = '#ff4d4d'; ctx.beginPath(); ctx.arc(x + CELL / 2, y + CELL / 2, CELL / 2 + 1, 0, 6.3); ctx.stroke(); }   // big snakes wear a red ring
   ctx.restore();
 }
 function drawSpits() { // spitter orbs, interpolated between ticks
@@ -731,6 +737,7 @@ function draw() {
       drawBlasts();
       drawZaps();
       drawTethers();        // skills.js: Raiden's blue line
+      drawRazor();          // levels.js: the Razor's blade rings
       drawLasers();         // wizard.js: telegraph and beams
       drawPopups();
       drawLevelBar();       // hud.js: small bar under the hero (world pixels)

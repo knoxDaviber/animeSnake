@@ -28,7 +28,7 @@ function faceSegments() {
 }
 
 // source = 'enemyHead' when an enemy head caused the hit (the Swordsman can block that).
-function takeHit(source, from) {
+function takeHit(source, from, rings) {
   S.invuln = INVULN_TICKS + S.invulnBonus;
   if (source === 'enemyHead' && shieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // blocked: no blink
   if (bubbleAbsorbs() || goliathShieldAbsorbs() || gorgonAbsorbs() || medusaShieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
@@ -42,6 +42,10 @@ function takeHit(source, from) {
   }
   const t = S.snake.pop(), r = S.roster.pop();           // the tail character is the one dropped
   dropFx(t.x, t.y, (px, py) => drawSegment(r, px, py, false));
+  for (let k = 1; k < (rings || 1) && S.snake.length > 1; k++) {   // a big snake's head takes more followers
+    const t2 = S.snake.pop(), r2 = S.roster.pop();
+    dropFx(t2.x, t2.y, (px, py) => drawSegment(r2, px, py, false));
+  }
 }
 
 // Would stepping onto (x, y) heading (dx, dy) hit a wall, hazard or wrong-way gate?
@@ -117,7 +121,7 @@ function playerMove() {
   const wallHit = !inBounds(nx, ny) || isWall(nx, ny) || gateBlocks(nx, ny, S.dir.x, S.dir.y);
   const blocked = wallHit || self || en || isHazardAt(nx, ny);
   if (blocked && isGoliath() && !self) {               // Goliath: whatever is in FRONT of him is harmless
-    if (en) { if (en.i === 0) { if (damageEnemyHead(en.e, 1)) en.e.stun = 4; } else cutEnemy(en.e, en.i); } // he headbutts it
+    if (en) { if (en.i === 0) { if (damageEnemyHead(en.e, 1)) { en.e.stun = 4; headbutt(en.e, true); } } else cutEnemy(en.e, en.i); } // he headbutts it
     S.waitDir = true; playSfx('stall');
     return;
   }
@@ -129,8 +133,8 @@ function playerMove() {
     if (S.invuln <= 0) {
       if (self && !SELF_HIT_COSTS_RING) S.alive = false;
       else {
-                takeHit(en && en.i === 0 ? 'enemyHead' : undefined, { x: nx, y: ny });
-        if (en && en.i === 0 && damageEnemyHead(en.e, 1)) en.e.stun = 4; // head-on: the enemy is hurt too
+        takeHit(en && en.i === 0 ? 'enemyHead' : undefined, { x: nx, y: ny }, en && en.i === 0 ? ringsFor(en.e) : 1);
+        if (en && en.i === 0 && damageEnemyHead(en.e, 1)) { en.e.stun = 4; headbutt(en.e); } // head-on: the enemy is hurt too
         bombContact(wallHit ? h.x : nx, wallHit ? h.y : ny); // Everything is a bomb (a wall blows up on your tile)
       }
     }

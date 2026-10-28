@@ -34,7 +34,7 @@ function damageEnemyHead(e, n, minor = false) {
   if (e.wizard) return wizardHit(e, n);   // wizard.js
   if (e.boss) return minor ? bossHit(e, BOSS_BODY_DAMAGE, false) : bossHit(e, n * BOSS_CRIT, true);   // only major hits crit
   e.hp -= n;
-  if (e.hp <= 0) { killEnemy(e); return false; }
+  if (e.hp <= 0) { if (bigBreak(e)) return true; killEnemy(e); return false; }   // snakes.js: a big snake only loses its chain
   playSfx('hitEnemy');
   e.stun = Math.max(e.stun, 2);
   return true;
@@ -109,8 +109,8 @@ function stepEnemy(e) {
   const sliding = under === 'I' ? opts.find(o => o.d.x === e.dir.x && o.d.y === e.dir.y) : null;           // ice: straight on
   let pick;
   if (pushed) pick = pushed;
-  else if (sliding) pick = sliding;
-  else if (e.type === 'kamikaze' || Math.random() < enemyChase()) {
+  else if (isFleeing(e)) pick = runnerPick(e, opts, head, ph) || opts[0];   // snakes.js: a small runner runs away from you
+  else if (e.type === 'kamikaze' || (e.type === 'runner' && isBigSnake(e)) || Math.random() < enemyChase()) {
     const tgt = e.type === 'kamikaze' ? kamikazeTarget(e, head, ph) : chaseTarget(head, ph);   // bombs.js          // the player's head, or a nearby recruit or key
     const dm = distField(tgt.x, tgt.y);
     const cost = o => { const v = dm[o.y * COLS + o.x]; return v < 0 ? 1000 + Math.abs(o.x - tgt.x) + Math.abs(o.y - tgt.y) : v; };
@@ -120,8 +120,8 @@ function stepEnemy(e) {
     if (countFollower('medusa') > 0) { killEnemy(e); return; } // Medusa: an enemy head that touches you dies at once
     if (goliathFront(-pick.d.x, -pick.d.y)) { if (damageEnemyHead(e, 1)) e.stun = 4; return; }  // Goliath faces it: harmless to him
     if (S.invuln > 0) return;                   // player is immune: the enemy just waits
-    takeHit('enemyHead', { x: head.x, y: head.y });                       // head-on: both snakes take damage, short stun
-    if (damageEnemyHead(e, 1)) e.stun = 4;
+    takeHit('enemyHead', { x: head.x, y: head.y }, ringsFor(e));   // head-on: both snakes take damage, short stun. A big snake costs you 2 followers
+    if (damageEnemyHead(e, 1)) { e.stun = 4; headbutt(e); }       // snakes.js: the longer chain shoves the shorter one back
     bombContact(ph.x, ph.y);
     return;
   }
@@ -132,8 +132,9 @@ function stepEnemy(e) {
   const key = S.keys.find(k => k.x === pick.x && k.y === pick.y);
   if (key) { S.keys = S.keys.filter(k => k !== key); ate = true; }
   S.recruits.filter(r => r.x === pick.x && r.y === pick.y).forEach(r => { killRecruit(r); ate = true; });
-  if (ate) e.speed = Math.min(ENEMY_SPEED_MAX, e.speed + ENEMY_EAT_SPEED);
+  if (ate) { e.speed = Math.min(ENEMY_SPEED_MAX, e.speed + ENEMY_EAT_SPEED); e.hp += ENEMY_EAT_HP; }   // eating makes it faster and tougher
   if (!(ate && e.segs.length <= ENEMY_MAX_LEN)) e.segs.pop(); // growing = keep the tail this move
+  if (ate && e.type === 'runner' && e.segs.length <= ENEMY_MAX_LEN) for (let k = 1; k < RUNNER_EAT_GROWTH; k++) { const t = e.segs[e.segs.length - 1]; e.segs.push({ x: t.x, y: t.y }); }   // runners grow faster
   const mine = mineAt(pick.x, pick.y);
   if (mine) { detonateMine(mine); if (e.type === 'kamikaze' && S.enemies.includes(e)) killEnemy(e); }   // enemies do not avoid mines: lure them in. A kamikaze goes with it
 }
@@ -155,7 +156,7 @@ function stepEnemies() {
 }
 function enemyInterval(e) { // ms between moves of this enemy (a head on mud is slowed)
   const mud = tileAt(e.segs[0].x, e.segs[0].y) === '~' ? MUD_SLOW : 1;
-  return TICK_MS / (ENEMY_BASE_SPEED * e.speed * mud);
+  return TICK_MS / (ENEMY_BASE_SPEED * e.speed * mud * lenSpeed(e));
 }
 // Runs every frame from loop() in main.js. Each enemy moves on its own timer, like the hero. A stunned enemy
 // keeps its timer "ready", so it moves the moment the stun ends.

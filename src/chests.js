@@ -68,7 +68,8 @@ function openChestAt(x, y) {
   S.chestsOpened = (S.chestsOpened || 0) + 1;
   grantChestWeapon(x, y);
 }
-
+// How many chest weapons you can hold: WEAPON_SLOTS (config.js) plus the Relic buff.
+function weaponSlots() { return WEAPON_SLOTS + (S.slotBonus || 0); }
 function grantChestWeapon(x, y) {
   playSfx('merge');
   if (S.pacifist) {                                    // no weapons in Pacifist: coins instead
@@ -78,7 +79,7 @@ function grantChestWeapon(x, y) {
     return;
   }
   const left = BRANCHES.filter(b => !S.weapons.includes(b.id));
-  if (!left.length || S.weapons.length - 1 >= WEAPON_SLOTS) {                                  // you already own everything: every weapon levels up
+  if (!left.length || S.weapons.length - 1 >= weaponSlots()) {                                  // you already own everything: every weapon levels up
     S.weapons.forEach(id => { S.wlv[id] = Math.min(WEAPON_LEVEL_CAP, (S.wlv[id] || 0) + 1); });
     showBanner('Chest: all weapons +1 level', '', '#ffd36b', true);
     return;

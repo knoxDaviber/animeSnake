@@ -26,6 +26,8 @@ const BUFFS = [
     apply() { S.cdMult = SKILL_HASTE_MULT; } },
   { id: 'secondWind', name: 'Second wind', desc: 'Your first revive this run is free.',
     apply() { S.freeRevive = true; } },
+  { id: 'relicSlot', name: 'Relic: weapon slot', desc: 'You can hold one more chest weapon this run (+1 weapon cap).',
+    apply() { S.slotBonus = (S.slotBonus || 0) + 1; } },
   { id: 'welcomeParty', name: 'Welcome party', desc: 'A character is already walking in when the run starts.',
     apply() { summonRecruit(); } },
   { id: 'rich', name: 'Rich', desc: `Get ${Math.round(RICH_BONUS * 100)}% more coins at the end of the run.`,

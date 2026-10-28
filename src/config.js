@@ -86,6 +86,7 @@ const ENEMY_TYPES = {
   armored: { speed: 0.85, hp: 2, len: 1,  from: 7 },
   spitter: { speed: 0.9,  hp: 1, len: 0,  from: 10 },
   kamikaze: { speed: 1.25, hp: 1, len: -1, from: 8 },   // hunts bombs near you (bombs.js)
+  runner:   { speed: 1.2,  hp: 1, len: 0,  from: 6 },   // flees until it grows big (snakes.js)
 };
 const ENEMY_TYPE_CHANCE = 0.45;   // chance a snake is a special type once one is unlocked
 const ENEMY_FAVOR_CHANCE = 0.6;   // chance it is the room's favoured type while you are in that room
@@ -113,10 +114,10 @@ const BOSS_EAT_DIST = 1;         // how close the head must be to eat something
 const BOSS_LEAD_MAX = 4;         // it aims up to this many tiles ahead of where you are heading
 const BOSS_PATH_MS = 200;        // how often it re-plans its way around walls
 const BOSS_REPEL = 1.3, BOSS_MINE_FEAR = 1.2;   // how strongly it steers away from walls and from mines
-const BOSS_ENRAGE_AT = 0.5, BOSS_ENRAGE_SPEED = 1.25;   // under half HP: faster, turns faster, charges more often
-const BOSS_FIRST_CHARGE_MS = 4000, BOSS_CHARGE_CD = 5000;   // time to its first charge, and between charges
+const BOSS_ENRAGE_AT = 0.5, BOSS_ENRAGE_SPEED = 1.5;   // under half HP: faster, turns faster, charges more often
+const BOSS_FIRST_CHARGE_MS = 2000, BOSS_CHARGE_CD = 5000;   // time to its first charge, and between charges
 const BOSS_WINDUP_MS = 500, BOSS_CHARGE_MS = 700, BOSS_CHARGE_SPEED = 2.4;   // telegraph, charge length, charge speed (x)
-const BOSS_DAZE_MS = 900;        // dazed for this long after ramming a wall in a charge (free hits)
+const BOSS_DAZE_MS = 500;        // dazed for this long after ramming a wall in a charge (free hits)
 const BOSS_HEAD_REACH = 1.0, BOSS_BODY_REACH = 0.8;   // how close counts as touching you
 const BOSS_CONTACT_MS = 800, BOSS_RECOIL_MS = 600;    // it can hurt you at most this often, and pauses after
 const BOSS_MEDUSA_DAMAGE = 2;    // touching its head with a Medusa in the chain (the crit makes it 6)
@@ -473,7 +474,7 @@ const WIZARD_MIN_DIST = 14;           // he teleports at least this far (tiles) 
 const WIZARD_FIRST_LASER = 24;        // 3 s after he appears
 const WIZARD_LASER_EVERY = 40;        // 5 s from one shot to the next
 const WIZARD_CHARGE_TICKS = 16;       // 2 s of charge (the telegraph)
-const WIZARD_LOCK_TICKS = 4;          // the aim stops following you this long before the shot
+const WIZARD_LOCK_TICKS = 6;          // the aim stops following you this long before the shot
 const WIZARD_LASER_ACTIVE = 24;       // 4 s the beam stays on the field
 const WIZARD_FAN = 0.45;              // radians between beams when there are several
 const WIZARD_LASER_MAX = 3;           // most beams in one volley (1 + one per field reform)
@@ -495,7 +496,7 @@ const BOSS_WARN_TICKS = 80;   // the warning appears this many ticks (10 s) befo
 // ---- Harder waves, rushes, boss tiers (waves.js) ----
 const ENEMY_CAP_WAVES = 3;        // the alive cap grows by 1 every this many waves (up to ENEMY_CAP)
 const WAVE_SIZE_MAX = 24;         // most snakes in one wave (waveSize)
-const ENEMY_LEN_BONUS_MAX = 8;    // enemyLength stops adding segments after this many
+const ENEMY_LEN_BONUS_MAX = 4;    // enemyLength stops adding segments after this many
 const ENEMY_TYPE_CHANCE_STEP = 0.01, ENEMY_TYPE_CHANCE_MAX = 0.8;   // special snakes get likelier every wave, up to this
 const SPAWN_GAP_MIN = 3;          // ticks between spawns shrink by 1 every 4 waves, down to this
 const WAVE_MIN_TICKS = 300;       // after wave 20 waves get shorter, never below this many ticks (300 = 37 s)
@@ -515,8 +516,24 @@ const FINALE_COINS = 60, FINALE_SCORE = 5000;        // victory reward when both
 const WEAPON_LEVEL_CAP = 40;      // no weapon goes above this level (levelling and chests both stop here)
 const WEAPON_DAMAGE_CAP = 60;     // most damage one hit can do
 const WEAPON_MIN_COOLDOWN = 2;    // fastest a weapon can fire, in world ticks (2 = 4 shots a second)
-const WEAPON_SLOTS = 4;           // most chest weapons you can hold (more chests then level your weapons up instead)
+const WEAPON_SLOTS = 3;           // most chest weapons you can hold (more chests then level your weapons up instead)
 
 // ---- Misc ----
 const SCORE_PER_COIN = 100;       // when a run ends, every this many points of score become 1 coin
 const RAIDEN_TELEGRAPH_TICKS = 4; // Raiden shows a thin blue line this long (0.5 s) before a mine goes off
+// ---- Razor weapon (levels.js) ----
+const RAZOR_PERIOD = 24;          // ticks (3 s) for one ring to pulse out and back in at level 1. Levels, Quick hands and Frenzy speed it up
+const RAZOR_DAMAGE = 1;           // per ring sweep, scaled by weapon level like every weapon
+const RAZOR_MIN_R = 1, RAZOR_MAX_R = 3;   // ring radius in tiles: from 1 out to 3 (a 7x7 square) and back
+const RAZOR_GROW_LEVELS = 8;      // the biggest ring grows by 1 tile every this many weapon levels
+const RAZOR_SECOND_LEVEL = 4;     // from this weapon level a second ring pulses half a cycle behind the first
+
+// ---- Big snakes, runners, headbutts (snakes.js) ----
+const BIG_SNAKE_LEN = 7;          // an enemy snake LONGER than this is big
+const BIG_SNAKE_HIT_RINGS = 2;    // a big snake's head hit costs you this many followers
+const BIG_SNAKE_KEEP = 4;         // a big snake that would die loses its chain down to this many segments instead
+const LEN_SPEED_FROM = 3, LEN_SPEED_PER = 0.03;   // every segment beyond FROM makes a snake this much faster
+const ENEMY_EAT_HP = 1;           // hit points a snake gains each time it eats a key or recruit
+const RUNNER_FOOD_DIST = 7;       // a runner heads for a key or recruit this close (if you are not next to it)
+const RUNNER_EAT_GROWTH = 2;      // a runner grows this many segments per key or recruit it eats
+const BUMP_TILES = 1;             // a headbutt pushes the shorter chain back this many tiles

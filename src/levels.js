@@ -8,6 +8,7 @@ const BRANCHES = [
   { id: 'ricochet', name: 'Ricochet', desc: 'A heavy shot that bounces off the walls.', cd: RICOCHET_COOLDOWN, update: updateRicochet },
   { id: 'nova',     name: 'Nova',     desc: 'A blast around you when enemies get close.', cd: NOVA_COOLDOWN,   update: updateNova },
   { id: 'thunder',  name: 'Thunder',  desc: 'Lightning strikes the nearest enemies.',   cd: THUNDER_COOLDOWN,  update: updateThunder },
+  { id: 'razor',    name: 'Razor',    desc: 'Rings of blades pulse out and back in, nonstop.', cd: RAZOR_PERIOD, update: updateRazor },
 ];
 
 function addXp(n) {
@@ -104,4 +105,51 @@ function updateThunder(id) {
     S.zaps.push({ kind: 'bolt', x1: h.x, y1: h.y, x2: s.x, y2: s.y, age: 0, jig: range(3).map(() => (Math.random() - 0.5) * 24) });
     strikeEnemyAt(s.x, s.y, weaponDamage(THUNDER_DAMAGE, id));
   });
+}
+// ---- Razor: square rings of blades that pulse out and back in, nonstop ----
+// One ring from the start; from weapon level RAZOR_SECOND_LEVEL a second ring pulses half a cycle behind it. S.bt[id] counts the ticks
+// of the current cycle. The cycle length is the weapon cooldown (weaponCooldown), so weapon levels, Quick hands and Frenzy all make it
+// faster. Every time a ring moves onto a new square it cuts whatever snake is on it, so the damage comes as it sweeps.
+function razorRadius(p, id) {   // p = 0..1 through the cycle: out, then back in. Returns the ring radius in tiles (a fraction while it moves)
+  const tri = p < 0.5 ? p * 2 : (1 - p) * 2, maxR = RAZOR_MAX_R + Math.floor((S.wlv[id] || 0) / RAZOR_GROW_LEVELS);
+  return RAZOR_MIN_R + (maxR - RAZOR_MIN_R) * tri;
+}
+function razorPhases(id) {      // where each ring is in its cycle right now (smooth between ticks, for drawing)
+  const p = ((S.bt[id] || 0) + S.alpha) / weaponCooldown(RAZOR_PERIOD, id), out = [p % 1];
+  if ((S.wlv[id] || 0) >= RAZOR_SECOND_LEVEL) out.push((p + 0.5) % 1);
+  return out;
+}
+function updateRazor(id) {
+  const per = weaponCooldown(RAZOR_PERIOD, id), h = S.snake[0];
+  S.bt[id] = ((S.bt[id] || 0) + 1) % per;
+  const base = S.bt[id] / per, phases = [base];
+  if ((S.wlv[id] || 0) >= RAZOR_SECOND_LEVEL) phases.push((base + 0.5) % 1);
+  const last = S.rz[id] = S.rz[id] || [];
+  phases.forEach((ph, k) => {
+    const r = Math.round(razorRadius(ph, id));
+    if (last[k] === r) return;                         // the ring is still on the same square
+    last[k] = r;
+    for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) !== r) continue;   // only the squares on the ring
+      const x = h.x + dx, y = h.y + dy;
+      if (inBounds(x, y)) strikeEnemyAt(x, y, weaponDamage(RAZOR_DAMAGE, id));
+    }
+  });
+}
+function drawRazor() {          // world space: the blade rings, drawn smoothly between ticks
+  if (!S.alive || S.picking || !S.weapons.includes('razor')) return;
+  const p = lerpPos(S.prev, 0, S.snake[0], S.heroAlpha), cx = p.x + CELL / 2, cy = p.y + CELL / 2;
+  ctx.save();
+  razorPhases('razor').forEach((ph, k) => {
+    const r = (razorRadius(ph, 'razor') + 0.5) * CELL;
+    ctx.globalAlpha = 0.85; ctx.strokeStyle = k ? '#c9a6ff' : '#9be8ff'; ctx.lineWidth = 3;
+    ctx.shadowColor = ctx.strokeStyle; ctx.shadowBlur = 8;
+    ctx.strokeRect(cx - r, cy - r, r * 2, r * 2);
+    ctx.fillStyle = '#ffffff';
+    [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sy]) => {     // a blade tip on each corner
+      const bx = cx + sx * r, by = cy + sy * r;
+      ctx.beginPath(); ctx.moveTo(bx, by - 5); ctx.lineTo(bx + 5, by); ctx.lineTo(bx, by + 5); ctx.lineTo(bx - 5, by); ctx.closePath(); ctx.fill();
+    });
+  });
+  ctx.restore();
 }
