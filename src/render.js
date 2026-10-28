@@ -616,7 +616,7 @@ function drawAd() { // the fake ad, on top of everything. Hold the button to fas
   ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 20px system-ui';
   ctx.fillText(fast ? `>> Fast-forwarding x${AD_HOLD_SPEED} >>` : 'HOLD to fast-forward', cx, hb.y + 30);
   ctx.fillStyle = '#9a8cc4'; ctx.font = '13px system-ui';
-  ctx.fillText('Hold this button (or Space). Let go and the ad slows down again.', cx, hb.y + 52);
+  ctx.fillText('Hold this button (or Space) to speed up the ad.', cx, hb.y + 52);
   const left = Math.ceil(AD_SECONDS * (1 - p) / (fast ? AD_HOLD_SPEED : 1));
   ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
   ctx.fillText(`Ad  ${left}s left`, cx, 520);

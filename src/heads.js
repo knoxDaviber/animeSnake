@@ -69,13 +69,23 @@ function swordSwing() {
   playSfx('sword');
   return true;
 }
-// Called by takeHit for a hit from an enemy HEAD. True if the Swordsman's block absorbs it.
-function shieldAbsorbs() {
+// Called by takeHit for a hit from an enemy HEAD. True if the Swordsman's block absorbs it. `from` = the tile of whatever hit
+// him: the block answers with a counter slash on it (riposte).
+function shieldAbsorbs(from) {
   if (headId() !== 'swordsman' || !S.shield) return false;
   S.shield = false; S.shieldTimer = SHIELD_RECHARGE;
   S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'Blocked!', age: 0 });
   playSfx('block');
+  if (from && !S.pacifist) riposte(from);
   return true;
+}
+// The counter slash: a sword hit RIPOSTE_MULT times as hard on the attacker's tile. It lands a tick later, and an enemy that
+// ran into you is stunned for 4 ticks, so it is still there.
+function riposte(from) {
+  const h = S.snake[0], dx = from.x - h.x, dy = from.y - h.y;
+  const dir = Math.abs(dx) >= Math.abs(dy) ? { x: Math.sign(dx) || 1, y: 0 } : { x: 0, y: Math.sign(dy) };
+  fireAttack(ATTACKS.sword, from.x, from.y, dir, weaponDamage(SWORD_DAMAGE * RIPOSTE_MULT));
+  playSfx('sword');
 }
 
 // ---- Magician ------------------------------------------------------------------

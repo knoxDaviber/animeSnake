@@ -26,7 +26,12 @@ function tileFree(x, y) {
     !S.snake.some(s => s.x === x && s.y === y) &&
     !enemyAt(x, y);
 }
-function randomTile() { return { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) }; }
+function randomTile() {
+  const rooms = S.openRooms && S.openRooms.length ? S.openRooms : null;
+  if (!rooms) return { x: Math.floor(Math.random() * COLS), y: Math.floor(Math.random() * ROWS) };
+  const ri = rooms[Math.floor(Math.random() * rooms.length)];
+  return { x: (ri % GRID) * ROOM + Math.floor(Math.random() * ROOM), y: Math.floor(ri / GRID) * ROOM + Math.floor(Math.random() * ROOM) };
+}
 // Push blocks ('B'). Returns true if the block at (x, y) slid one tile along (dx, dy). It cannot move into a wall, another
 // block, a snake, a key, a mine or a waiting recruit. Pushed onto a hazard it FILLS it: both turn into plain floor.
 function pushBlock(x, y, dx, dy) {

@@ -188,7 +188,7 @@ function bossContact(e, now) {
   const dx = head.x - hero.x, dy = head.y - hero.y, fx = Math.abs(dx) > Math.abs(dy) ? Math.sign(dx) : 0, fy = fx ? 0 : Math.sign(dy);
   if (goliathFront(fx, fy)) { bossHit(e, 1, false); e.pauseUntil = Math.max(e.pauseUntil, now + 500); return; } // Goliath: harmless to him
   if (S.invuln > 0) return;
-  takeHit(headOn ? 'enemyHead' : undefined);
+    takeHit(headOn ? 'enemyHead' : undefined, { x: Math.round(head.x), y: Math.round(head.y) });
   bombContact(hero.x, hero.y);
   e.pauseUntil = Math.max(e.pauseUntil, now + BOSS_RECOIL_MS);                                       // it recoils for a moment
   e.phase = 'move';

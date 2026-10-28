@@ -28,7 +28,7 @@ function faceSegments() {
 }
 
 // source = 'enemyHead' when an enemy head caused the hit (the Swordsman can block that).
-function takeHit(source) {
+function takeHit(source, from) {
   S.invuln = INVULN_TICKS + S.invulnBonus;
   if (source === 'enemyHead' && shieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // blocked: no blink
   if (bubbleAbsorbs() || goliathShieldAbsorbs() || gorgonAbsorbs() || medusaShieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
@@ -129,7 +129,7 @@ function playerMove() {
     if (S.invuln <= 0) {
       if (self && !SELF_HIT_COSTS_RING) S.alive = false;
       else {
-        takeHit(en && en.i === 0 ? 'enemyHead' : undefined);
+                takeHit(en && en.i === 0 ? 'enemyHead' : undefined, { x: nx, y: ny });
         if (en && en.i === 0 && damageEnemyHead(en.e, 1)) en.e.stun = 4; // head-on: the enemy is hurt too
         bombContact(wallHit ? h.x : nx, wallHit ? h.y : ny); // Everything is a bomb (a wall blows up on your tile)
       }

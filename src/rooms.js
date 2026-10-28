@@ -468,35 +468,98 @@ function transformPoint(x, y, rot, flip) { // the same turn, applied to one tile
     if (t.rows.length !== ROOM || t.rows.some(r => r.length !== ROOM)) console.warn('Room template is not 20x20:', t.id);
   });
 })();
+// ---- World shapes ----------------------------------------------------------------------------------------------------
+// The world is a GRID x GRID grid of 20x20 cells. A LAYOUT says which cells hold a room (R), where you start (S) and which
+// cells stay solid rock (.). Every run picks one at random and turns / mirrors it, so the map is a different shape each time.
+// Doors, chests and the "N doors away" rules all follow the shape (S.layout.dist = doors away from the start room).
+const LAYOUTS = [
+  { name: 'The Cross',    rows: ['..R..', '..R..', 'RRSRR', '..R..', '..R..'] },
+  { name: 'The Keyhole',  rows: ['..R..', '.RRR.', '.R.R.', '.RSR.', '.....'] },
+  { name: 'The Long L',   rows: ['R....', 'R....', 'R....', 'R....', 'SRRRR'] },
+  { name: 'The Serpent',  rows: ['.RRR.', '.R...', '.RSR.', '...R.', '.RRR.'] },
+  { name: 'The Stairs',   rows: ['RR...', '.RR..', '..SR.', '...RR', '....R'] },
+  { name: 'The Keep',     rows: ['.....', '.RRR.', '.RSR.', '.RRR.', '.....'] },
+  { name: 'The Crossbar', rows: ['RRRRR', '..R..', '..S..', '..R..', '..R..'] },
+];
+(function checkLayouts() {   // warns in the console if a shape is not GRID x GRID, or has no start
+  LAYOUTS.forEach(l => {
+    if (l.rows.length !== GRID || l.rows.some(r => r.length !== GRID) || l.rows.join('').split('S').length !== 2) console.warn('Bad world layout:', l.name);
+  });
+})();
 
-function pickTemplate(tier, avoidId) {
-  const list = ROOM_TEMPLATES.filter(t => t.tier.includes(tier) && t.id !== avoidId);
-  return list[Math.floor(Math.random() * list.length)];
+// Picks this run's shape, turns and mirrors it, and works out how many doors away from the start every room is.
+// Returns { name, has: Uint8Array (1 = a room is here), start: cell index, dist: Int8Array (doors from the start, -1 = no room) }.
+function pickLayout() {
+  const N = GRID, forced = FORCE_LAYOUT ? LAYOUTS.find(l => l.name === FORCE_LAYOUT) : null;
+  const L = forced || LAYOUTS[Math.floor(Math.random() * LAYOUTS.length)];
+  const rot = Math.floor(Math.random() * 4), flip = Math.random() < 0.5;
+  const has = new Uint8Array(N * N); let start = 0;
+  L.rows.forEach((row, y) => row.split('').forEach((ch, x) => {
+    if (ch === '.') return;
+    let px = flip ? N - 1 - x : x, py = y;
+    for (let i = 0; i < rot; i++) { const nx = N - 1 - py, ny = px; px = nx; py = ny; }
+    has[py * N + px] = 1;
+    if (ch === 'S') start = py * N + px;
+  }));
+  const dist = new Int8Array(N * N).fill(-1), q = [start];
+  dist[start] = 0;
+  for (let h = 0; h < q.length; h++) {                 // doors away from the start: breadth first over touching room cells
+    const i = q[h], x = i % N, y = (i - x) / N;
+    for (const d of DIRS) {
+      const nx = x + d.x, ny = y + d.y;
+      if (nx < 0 || ny < 0 || nx >= N || ny >= N) continue;
+      const j = ny * N + nx;
+      if (has[j] && dist[j] < 0) { dist[j] = dist[i] + 1; q.push(j); }
+    }
+  }
+  return { name: L.name, has, start, dist };
+}
+// The tile the hero starts on: the middle of the start room.
+function startTile() {
+  const ri = S.layout.start;
+  return { x: (ri % GRID) * ROOM + ROOM / 2, y: Math.floor(ri / GRID) * ROOM + ROOM / 2 };
 }
 
-// Which room the tile (x, y) belongs to (S.rooms is in row order: index = room row * 3 + room column).
+// nb = which sides of the room touch another room: { u, d, l, r }. A 'tb' template only has two opposite openings, so it
+// cannot sit on a bend of the shape.
+function pickTemplate(tier, avoidId, nb) {
+  const bend = !!nb && (nb.u || nb.d) && (nb.l || nb.r);
+  const list = ROOM_TEMPLATES.filter(t => t.tier.includes(tier) && t.id !== avoidId && !(t.doors === 'tb' && bend));
+  return list.length ? list[Math.floor(Math.random() * list.length)] : ROOM_TEMPLATES.find(t => t.tier.includes(tier) && t.doors !== 'tb');
+}
+
+// Which room the tile (x, y) belongs to (S.rooms is in row order: index = room row * GRID + room column).
 function roomAt(x, y) {
-  const rx = Math.max(0, Math.min(2, Math.floor(x / ROOM))), ry = Math.max(0, Math.min(2, Math.floor(y / ROOM)));
-  return S.rooms[ry * 3 + rx];
+  const rx = Math.max(0, Math.min(GRID - 1, Math.floor(x / ROOM))), ry = Math.max(0, Math.min(GRID - 1, Math.floor(y / ROOM)));
+  return S.rooms[ry * GRID + rx];
 }
-// Rooms with doors: 'tb' (only top and bottom openings) must keep the opening that faces the middle of the world.
-function pickRot(tpl, rx, ry) {
-  if (tpl.doors !== 'tb' || (rx !== 1 && ry !== 1)) return Math.floor(Math.random() * 4);   // corners can face either way
-  return (rx === 1 ? 0 : 1) + 2 * Math.floor(Math.random() * 2);                          // top/bottom rooms: 0 or 180; left/right rooms: 90 or 270
+// Rooms with doors: 'tb' (only two opposite openings) are turned so their openings face the neighbours.
+function pickRot(tpl, nb) {
+  if (tpl.doors !== 'tb') return Math.floor(Math.random() * 4);
+  const vert = nb.u || nb.d;
+  return (vert ? 0 : 1) + 2 * Math.floor(Math.random() * 2);   // 0 or 180 for up/down neighbours, 90 or 270 for left/right ones
 }
-// True on tiles where nothing may spawn (keys, recruits, enemies): rooms flagged noItems, like the vault.
+// True on tiles where nothing may spawn (keys, recruits, enemies): rooms flagged noItems, like the vault, and rock.
 function noItems(x, y) { const r = roomAt(x, y); return !!(r && r.noItems); }
-// Builds a fresh world for a new run: S.map, S.rooms, S.decor, S.keySpots.
+
+// Builds a fresh world for a new run (S.layout must be set): S.map, S.rooms, S.decor, S.keySpots.
 function buildWorld() {
-  const map = range(ROWS).map(() => Array(COLS).fill('#'));
-    const rooms = [], vignettes = [], spots = [], turrets = [], pedestals = [];
+  const N = GRID, L = S.layout, map = range(ROWS).map(() => Array(COLS).fill('#'));   // rock everywhere, rooms are stamped in
+  const rooms = [], vignettes = [], spots = [], turrets = [], pedestals = [];
   let last = null;
-  const powderRoom = [1, 3, 5, 7][Math.floor(Math.random() * 4)];   // one near room always holds bomb pedestals
-  for (let ry = 0; ry < 3; ry++) for (let rx = 0; rx < 3; rx++) {
-    const start = rx === 1 && ry === 1, corner = rx !== 1 && ry !== 1;
-    const tpl = start ? START_ROOM : ry * 3 + rx === powderRoom ? ROOM_TEMPLATES.find(t => t.id === 'powder') : pickTemplate(corner ? 2 : 1, last);
+  const nearRooms = range(N * N).filter(i => L.has[i] && L.dist[i] === 1);
+  const powderRoom = nearRooms.length ? nearRooms[Math.floor(Math.random() * nearRooms.length)] : -1;   // one near room always holds bomb pedestals
+  const touching = i => {                              // which sides of cell i join another room
+    const x = i % N, y = (i - x) / N, has = (cx, cy) => cx >= 0 && cy >= 0 && cx < N && cy < N && !!L.has[cy * N + cx];
+    return { u: has(x, y - 1), d: has(x, y + 1), l: has(x - 1, y), r: has(x + 1, y) };
+  };
+  for (let ry = 0; ry < N; ry++) for (let rx = 0; rx < N; rx++) {
+    const ri = ry * N + rx;
+    if (!L.has[ri]) { rooms.push({ id: 'void', name: 'Rock', theme: 'crypt', favors: null, noItems: true, void: true }); continue; }
+    const start = ri === L.start, nb = touching(ri);
+    const tpl = start ? START_ROOM : ri === powderRoom ? ROOM_TEMPLATES.find(t => t.id === 'powder') : pickTemplate(L.dist[ri] <= 1 ? 1 : 2, last, nb);
     last = tpl.id;
-        const rot = start ? 0 : pickRot(tpl, rx, ry), flip = !start && Math.random() < 0.5;
+    const rot = start ? 0 : pickRot(tpl, nb), flip = !start && Math.random() < 0.5;
     const rows = transformRows(tpl.rows, rot, flip), ox = rx * ROOM, oy = ry * ROOM;
     for (let y = 0; y < ROOM; y++) for (let x = 0; x < ROOM; x++) {
       const c = rows[y][x];
@@ -508,18 +571,26 @@ function buildWorld() {
         if (dx || dy) turrets.push({ x: ox + x, y: oy + y, dx, dy, cd: 10 + (turrets.length * 5) % 22 });
       }
     }
+    const seal = (x, y) => { if (map[y][x] !== 'T') map[y][x] = '#'; };
+    for (let k = 9; k <= 10; k++) {                    // a side that touches rock or the world edge is walled up, so there is no dead-end nook
+      if (!nb.u) seal(ox + k, oy);
+      if (!nb.d) seal(ox + k, oy + ROOM - 1);
+      if (!nb.l) seal(ox, oy + k);
+      if (!nb.r) seal(ox + ROOM - 1, oy + k);
+    }
     (tpl.decor || []).forEach(([k, x, y]) => {
       const p = transformPoint(x, y, rot, flip);
       vignettes.push({ x: ox + p.x, y: oy + p.y, k, v: Math.random() });
     });
-        rooms.push({ id: tpl.id, name: tpl.name, theme: tpl.theme, favors: tpl.favors || null, noItems: !!tpl.noItems });
+    rooms.push({ id: tpl.id, name: tpl.name, theme: tpl.theme, favors: tpl.favors || null, noItems: !!tpl.noItems });
   }
   for (let x = 0; x < COLS; x++) { if (map[0][x] !== 'T') map[0][x] = '#'; if (map[ROWS - 1][x] !== 'T') map[ROWS - 1][x] = '#'; }   // the edge of the world is always wall
   for (let y = 0; y < ROWS; y++) { if (map[y][0] !== 'T') map[y][0] = '#'; if (map[y][COLS - 1] !== 'T') map[y][COLS - 1] = '#'; }
-  S.doors = buildDoors(map);   // doors.js: every doorway starts sealed
+  S.doors = buildDoors(map);   // doors.js: every doorway between two rooms starts sealed
   const scatter = [];                                                           // small decor from each room's theme
   rooms.forEach((r, i) => {
-    const th = ROOM_THEMES[r.theme], ox = (i % 3) * ROOM, oy = Math.floor(i / 3) * ROOM;
+    if (r.void) return;
+    const th = ROOM_THEMES[r.theme], ox = (i % N) * ROOM, oy = Math.floor(i / N) * ROOM;
     for (let y = oy; y < oy + ROOM; y++) for (let x = ox; x < ox + ROOM; x++)
       if (map[y][x] === '.' && Math.random() < th.density)
         scatter.push({ x, y, k: th.scatter[Math.floor(Math.random() * th.scatter.length)], v: Math.random() });

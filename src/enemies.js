@@ -120,7 +120,7 @@ function stepEnemy(e) {
     if (countFollower('medusa') > 0) { killEnemy(e); return; } // Medusa: an enemy head that touches you dies at once
     if (goliathFront(-pick.d.x, -pick.d.y)) { if (damageEnemyHead(e, 1)) e.stun = 4; return; }  // Goliath faces it: harmless to him
     if (S.invuln > 0) return;                   // player is immune: the enemy just waits
-    takeHit('enemyHead');                       // head-on: both snakes take damage, short stun
+    takeHit('enemyHead', { x: head.x, y: head.y });                       // head-on: both snakes take damage, short stun
     if (damageEnemyHead(e, 1)) e.stun = 4;
     bombContact(ph.x, ph.y);
     return;

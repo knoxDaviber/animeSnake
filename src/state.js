@@ -49,7 +49,9 @@ function newLeaderboardState() {
 function newRun() {
   hideNameEntry(); // the initials box belongs to the previous game-over screen
   // The head plus START_FOLLOWERS, in a line heading right from the middle of the grid.
-  const snake = range(1 + START_FOLLOWERS.length).map(i => ({ x: Math.floor(COLS / 2) - i, y: Math.floor(ROWS / 2) }));
+  S.layout = pickLayout();   // rooms.js: this run's world shape and start room
+  const sp = startTile();
+  const snake = range(1 + START_FOLLOWERS.length).map(i => ({ x: sp.x - i, y: sp.y }));
   Object.assign(S, {
     runId: (S.runId || 0) + 1, lb: newLeaderboardState(), cam: null, camT: 0,
     snake,
@@ -68,7 +70,7 @@ function newRun() {
     gift: false, giftCharges: 0, freeRevive: false, thirdUnlocked: false, pickNote: null,
     giftPerWave: 1, bombChance: BOMB_CHANCE, shopping: false, giveAskUntil: 0,
     challenge: false, pacifist: false, won: false, winCoins: 0, stuckTicks: 0, pentaPaid: false, ad: null,
-    openRooms: [4], doors: [], roomTwist: {}, extraTypes: [], lockdown: null, pendingDoor: false, doorPicking: false, doorChoices: [],
+    openRooms: [S.layout.start], doors: [], roomTwist: {}, extraTypes: [], lockdown: null, pendingDoor: false, doorPicking: false, doorChoices: [],
     banners: [], announced: {}, wizard: null, wizardWait: false, lasers: [], pedestals: [], boss: null, bossWait: false, pendingReward: false, rewardPicking: false, keys: [], kicks: [], kickCount: 0, tb: newTempBuffs(), pickups: [], keyShields: 0, agents: [], spiritBuffs: {}, growQueue: [], recruits: [], map: null, rooms: [], decor: [], keySpots: [], spits: [], keyBonus: 0, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,

@@ -1,7 +1,9 @@
 // config.js: constants and tuning numbers. Change how the game feels here, not in the logic files.
 
 // Numbers from ART_SPEC.md: 32x32 tiles, 20x20 grid (640x640), 125 ms logic tick.
-const COLS = 60, ROWS = 60, CELL = 32, TICK_MS = 125; // COLS / ROWS = the WORLD size in tiles
+const GRID = 5;   // the world is a GRID x GRID grid of 20x20 room cells. rooms.js LAYOUTS decide which cells hold a room, the rest is rock
+const FORCE_LAYOUT = null;   // for testing: a layout name from rooms.js, like 'The Cross'. null = a random shape each run
+const COLS = GRID * 20, ROWS = GRID * 20, CELL = 32, TICK_MS = 125; // COLS / ROWS = the WORLD size in tiles
 const SCREEN_W = 640, SCREEN_H = 640;   // the UI canvas (HUD, menus, overlays): a fixed square, must match index.html
 const VIEW_SHORT_TILES = 20;            // the window's short side shows this many tiles...
 const VIEW_LONG_MAX_TILES = 32;         // ...and the long side never more than this (whichever zooms in more wins)
@@ -179,6 +181,7 @@ const GOLIATH_WIDE_LEVEL = 10;    // from this hero level the swipe is 3 wide an
 const LEVEL_XP_TAIL_FREE = 4;     // a snake with up to this many tail segments gives the normal LEVEL_XP_KILL
 const LEVEL_XP_PER_TAIL = 0.5;    // extra XP per tail segment beyond that
 const SHIELD_RECHARGE = 40;     // ticks (5 s) until the Swordsman's block is ready again after it blocks a hit
+const RIPOSTE_MULT = 2;         // the counter slash after a Swordsman block hits this many times as hard as a normal sword swing
 const SHOCK_COOLDOWN = 40;      // ticks (5 s) for the Magician to regain one shockwave charge
 const SHOCK_DAMAGE = 1;         // hit points a shockwave takes off an enemy head
 const SHOCK_REACH = 2;          // the 3x3 area is centred this many tiles ahead of the head (0 = around the head)
@@ -374,6 +377,12 @@ const MUSIC_VOLUME = 0.35;
 const PAUSE_DUCK = 0.3;         // music plays at this fraction of its volume while paused
 const MUSIC_BPM = 120;          // placeholder music tempo
 const MUSIC_FADE = 0.3;         // how quickly music crossfades between moods (bigger = slower)
+const SFX_JITTER = 0.03;        // repeated effects are randomly up to this much higher or lower in pitch (0 = off)
+const REVERB_SECONDS = 1.4;     // length of the reverb tail (0 = no reverb at all)
+const REVERB_SFX = 0.2;         // how much of the sound effects goes through the reverb
+const REVERB_MUSIC = 0.28;      // ...and of the music
+const LAYER_DRUMS_COMBO = 3;    // a combo this long brings the drum layer in, even in calm music (battle and bosses always have it)
+const LAYER_LEAD_COMBO = 5;     // a combo this long brings the lead melody in (the serpent fight always has it)
 const BATTLE_HOLD_MS = 2500;    // battle music lingers this long after the last enemy dies
 const SFX_MIN_GAP_MS = 45;      // the same sound cannot retrigger faster than this
 const SFX_GAPS = { tick: 30, hitEnemy: 70, kill: 60, explosion: 120, spawn: 150 }; // per-sound overrides

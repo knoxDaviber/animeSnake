@@ -1,15 +1,12 @@
 // chests.js: weapon chests. They replace the weapon pick that used to pop up every few levels, so no screen interrupts a run.
 //  * At the start of a run (newRun in state.js calls placeChests) CHESTS_NEAR chest goes in a room ONE door from the start room
-//    (the four rooms touching it) and CHESTS_FAR chests go in rooms TWO doors away (the corners). Max 4 per run. Rooms flagged
-//    noItems (the vault) get none, and a chest only goes on a plain floor tile the hero can really walk to.
+//    and CHESTS_FAR chests go in rooms TWO OR MORE doors away (counted along the world shape, S.layout.dist). Max 4 per run.
+//    Rooms flagged noItems (the vault) get none, and a chest only goes on a plain floor tile the hero can really walk to.
 //  * Walk onto a chest (playerMove calls openChestAt) and the weapon is yours at once: a random one you do not have yet, with a
 //    small banner. Once you own them all, a chest gives every weapon +1 level. In Pacifist (no weapons) it pays coins.
 //  * A weapon from a chest starts at CHEST_START_SHARE of your hero level, so a late chest is not a dud.
 //  * S.chests = [{ x, y, room }] chests still closed, S.chestsOpened = how many were opened this run.
 //  * Placeholder art for now: a brown box with a gold band (drawChests).
-// Room numbers: row * 3 + column, so 4 is the start room, 1 3 5 7 touch it, 0 2 6 8 are the corners.
-
-const CHEST_NEAR_ROOMS = [1, 3, 5, 7], CHEST_FAR_ROOMS = [0, 2, 6, 8];
 
 // Which tiles the hero could walk to from (sx, sy), counting door tiles as open (so closed rooms count too).
 // Walls, push blocks, turrets, hazards and one-way gates block it, so a chest is never put somewhere unreachable.
@@ -31,7 +28,7 @@ function reachableTiles(sx, sy) {
 
 // A random plain floor tile inside room ri (away from its edge walls) that the hero can reach, or null.
 function chestSpot(ri, reach) {
-  const ox = (ri % 3) * ROOM, oy = Math.floor(ri / 3) * ROOM;
+  const ox = (ri % GRID) * ROOM, oy = Math.floor(ri / GRID) * ROOM;
   for (let tries = 0; tries < 200; tries++) {
     const x = ox + 2 + Math.floor(Math.random() * (ROOM - 4)), y = oy + 2 + Math.floor(Math.random() * (ROOM - 4));
     if (S.map[y][x] !== '.' || !reach[y * COLS + x]) continue;
@@ -44,8 +41,12 @@ function chestSpot(ri, reach) {
 // Called by newRun (state.js) right after buildWorld.
 function placeChests() {
   S.chests = []; S.chestsOpened = 0;
-  if (!S.map || !S.rooms || !S.rooms.length) return;
-  const h = S.snake[0], reach = reachableTiles(h.x, h.y);
+  if (!S.map || !S.rooms || !S.rooms.length || !S.layout) return;
+  const h = S.snake[0], reach = reachableTiles(h.x, h.y), L = S.layout, near = [], far = [];
+  range(GRID * GRID).forEach(i => {
+    if (!L.has[i] || i === L.start) return;
+    (L.dist[i] === 1 ? near : far).push(i);          // 1 door away, or 2 or more doors away
+  });
   const shuffled = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   const put = (rooms, n) => {
     for (const ri of shuffled(rooms)) {
@@ -55,8 +56,8 @@ function placeChests() {
       if (t) { S.chests.push({ x: t.x, y: t.y, room: ri }); n--; }
     }
   };
-  put(CHEST_NEAR_ROOMS, CHESTS_NEAR);
-  put(CHEST_FAR_ROOMS, CHESTS_FAR);
+  put(near, CHESTS_NEAR);
+  put(far, CHESTS_FAR);
 }
 
 // Called by playerMove for the tile the hero just entered.

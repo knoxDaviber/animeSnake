@@ -10,6 +10,14 @@
 //    horns, "new best" fanfare...) is worked out from S by audioWatch() / audioMode(), once per frame.
 //  * Audio can never crash or freeze the game: every entry point is wrapped, and an error just turns sound off.
 //  * Handy in the browser console: audioDemo() plays every sound in turn. Set AUDIO_LOG = true in config.js to see names.
+//
+// Craft (same chiptune style, better made):
+//  * MUSIC VARIETY. The chords change by wave band (PROGRESSIONS: waves 1-5, 6-10, 11-15, 16-20, 21+), at the start of a 4 bar loop.
+//    The Great Serpent ('boss') and the Hollow Wizard ('wizard') have their own loops, tempo and chords.
+//  * REACTIVE LAYERS. Drums fade in when a combo builds (LAYER_DRUMS_COMBO), in battle and during a boss; a lead melody joins at a
+//    big combo (LAYER_LEAD_COMBO) or during the serpent fight.
+//  * PITCH JITTER. Repeated effects (JITTER_SFX) are randomly a little higher or lower each time (SFX_JITTER), so they do not grate.
+//  * REVERB. One short synthetic room: sound effects and music both send a little of themselves into it.
 
 const AUDIO = {
   ctx: null, master: null, sfxBus: null, musicBus: null, noise: null,   // Web Audio objects (cannot live in S)
@@ -18,9 +26,13 @@ const AUDIO = {
   lastAt: {},                       // when each sound last played (stops machine-gun repeats)
   mode: null, modeGain: {}, duck: 1, // music: current mood, one gain node per mood, pause ducking
   nextStep: 0, stepIndex: 0, battleUntil: 0,
+  jit: 1,                           // pitch multiplier of the effect that is playing right now (see playSfx)
+  bandNow: 0,                       // which chord set the music uses (by wave band, changes at a loop start)
+  layerGain: {}, layerWant: { drums: 0, lead: 0 },   // reactive music layers
   seen: { runId: -1 },              // what audioWatch saw last frame, to spot changes
 };
-const MUSIC_MODES = ['title', 'run', 'battle', 'tense']; // title = hero/buff pick, run = calm, battle = enemies about, tense = revive countdown
+// title = hero/buff pick, run = calm, battle = enemies about, tense = revive countdown, boss = the Great Serpent, wizard = the Hollow Wizard
+const MUSIC_MODES = ['title', 'run', 'battle', 'tense', 'boss', 'wizard'];
 
 function muteButtonRect() { return { x: 8, y: 8, w: 36, h: 36 }; } // the speaker icon on the hero select screen (render.js draws it, input.js taps it)
 function masterVol() { return MASTER_VOLUME * S.volume; }   // the player's slider scales the master volume
@@ -29,6 +41,7 @@ function setVolume(v) {
   S.volume = Math.max(0, Math.min(1, v));
   if (AUDIO.ctx && AUDIO.master && !S.muted) AUDIO.master.gain.setTargetAtTime(masterVol(), AUDIO.ctx.currentTime, 0.02);
 }
+
 // ---- Setup ------------------------------------------------------------------------
 function loadAudioFile(src, loop) {
   const a = new Audio();
@@ -45,7 +58,7 @@ function audioLoadFiles() {
   } catch (err) { console.warn('Could not load audio files:', err); }
 }
 
-function audioBuild() { // the Web Audio graph: sfx and music buses -> master -> compressor -> speakers
+function audioBuild() { // the Web Audio graph: sfx and music buses -> master -> compressor -> speakers, plus a reverb on the side
   const AC = window.AudioContext || window.webkitAudioContext;
   if (!AC) { AUDIO.dead = true; return; }
   const c = new AC();
@@ -56,9 +69,20 @@ function audioBuild() { // the Web Audio graph: sfx and music buses -> master ->
   AUDIO.sfxBus = c.createGain(); AUDIO.sfxBus.gain.value = SFX_VOLUME; AUDIO.sfxBus.connect(AUDIO.master);
   AUDIO.musicBus = c.createGain(); AUDIO.musicBus.gain.value = MUSIC_VOLUME; AUDIO.musicBus.connect(AUDIO.master);
   MUSIC_MODES.forEach(m => { const g = c.createGain(); g.gain.value = 0; g.connect(AUDIO.musicBus); AUDIO.modeGain[m] = g; });
+  ['drums', 'lead'].forEach(k => { const g = c.createGain(); g.gain.value = 0; g.connect(AUDIO.musicBus); AUDIO.layerGain[k] = g; });   // reactive layers
   const len = c.sampleRate, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0); // one second of white noise
   for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
   AUDIO.noise = buf;
+  // Reverb: a short synthetic room (decaying noise), warmed with a low-pass. Each bus sends a little of itself into it.
+  if (REVERB_SECONDS > 0) {
+    const rl = Math.floor(c.sampleRate * REVERB_SECONDS), ir = c.createBuffer(2, rl, c.sampleRate);
+    for (let ch = 0; ch < 2; ch++) { const data = ir.getChannelData(ch); for (let i = 0; i < rl; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / rl, 2.5); }
+    const conv = c.createConvolver(); conv.buffer = ir;
+    const warm = c.createBiquadFilter(); warm.type = 'lowpass'; warm.frequency.value = 3200;
+    conv.connect(warm); warm.connect(AUDIO.master);
+    const send = (bus, amount) => { const g = c.createGain(); g.gain.value = amount; bus.connect(g); g.connect(conv); };
+    send(AUDIO.sfxBus, REVERB_SFX); send(AUDIO.musicBus, REVERB_MUSIC);
+  }
   AUDIO.nextStep = c.currentTime + 0.1;
 }
 function audioFail(err) { console.warn('Audio turned off after an error:', err); AUDIO.dead = true; }
@@ -91,13 +115,16 @@ function toggleMute() { // M key anywhere, or the speaker icon on the hero selec
 
 // ---- Synth building blocks ----------------------------------------------------------
 // Options: at = seconds from now, when = absolute audio time (music), vol, type, slide = end frequency, bus.
+// A sound effect (no `when`) is multiplied by AUDIO.jit, the pitch jitter picked once per playSfx call, so a whole chord or
+// arpeggio moves together and stays in tune with itself. Music (with `when`) is never jittered.
 function tone(freq, dur, o) {
   o = o || {};
   const c = AUDIO.ctx, t = (o.when !== undefined ? o.when : c.currentTime + (o.at || 0)) + 0.005;
+  const j = o.when !== undefined ? 1 : AUDIO.jit;
   const osc = c.createOscillator(), g = c.createGain();
   osc.type = o.type || 'square';
-  osc.frequency.setValueAtTime(freq, t);
-  if (o.slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.slide), t + dur);
+  osc.frequency.setValueAtTime(freq * j, t);
+  if (o.slide) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.slide * j), t + dur);
   const v = o.vol === undefined ? 0.25 : o.vol, a = Math.min(o.attack || 0.004, dur / 2);
   g.gain.setValueAtTime(0.0001, t);
   g.gain.linearRampToValueAtTime(v, t + a);
@@ -109,10 +136,11 @@ function tone(freq, dur, o) {
 function noise(dur, o) {
   o = o || {};
   const c = AUDIO.ctx, t = (o.when !== undefined ? o.when : c.currentTime + (o.at || 0)) + 0.005;
+  const j = o.when !== undefined ? 1 : AUDIO.jit;
   const src = c.createBufferSource(); src.buffer = AUDIO.noise; src.loop = true;
   const f = c.createBiquadFilter(); f.type = o.filter || 'lowpass';
-  f.frequency.setValueAtTime(o.freq || 1000, t);
-  if (o.freqEnd) f.frequency.exponentialRampToValueAtTime(Math.max(20, o.freqEnd), t + dur);
+  f.frequency.setValueAtTime((o.freq || 1000) * j, t);
+  if (o.freqEnd) f.frequency.exponentialRampToValueAtTime(Math.max(20, o.freqEnd * j), t + dur);
   f.Q.value = o.q || 1;
   const g = c.createGain(), v = o.vol === undefined ? 0.3 : o.vol;
   g.gain.setValueAtTime(v, t);
@@ -184,6 +212,9 @@ const SYNTH = {
   newBest()    { [523, 523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.13, { at: i * 0.09, vol: 0.2 })); noise(0.6, { at: 0.3, filter: 'highpass', freq: 6000, vol: 0.08 }); },
   win()        { [523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, 0.16, { at: i * 0.1, type: 'triangle', vol: 0.22 })); tone(262, 1.2, { at: 0.5, type: 'sine', vol: 0.2 }); noise(0.8, { at: 0.4, filter: 'highpass', freq: 6000, vol: 0.08 }); },
 };
+// Effects that get a random pitch jitter each time (the melodic ones are left out so they stay in tune).
+const JITTER_SFX = { sword: 1, shoot: 1, shock: 1, hitEnemy: 1, cut: 1, explosion: 1, mineDrop: 1, lightning: 1, gaze: 1, mrx: 1,
+                     block: 1, shield: 1, hit: 1, portal: 1, stall: 1, kick: 1, summon: 1, spawn: 1, die: 1 };
 
 // Plays one sound. Quietly does nothing before the first tap, when muted, or if the same sound just played.
 function playSfx(name, p) {
@@ -198,22 +229,54 @@ function playSfx(name, p) {
       const c = f.cloneNode(); c.volume = Math.min(1, masterVol() * SFX_VOLUME); c.play().catch(() => {});
       return;
     }
+    AUDIO.jit = JITTER_SFX[name] ? 1 + (Math.random() * 2 - 1) * SFX_JITTER : 1;   // one pitch nudge for the whole effect
     if (SYNTH[name] && AUDIO.ctx) SYNTH[name](p);
-  } catch (err) { audioFail(err); }
+    AUDIO.jit = 1;
+  } catch (err) { AUDIO.jit = 1; audioFail(err); }
 }
 function audioDemo() { Object.keys(SYNTH).forEach((n, i) => setTimeout(() => playSfx(n, 2), i * 700)); } // console: hear everything
 
 // ---- Placeholder music --------------------------------------------------------------
-// One chord per bar (Am F C G), 16 steps per bar, all moods share the same clock so crossfades stay in time.
-const BARS = [{ bass: 45, arp: [69, 72, 76] }, { bass: 41, arp: [65, 69, 72] }, { bass: 48, arp: [72, 76, 79] }, { bass: 43, arp: [67, 71, 74] }];
+// One chord per bar, 16 steps per bar, 4 bars per loop. All moods share the same clock so crossfades stay in time.
+// bass = MIDI note of the bass, arp = the three notes of the chord (MIDI, 69 = A4).
+const PROGRESSIONS = [   // chosen by wave band (musicBand)
+  [{ bass: 45, arp: [69, 72, 76] }, { bass: 41, arp: [65, 69, 72] }, { bass: 48, arp: [72, 76, 79] }, { bass: 43, arp: [67, 71, 74] }],   // waves 1-5:   Am F C G
+  [{ bass: 38, arp: [65, 69, 74] }, { bass: 46, arp: [65, 70, 74] }, { bass: 41, arp: [65, 69, 72] }, { bass: 48, arp: [67, 72, 76] }],   // waves 6-10:  Dm Bb F C
+  [{ bass: 40, arp: [67, 71, 76] }, { bass: 48, arp: [67, 72, 76] }, { bass: 43, arp: [67, 71, 74] }, { bass: 38, arp: [66, 69, 74] }],   // waves 11-15: Em C G D
+  [{ bass: 45, arp: [69, 72, 76] }, { bass: 43, arp: [67, 71, 74] }, { bass: 41, arp: [65, 69, 72] }, { bass: 40, arp: [68, 71, 76] }],   // waves 16-20: Am G F E
+  [{ bass: 48, arp: [67, 72, 75] }, { bass: 44, arp: [68, 72, 75] }, { bass: 39, arp: [67, 70, 75] }, { bass: 46, arp: [70, 74, 77] }],   // waves 21+:   Cm Ab Eb Bb
+];
+const BOSS_PROG = [{ bass: 45, arp: [69, 72, 76] }, { bass: 46, arp: [70, 74, 77] }, { bass: 45, arp: [69, 72, 76] }, { bass: 40, arp: [68, 71, 76] }];     // Am Bb Am E
+const WIZARD_PROG = [{ bass: 38, arp: [69, 74, 77] }, { bass: 47, arp: [71, 74, 77] }, { bass: 43, arp: [70, 74, 79] }, { bass: 45, arp: [69, 73, 76] }];  // Dm B-dim Gm A
 const ARP = [0, 1, 2, 1];
+const LEAD = [0, 2, 1, 2, 0, 1, 2, 1];     // which chord note the lead layer plays on each even step
+
+function musicBand() { const w = S.wave || 0; return w <= 5 ? 0 : w <= 10 ? 1 : w <= 15 ? 2 : w <= 20 ? 3 : 4; }
+function musicTempo() { const m = AUDIO.mode; return m === 'boss' ? 1.2 : m === 'wizard' ? 0.85 : m === 'battle' ? 1.05 : 1; }   // x MUSIC_BPM
+
+// The reactive layers (drums, lead). They are scheduled every step but only audible while their gain is up (layerUpdate).
+function layerStep(bar, s, t) {
+  const d = AUDIO.layerGain.drums, l = AUDIO.layerGain.lead;
+  if (AUDIO.layerWant.drums || d.gain.value > 0.01) {
+    if (s % 4 === 0) tone(150, 0.15, { type: 'sine', slide: 45, vol: 0.5, when: t, bus: d });
+    if (s === 4 || s === 12) noise(0.12, { filter: 'bandpass', freq: 1800, q: 0.8, vol: 0.25, when: t, bus: d });
+    if (s % 2 === 0 || AUDIO.mode === 'boss') noise(0.03, { filter: 'highpass', freq: 8000, vol: 0.07, when: t, bus: d });
+  }
+  if (AUDIO.layerWant.lead || l.gain.value > 0.01) {
+    if (s % 2 === 0) tone(NOTE(bar.arp[LEAD[(s / 2) % 8]] + 12), 0.1, { vol: 0.06, when: t, bus: l });
+  }
+}
 
 function musicStep(i, t) {
+  if (i % 64 === 0) AUDIO.bandNow = musicBand();           // new chords only at the start of a 4 bar loop
   const m = AUDIO.mode;
+  const prog = m === 'boss' ? BOSS_PROG : m === 'wizard' ? WIZARD_PROG : PROGRESSIONS[AUDIO.bandNow];
+  const bar = prog[Math.floor(i / 16) % 4], s = i % 16;
+  layerStep(bar, s, t);
   if (!m) return;
   const file = AUDIO.musicFiles[m];
   if (file && file.ready && !file.failed) return;          // a real track plays this mood
-  const bar = BARS[Math.floor(i / 16) % 4], s = i % 16, bus = AUDIO.modeGain[m];
+  const bus = AUDIO.modeGain[m];
   if (m === 'title') {                                     // soft and slow: a held bass note and a gentle arpeggio
     if (s === 0) tone(NOTE(bar.bass), 1.9, { type: 'sine', vol: 0.22, when: t, bus, attack: 0.05 });
     if (s % 2 === 0) tone(NOTE(bar.arp[ARP[(s / 2) % 4]]), 0.35, { type: 'triangle', vol: 0.1, when: t, bus });
@@ -221,18 +284,28 @@ function musicStep(i, t) {
     if (s === 0 || s === 6 || s === 10) tone(NOTE(bar.bass), 0.22, { type: 'triangle', vol: 0.28, when: t, bus });
     if (s % 2 === 0) tone(NOTE(bar.arp[ARP[(s / 2) % 4]]), 0.12, { vol: 0.07, when: t, bus });
     if (s % 4 === 2) noise(0.04, { filter: 'highpass', freq: 7000, vol: 0.06, when: t, bus });
-  } else if (m === 'battle') {                             // drums, driving bass, fast arpeggio
-    if (s % 4 === 0) tone(150, 0.15, { type: 'sine', slide: 45, vol: 0.5, when: t, bus });
-    if (s === 4 || s === 12) noise(0.12, { filter: 'bandpass', freq: 1800, q: 0.8, vol: 0.25, when: t, bus });
-    if (s % 2 === 0) { noise(0.03, { filter: 'highpass', freq: 8000, vol: 0.07, when: t, bus }); tone(NOTE(bar.bass), 0.12, { type: 'sawtooth', vol: 0.16, when: t, bus }); }
+  } else if (m === 'battle') {                             // driving bass and a fast arpeggio (the drums come from the drum layer)
+    if (s % 2 === 0) tone(NOTE(bar.bass), 0.12, { type: 'sawtooth', vol: 0.16, when: t, bus });
     tone(NOTE(bar.arp[ARP[s % 4]] + 12), 0.08, { vol: 0.05, when: t, bus });
   } else if (m === 'tense') {                              // revive countdown: a low drone, a clashing note, a heartbeat
     if (s === 0) { tone(NOTE(33), 2, { type: 'triangle', vol: 0.18, when: t, bus, attack: 0.3 }); tone(NOTE(34), 2, { type: 'triangle', vol: 0.07, when: t, bus, attack: 0.5 }); }
     if (s === 0 || s === 3) tone(70, 0.12, { type: 'sine', slide: 35, vol: 0.4, when: t, bus });
+  } else if (m === 'boss') {                               // the Great Serpent: fast and heavy, a chord stab on every bar
+    if (s % 2 === 0) tone(NOTE(bar.bass), 0.12, { type: 'sawtooth', vol: 0.2, when: t, bus });
+    if (s === 0) bar.arp.forEach(n => tone(NOTE(n - 12), 0.35, { type: 'square', vol: 0.07, when: t, bus }));
+    tone(NOTE(bar.arp[ARP[s % 4]] + 12), 0.07, { vol: 0.05, when: t, bus });
+    if (s === 6 || s === 14) tone(NOTE(bar.bass + 12), 0.1, { type: 'sawtooth', vol: 0.12, when: t, bus });
+  } else if (m === 'wizard') {                             // the Hollow Wizard: slow and eerie, a drone, bells and one wrong note
+    if (s === 0) {
+      tone(NOTE(bar.bass), 3.6, { type: 'sine', vol: 0.2, when: t, bus, attack: 0.4 });
+      tone(NOTE(bar.bass + 7), 3.6, { type: 'sine', vol: 0.07, when: t, bus, attack: 0.8 });
+    }
+    if (s % 4 === 2) tone(NOTE(bar.arp[Math.floor(s / 4) % 3] + 12), 0.9, { type: 'sine', vol: 0.09, when: t, bus });
+    if (s === 8) tone(NOTE(bar.arp[1] + 6), 0.7, { type: 'triangle', vol: 0.05, when: t, bus });   // a tritone: something is wrong
   }
 }
 function musicSchedule() { // runs every frame; schedules notes a little ahead of time on the audio clock
-  const c = AUDIO.ctx, step = 60 / MUSIC_BPM / 4;
+  const c = AUDIO.ctx, step = 60 / (MUSIC_BPM * musicTempo()) / 4;
   if (AUDIO.nextStep < c.currentTime) AUDIO.nextStep = c.currentTime + 0.05; // fell behind (hidden tab): skip, do not catch up
   while (AUDIO.nextStep < c.currentTime + 0.25) {
     musicStep(AUDIO.stepIndex, AUDIO.nextStep);
@@ -244,6 +317,17 @@ function musicSetMode(m) { // crossfade to another mood
   AUDIO.mode = m;
   const now = AUDIO.ctx.currentTime;
   for (const k of MUSIC_MODES) { const g = AUDIO.modeGain[k].gain; g.cancelScheduledValues(now); g.setTargetAtTime(k === m ? 1 : 0, now, MUSIC_FADE); }
+}
+// Fades the drum and lead layers in and out: drums for battle, bosses and combos, the lead for big combos and the serpent.
+function layerUpdate() {
+  const m = AUDIO.mode, combo = S.alive ? S.combo : 0, now = AUDIO.ctx.currentTime;
+  const want = { drums: (m === 'battle' || m === 'boss' || combo >= LAYER_DRUMS_COMBO) ? 1 : 0,
+                 lead:  (m === 'boss' || combo >= LAYER_LEAD_COMBO) ? 1 : 0 };
+  for (const k in want) {
+    if (AUDIO.layerWant[k] === want[k]) continue;
+    AUDIO.layerWant[k] = want[k];
+    const g = AUDIO.layerGain[k].gain; g.cancelScheduledValues(now); g.setTargetAtTime(want[k], now, 0.15);
+  }
 }
 function fileMusicUpdate() { // real music files: fade by hand (they are plain <audio> elements)
   for (const k of MUSIC_MODES) {
@@ -261,6 +345,8 @@ function audioMode() {
   if (S.crashed) return null;
   if (S.picking) return 'title';
   if (!S.alive) return S.reviving ? 'tense' : null;      // silence on the game-over screen
+  if (S.boss || S.bossWait) return 'boss';               // the Great Serpent (also at the finale, when the wizard is there too)
+  if (S.wizard || S.wizardWait) return 'wizard';
   return performance.now() < AUDIO.battleUntil || S.toSpawn > 0 ? 'battle' : 'run';
 }
 
@@ -312,6 +398,7 @@ function audioUpdate() {
     audioWatch();
     if (!AUDIO.unlocked || !AUDIO.ctx) return;
     musicSetMode(audioMode());
+    layerUpdate();
     musicSchedule();
     fileMusicUpdate();
     const duck = S.paused ? PAUSE_DUCK : 1;               // music gets quieter while the game is paused

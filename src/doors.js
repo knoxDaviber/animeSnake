@@ -1,35 +1,39 @@
-// doors.js: progressive room opening. The world is a 3x3 grid of rooms (rooms.js), but only the start room is open at
-// first. Every doorway between two rooms is sealed with door tiles ('D', solid for everything). At the waves in DOOR_WAVES
-// the game pauses and offers a few doors; the one you pick opens that room, and the room carries a TWIST:
+// doors.js: progressive room opening. The world is a GRID x GRID grid of room cells (rooms.js LAYOUTS decide which cells hold a
+// room and which stay rock), but only the start room is open at first. Every doorway between two rooms is sealed with door
+// tiles ('D', solid for everything). At the waves in DOOR_WAVES a few doors become READY: they glow, and walking into one breaks
+// it (breakDoor, called by playerMove) and opens that room. The room carries a TWIST that is a surprise when it opens:
 //   variety   a snake type joins the spawn pool early      cache     keys and temp buff blocks lie inside
 //   swarm     snakes burst out when you walk well inside   lockdown  the doors seal behind you until its snakes are dead
 //   quiet     nothing (rooms flagged noItems, like the vault)
-// State (state.js): S.openRooms = open room indexes (row * 3 + column, 4 = start room), S.doors = every doorway,
-// S.roomTwist[room], S.extraTypes, S.lockdown, S.pendingDoor, S.doorPicking, S.doorChoices.
-// The pick screen is the buff pick screen, reused (like the weapon branch pick).
+// State (state.js): S.openRooms = open room indexes (row * GRID + column), S.doors = every doorway { a, b, tiles, open, ready },
+// S.roomTwist[room], S.extraTypes, S.lockdown, S.pendingDoor. S.layout (rooms.js) says which cells hold a room.
+// There is no pick screen: nothing interrupts the run.
 
 const DOOR_TWISTS = { variety: 3, lockdown: 2, swarm: 2, cache: 2 };   // weights
 const absTile = (ax, ay, bx, by) => Math.abs(ax - bx) + Math.abs(ay - by);
 const cap1 = s => s.charAt(0).toUpperCase() + s.slice(1);
 const pickRand = a => a[Math.floor(Math.random() * a.length)];
+const roomOx = ri => (ri % GRID) * ROOM, roomOy = ri => Math.floor(ri / GRID) * ROOM;   // top left tile of room cell ri
 
 // ---- Which rooms are open ----
 function roomIndexAt(x, y) {
-  const rx = Math.max(0, Math.min(2, Math.floor(x / ROOM))), ry = Math.max(0, Math.min(2, Math.floor(y / ROOM)));
-  return ry * 3 + rx;
+  const rx = Math.max(0, Math.min(GRID - 1, Math.floor(x / ROOM))), ry = Math.max(0, Math.min(GRID - 1, Math.floor(y / ROOM)));
+  return ry * GRID + rx;
 }
 function roomOpenAt(x, y) { return !S.openRooms || S.openRooms.includes(roomIndexAt(x, y)); }
-function enemyCap() { return Math.min(ENEMY_CAP, ENEMY_CAP_BASE + (S.openRooms ? S.openRooms.length : 9)); }
+function enemyCap() { return Math.min(ENEMY_CAP, ENEMY_CAP_BASE + (S.openRooms ? S.openRooms.length : GRID * GRID)); }
 
 // ---- Building the doors (called by buildWorld in rooms.js) ----
-// A doorway is the 2x2 block of tiles where the openings of two neighbouring rooms meet. If any of its tiles is wall in the
-// template (a room with no opening on that side), there is no door there. Every real doorway starts sealed.
+// A doorway is the 2x2 block of tiles where the openings of two neighbouring rooms meet. Only cells that both hold a room get
+// one. If any of its tiles is wall in the template (a room with no opening on that side), there is no door there. Every real
+// doorway starts sealed.
 function buildDoors(map) {
-  const doors = [], wall = c => c === '#' || c === 'T' || c === 'B';
-  for (let ry = 0; ry < 3; ry++) for (let rx = 0; rx < 3; rx++) {
+  const doors = [], N = GRID, L = S.layout, wall = c => c === '#' || c === 'T' || c === 'B';
+  for (let ry = 0; ry < N; ry++) for (let rx = 0; rx < N; rx++) {
+    if (!L.has[ry * N + rx]) continue;
     [[1, 0], [0, 1]].forEach(([dx, dy]) => {
       const nx = rx + dx, ny = ry + dy;
-      if (nx > 2 || ny > 2) return;
+      if (nx >= N || ny >= N || !L.has[ny * N + nx]) return;
       const tiles = [];
       for (let k = 9; k <= 10; k++) for (let s = 0; s < 2; s++) {
         const x = dx ? rx * ROOM + ROOM - 1 + s : rx * ROOM + k;
@@ -37,7 +41,7 @@ function buildDoors(map) {
         tiles.push({ x, y, c: map[y][x] });
       }
       if (tiles.some(t => wall(t.c))) return;
-      doors.push({ a: ry * 3 + rx, b: ny * 3 + nx, tiles, open: false, ready: false });
+      doors.push({ a: ry * N + rx, b: ny * N + nx, tiles, open: false, ready: false });
     });
   }
   doors.forEach(d => d.tiles.forEach(t => { map[t.y][t.x] = 'D'; }));
@@ -58,19 +62,8 @@ function rollTwist(ri) {
   }
   return { kind };
 }
-function twistHint(tw) {
-  if (tw.kind === 'variety') return `${cap1(tw.type)} snakes nest here. They will start showing up.`;
-  if (tw.kind === 'cache') return 'Something shiny glints through the keyhole.';
-  if (tw.kind === 'swarm') return 'Muffled hissing. A lot of it.';
-  if (tw.kind === 'lockdown') return 'The bolt is on the inside...';
-  return 'Dust, silence and a long way down.';
-}
-function doorDir(from, to) {
-  const dx = (to % 3) - (from % 3), dy = Math.floor(to / 3) - Math.floor(from / 3);
-  return dx > 0 ? 'east' : dx < 0 ? 'west' : dy > 0 ? 'south' : 'north';
-}
 
-// ---- The pick screen ----
+// ---- Ready doors (no pick screen) ----
 // Closed rooms that touch an open room through a real doorway.
 function doorCandidates() {
   const out = [];
@@ -82,8 +75,8 @@ function doorCandidates() {
   });
   return out;
 }
-// No pick screen any more. At a door wave a few doors just become READY: they glow, and walking into one breaks it (breakDoor).
-// Called every frame from loop() in main.js.
+// At a door wave a few doors just become READY: they glow, and walking into one breaks it (breakDoor).
+// Called every frame from loop() in main.js (the name is old, there is no pick any more).
 function openDoorPick() {
   if (!S.pendingDoor || S.picking || !S.alive || S.lockdown) return;
   S.pendingDoor = false;
@@ -100,21 +93,15 @@ function openDoorPick() {
   showBanner('A door is ready!', '', '#ffd36b', true);
   playSfx('waveClear');
 }
-function doorCard(k) { // what a card shows (render.js drawPick)
-  const c = S.doorChoices[k];
-  if (!c) return { name: '?', desc: '' };
-  return { name: S.rooms[c.room].name || 'A room', desc: `On the ${doorDir(c.from, c.room)} side. ${twistHint(c.twist)}` };
-}
-function chooseDoor(i) {
-  if (!S.picking || !S.doorPicking || performance.now() < S.pickAfter) return;
-  const c = S.doorChoices[i];
-  if (!c) return;
-  S.picking = false; S.doorPicking = false;
-  openRoom(c.room, c.twist);
-  const now = performance.now();                    // continue mid-tick, like resume()
-  S.last = now - S.alpha * TICK_MS;
-  S.heroLast = now - S.heroAlpha * heroInterval();
-  resetEnemyClocks();
+function doorAt(x, y) { return S.doors.find(d => d.tiles.some(t => t.x === x && t.y === y)) || null; }
+// True if (x, y) belonged to a READY door and it broke. Its room opens (with a surprise twist) and you walk on through.
+function breakDoor(x, y) {
+  const d = S.doors.find(q => q.ready && !q.open && q.tiles.some(t => t.x === x && t.y === y));
+  if (!d) return false;
+  const ri = S.openRooms.includes(d.a) ? d.b : d.a;
+  if (S.openRooms.includes(ri)) { d.open = true; d.tiles.forEach(t => { S.map[t.y][t.x] = t.c; }); return true; }
+  openRoom(ri, rollTwist(ri));
+  return true;
 }
 
 // ---- Opening a room ----
@@ -131,6 +118,7 @@ function openRoom(ri, tw) {
   });
   const h = S.snake[0];
   S.popups.push({ x: h.x, y: h.y, text: 'A door opens!', age: 0 });
+  if (S.rooms[ri] && S.rooms[ri].name) showBanner(S.rooms[ri].name, '', '#c9bde6', true);   // the room's name, one quiet line
   playSfx('waveClear');
   if (tw.kind === 'variety') {
     S.extraTypes.push(tw.type); state.done = true;
@@ -139,7 +127,7 @@ function openRoom(ri, tw) {
   else if (tw.kind === 'quiet') state.done = true;
 }
 function freeTileIn(ri) {
-  const ox = (ri % 3) * ROOM, oy = Math.floor(ri / 3) * ROOM;
+  const ox = roomOx(ri), oy = roomOy(ri);
   for (let i = 0; i < 80; i++) {
     const x = ox + 2 + Math.floor(Math.random() * (ROOM - 4)), y = oy + 2 + Math.floor(Math.random() * (ROOM - 4));
     if (tileFree(x, y) && !inTextZone(x, y)) return { x, y };
@@ -164,7 +152,7 @@ function makeEnemy(segs, d, type) {
 }
 // n snakes inside room ri, at least 5 tiles from the hero, ignoring the enemy cap (swarm and lockdown). Returns them.
 function spawnInRoom(ri, n) {
-  const out = [], ox = (ri % 3) * ROOM, oy = Math.floor(ri / 3) * ROOM, h = S.snake[0];
+  const out = [], ox = roomOx(ri), oy = roomOy(ri), h = S.snake[0];
   for (let tries = 0; tries < 250 && out.length < n; tries++) {
     const type = pickEnemyType(), T = ENEMY_TYPES[type], len = Math.max(2, enemyLength(S.wave) + T.len), d = pickRand(DIRS);
     const sx = ox + 1 + Math.floor(Math.random() * (ROOM - 2)), sy = oy + 1 + Math.floor(Math.random() * (ROOM - 2));
@@ -182,7 +170,7 @@ function spawnInRoom(ri, n) {
 function spawnEnemyInRoom() {
   const type = pickEnemyType(), T = ENEMY_TYPES[type], len = Math.max(2, enemyLength(S.wave) + T.len), v = viewTiles(), h = S.snake[0];
   for (let tries = 0; tries < 160; tries++) {
-    const ri = pickRand(S.openRooms), ox = (ri % 3) * ROOM, oy = Math.floor(ri / 3) * ROOM, d = pickRand(DIRS);
+    const ri = pickRand(S.openRooms), ox = roomOx(ri), oy = roomOy(ri), d = pickRand(DIRS);
     const sx = ox + 1 + Math.floor(Math.random() * (ROOM - 2)), sy = oy + 1 + Math.floor(Math.random() * (ROOM - 2));
     if (tries < 80 && onScreen(sx, sy, v)) continue;                 // first look for a spot out of view
     if (absTile(sx, sy, h.x, h.y) < ENEMY_SPAWN_MIN_DIST + 2) continue;
@@ -197,7 +185,7 @@ function spawnEnemyInRoom() {
 function summonRecruitInRoom(exceptId) {
   const h = S.snake[0];
   for (let tries = 0; tries < 100; tries++) {
-    const ri = pickRand(S.openRooms), ox = (ri % 3) * ROOM, oy = Math.floor(ri / 3) * ROOM, d = pickRand(DIRS);
+    const ri = pickRand(S.openRooms), ox = roomOx(ri), oy = roomOy(ri), d = pickRand(DIRS);
     const tx = ox + 1 + Math.floor(Math.random() * (ROOM - 2)), ty = oy + 1 + Math.floor(Math.random() * (ROOM - 2));
     const len = RECRUIT_WALK_MIN + Math.floor(Math.random() * (RECRUIT_WALK_MAX - RECRUIT_WALK_MIN + 1));
     const sx = tx - d.x * len, sy = ty - d.y * len;
@@ -222,7 +210,7 @@ function updateDoors() {
   if (S.lockdown || S.pacifist || wavesPaused()) return;
   const h = S.snake[0], ri = roomIndexAt(h.x, h.y), tw = S.roomTwist[ri];
   if (!tw || tw.done || (tw.kind !== 'swarm' && tw.kind !== 'lockdown')) return;
-  const lx = h.x - (ri % 3) * ROOM, ly = h.y - Math.floor(ri / 3) * ROOM;
+  const lx = h.x - roomOx(ri), ly = h.y - roomOy(ri);
   if (lx < 3 || lx > ROOM - 4 || ly < 3 || ly > ROOM - 4) return;     // wait until the hero is well inside
   tw.done = true;
   if (tw.kind === 'swarm') {
@@ -255,18 +243,6 @@ function updateLockdown(lk) {
   S.coins += c; saveProgress();
   S.popups.push({ x: h.x, y: h.y - 1, text: `Cleared! +${c} coins`, age: 0 });
   if (t) S.pickups.push({ x: t.x, y: t.y, id: pickRand(Object.keys(TEMP_BUFFS)), ttl: DOOR_CACHE_TTL });
-}
-
-// ---- Breaking a door (playerMove calls this when the next tile is a door) ----
-function doorAt(x, y) { return S.doors.find(d => d.tiles.some(t => t.x === x && t.y === y)) || null; }
-// True if (x, y) belonged to a READY door and it broke. Its room opens (with a surprise twist) and you walk on through.
-function breakDoor(x, y) {
-  const d = S.doors.find(q => q.ready && !q.open && q.tiles.some(t => t.x === x && t.y === y));
-  if (!d) return false;
-  const ri = S.openRooms.includes(d.a) ? d.b : d.a;
-  if (S.openRooms.includes(ri)) { d.open = true; d.tiles.forEach(t => { S.map[t.y][t.x] = t.c; }); return true; }
-  openRoom(ri, rollTwist(ri));
-  return true;
 }
 
 // ---- Drawing a door tile (scenery.js drawTile calls this) ----
