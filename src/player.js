@@ -140,7 +140,7 @@ function playerMove() {
   S.stuckTicks = 0;
   if (heroKicks()) tryKick(nx, ny, S.dir.x, S.dir.y);   // kicks.js: a kicked item slides away before we step in
   const key = S.keys.find(k => k.x === nx && k.y === ny);   // the key
-  let rec = touchableRecruitAt(nx, ny); if (rec && mrxRejects()) { shootRecruit(rec, nx, ny); rec = null; } // a character that is jumping, ready
+  let rec = touchableRecruitAt(nx, ny); if (rec && mrxRejects(rec.c)) { shootRecruit(rec, nx, ny); rec = null; } // a character that is jumping, ready
   S.snake.unshift({ x: nx, y: ny });
   if (portal) { S.zaps.push({ kind: 'portal', ...portal, age: 0 }); playSfx('portal'); }
   if (rec) {

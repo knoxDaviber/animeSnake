@@ -21,7 +21,7 @@ function roomIndexAt(x, y) {
   return ry * GRID + rx;
 }
 function roomOpenAt(x, y) { return !S.openRooms || S.openRooms.includes(roomIndexAt(x, y)); }
-function enemyCap() { return Math.min(ENEMY_CAP, ENEMY_CAP_BASE + (S.openRooms ? S.openRooms.length : GRID * GRID)); }
+function enemyCap() { return Math.min(ENEMY_CAP, ENEMY_CAP_BASE + (S.openRooms ? S.openRooms.length : GRID * GRID) + Math.floor(S.wave / ENEMY_CAP_WAVES)); }
 
 // ---- Building the doors (called by buildWorld in rooms.js) ----
 // A doorway is the 2x2 block of tiles where the openings of two neighbouring rooms meet. Only cells that both hold a room get

@@ -78,14 +78,14 @@ function grantChestWeapon(x, y) {
     return;
   }
   const left = BRANCHES.filter(b => !S.weapons.includes(b.id));
-  if (!left.length) {                                  // you already own everything: every weapon levels up
-    S.weapons.forEach(id => { S.wlv[id] = (S.wlv[id] || 0) + 1; });
+  if (!left.length || S.weapons.length - 1 >= WEAPON_SLOTS) {                                  // you already own everything: every weapon levels up
+    S.weapons.forEach(id => { S.wlv[id] = Math.min(WEAPON_LEVEL_CAP, (S.wlv[id] || 0) + 1); });
     showBanner('Chest: all weapons +1 level', '', '#ffd36b', true);
     return;
   }
   const b = left[Math.floor(Math.random() * left.length)];
   S.weapons.push(b.id);
-  S.wlv[b.id] = Math.floor(Math.max(0, S.level - 1) * CHEST_START_SHARE);
+  S.wlv[b.id] = Math.min(WEAPON_LEVEL_CAP, Math.floor(Math.max(0, S.level - 1) * CHEST_START_SHARE));
   S.bt[b.id] = 0;
   S.popups.push({ x, y, text: b.name + '!', age: 0 });
   showBanner(`Chest: ${b.name}!`, '', '#ffd36b', true);

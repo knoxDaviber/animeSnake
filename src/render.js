@@ -478,7 +478,7 @@ function drawGameOver() {
   ctx.font = '20px system-ui';
   ctx.fillText(`Score ${S.score}${S.newBest ? '  (new best!)' : ''}`, cx, 82);
   ctx.fillStyle = '#c9bde6';
-  fitText(`Best ${S.best}   Best combo ${S.bestCombo}   Best wave ${S.bestWave}   Coins ${S.coins}${S.richPaid ? ` (+${S.richPaid})` : ''}`, cx, 108, 620, 16, false);
+  fitText(`Best ${S.best}   Best combo ${S.bestCombo}   Best wave ${S.bestWave}   Coins ${S.coins} (+${S.scoreCoins || 0} from score${S.richPaid ? `, +${S.richPaid} rich` : ''})`, cx, 108, 620, 16, false);
   const gap = S.best - S.score;                         // boast hook
   ctx.fillStyle = '#ffd36b';
   if (S.won) fitText(`+${S.winCoins} coins for beating the Challenge!`, cx, 132, 620, 16, true); else
@@ -730,6 +730,7 @@ function draw() {
       drawSpits();
       drawBlasts();
       drawZaps();
+      drawTethers();        // skills.js: Raiden's blue line
       drawLasers();         // wizard.js: telegraph and beams
       drawPopups();
       drawLevelBar();       // hud.js: small bar under the hero (world pixels)

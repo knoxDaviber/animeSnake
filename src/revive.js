@@ -64,10 +64,12 @@ function payRichBonus() {
   S.coins += S.richPaid; S.richBonus = 0;
   saveProgress();
 }
+// Score turns into coins when the run ends: SCORE_PER_COIN points = 1 coin. It is paid before the Rich bonus, which counts it.
+function payScoreCoins() { S.scoreCoins = Math.floor(S.score / SCORE_PER_COIN); S.coins += S.scoreCoins; saveProgress(); }
 function endRevive() { // the countdown is over: show the game-over screen
   S.reviving = false; S.over = true;
   S.restartAfter = performance.now() + DEATH_LOCKOUT_MS;
-  payRichBonus(); retentionRunEnd(); // frustration meter and coin tier history
+  payScoreCoins(); payRichBonus(); retentionRunEnd(); // score to coins, Rich bonus, frustration meter and coin tier history
   leaderboardGameOver(); // the run is really over: fetch the top 10 and offer the initials box if it qualifies
 }
 // Challenge complete: the run ends on the game-over screen (titled "Challenge complete!") with the reward.
@@ -79,7 +81,7 @@ function winRun() {
   S.coins += CHALLENGE_REWARD; S.winCoins = CHALLENGE_REWARD;
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }
   playSfx('win');
-  payRichBonus(); retentionRunEnd(); saveProgress();
+  payScoreCoins(); payRichBonus(); retentionRunEnd(); saveProgress();
   leaderboardGameOver();
 }
 function giveUp() { // Q, Backspace or the Give up button

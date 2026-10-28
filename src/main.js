@@ -31,7 +31,7 @@ function step() {
     }
     updateCombo();
     passiveXp();        // the XP bar trickles up on its own (levels.js)
-    if (!S.pacifist) updateSkills();
+    if (!S.pacifist) { updateSkills(); updateTethers(); }   // skills.js: Raiden's telegraphed mine pops
     S.tailLeft = null;  // the Miner only gets the tile the tail left since the last tick
     updatePassives();   // Magneto pulls the key toward you
     updateTempBuffs();
@@ -48,6 +48,8 @@ function step() {
     updateWizard();     // wizard.js: the wave 20 wizard and his lasers
     updatePedestals();  // bombs.js: bomb pedestals regrow their bomb
     updateDoors();      // ambush and lockdown triggers (doors.js)
+    updateRush();       // waves.js: enemy rushes
+    updateFinale();     // waves.js: the wave 30 victory  
   }
   if (S.score > S.best) { S.best = S.score; S.newBest = true; }
   if (S.wave > S.bestWave) S.bestWave = S.wave;

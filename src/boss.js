@@ -57,7 +57,7 @@ function spawnBoss() {
     const far = Math.abs(sx - head.x) + Math.abs(sy - head.y) >= (tries < 80 ? ENEMY_SPAWN_MIN_DIST : tries < 130 ? 12 : 6);
     if (far && !bossBlocked(pts[0].x, pts[0].y, pts) &&
         pts.every(p => { const x = Math.round(p.x), y = Math.round(p.y); return enemyCanEnter(x, y) && roomOpenAt(x, y) && !recruitAt(x, y) && !noItems(x, y); })) {
-      const boss = { pts, segs: [], prev: [], dir: d, hp: BOSS_HP, maxHp: BOSS_HP, stun: 0, type: 'boss', boss: true, fire: 0,
+      const boss = { pts, segs: [], prev: [], dir: d, hp: bossHp(), maxHp: bossHp(), tier: bossTier(), tierSpeed: bossSpeedMult(), tierCd: bossCd(), stun: 0, type: 'boss', boss: true, fire: 0,
                      speed: 1, last: now, alpha: 1, ang: Math.atan2(d.y, d.x), lastT: now,
                      phase: 'move', phaseUntil: 0, chargeReady: now + BOSS_FIRST_CHARGE_MS, pauseUntil: 0, flashUntil: 0, swapPending: false,
                      hitAt: 0, bodyHitAt: 0, contactAt: 0, flow: null, flowAt: 0, stuckAt: now, stuckX: pts[0].x, stuckY: pts[0].y };
@@ -253,16 +253,16 @@ function bossRepel(e) {
 function bossSteer(e, now, dt) {
   const h = e.pts[0], enraged = e.hp <= e.maxHp * BOSS_ENRAGE_AT, goal = bossGoal(e);
   if (e.volleyReady === undefined) e.volleyReady = now + BOSS_FIRST_VOLLEY_MS;
-  let speed = BOSS_TPS * e.speed * (enraged ? BOSS_ENRAGE_SPEED : 1), turn = BOSS_TURN * (enraged ? 1.25 : 1), v;
+  let speed = BOSS_TPS * e.speed * (e.tierSpeed || 1) * (enraged ? BOSS_ENRAGE_SPEED : 1), turn = BOSS_TURN * (enraged ? 1.25 : 1), v;
   if (e.phase === 'windup') {
     speed = 0; turn = BOSS_TURN * 2.5; v = { x: goal.x - h.x, y: goal.y - h.y };
     if (now >= e.phaseUntil) { e.phase = 'charge'; e.phaseUntil = now + BOSS_CHARGE_MS; }
   } else if (e.phase === 'charge') {
     speed *= BOSS_CHARGE_SPEED; turn = BOSS_TURN * 0.35; v = { x: goal.x - h.x, y: goal.y - h.y };
-    if (now >= e.phaseUntil) { e.phase = 'move'; e.chargeReady = now + BOSS_CHARGE_CD * (enraged ? 0.6 : 1); }
+    if (now >= e.phaseUntil) { e.phase = 'move'; e.chargeReady = now + BOSS_CHARGE_CD * (enraged ? 0.6 : 1) * (e.tierCd || 1); }
   } else if (e.phase === 'volley') {                  // stands still, faces you, then fires a fan of orbs
     speed = 0; turn = BOSS_TURN * 2.5; v = { x: goal.x - h.x, y: goal.y - h.y };
-    if (now >= e.phaseUntil) { bossVolley(e, goal, enraged); e.phase = 'move'; e.volleyReady = now + BOSS_VOLLEY_CD * (enraged ? 0.6 : 1); }
+    if (now >= e.phaseUntil) { bossVolley(e, goal, enraged || (e.tier || 1) >= 3); e.phase = 'move'; e.volleyReady = now + BOSS_VOLLEY_CD * (enraged ? 0.6 : 1) * (e.tierCd || 1); }
   } else {
     v = bossSeek(e, goal, now);
     if (goal.kind === 'hero' && now >= e.chargeReady && goal.d >= 4 && goal.d <= 11 && bossLOS(h.x, h.y, goal.x, goal.y)) {

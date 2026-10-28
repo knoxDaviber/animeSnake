@@ -20,7 +20,41 @@ function dropMine() {
   playSfx('mineDrop');
   return true;
 }
-function detonateOldest() { if (S.mines.length) detonateMine(S.mines[0]); return true; } // free-running timer: no mine = nothing happens this cycle
+// Raiden: picks the oldest mine you can SEE on screen and marks it with a thin blue line. A few ticks later it blows.
+// No mine in view: nothing happens and the skill stays ready (it fires the moment a mine comes into view).
+function detonateOldest(r, i) {
+  const v = viewTiles(), m = S.mines.find(q => onScreen(q.x, q.y, v) && !q.armed);   // S.mines is in the order they were laid
+  if (!m) return false;
+  m.armed = true;
+  S.tethers.push({ from: Math.min(i, S.snake.length - 1), mine: m, ttl: RAIDEN_TELEGRAPH_TICKS, max: RAIDEN_TELEGRAPH_TICKS });
+  playSfx('tick');
+  return true;
+}
+// Once per world tick: the blue lines count down, then the mine goes off (unless something else already set it off).
+function updateTethers() {
+  if (!S.tethers || !S.tethers.length) return;
+  for (const t of S.tethers) {
+    if (!S.mines.includes(t.mine)) { t.ttl = 0; continue; }
+    if (--t.ttl <= 0) detonateMine(t.mine);
+  }
+  S.tethers = S.tethers.filter(t => t.ttl > 0);
+}
+// World space: a thin blue dashed line from the Raiden to the mine it is about to set off, and a ring closing in on the mine.
+function drawTethers() {
+  if (!S.tethers || !S.tethers.length) return;
+  ctx.save();
+  S.tethers.forEach(t => {
+    if (!S.mines.includes(t.mine) || !S.snake.length) return;
+    const i = Math.min(t.from, S.snake.length - 1), p = lerpPos(S.prev, i, S.snake[i], S.heroAlpha), ip = itemPos(t.mine);
+    const ax = p.x + CELL / 2, ay = p.y + CELL / 2, bx = ip.x + CELL / 2, by = ip.y + CELL / 2, k = 1 - t.ttl / t.max;
+    ctx.globalAlpha = 0.5 + 0.4 * k; ctx.strokeStyle = '#6bc5ff'; ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]); ctx.lineDashOffset = -performance.now() / 40;
+    ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath(); ctx.arc(bx, by, 8 + 6 * (1 - k), 0, 6.3); ctx.stroke();
+  });
+  ctx.restore();
+}
 function castShogun(r, i) {
   const h = S.snake[0];
   let best = null, bestD = Infinity;

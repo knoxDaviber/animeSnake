@@ -28,7 +28,7 @@ const FOLLOWERS = [
   { id: 'kingsman', name: 'Kingsman', color: '#ffe36b', skill: null, fusion: true,
        passive: 'Fusion leaves +1 key on the map and +1 weapon damage for the rest of the run. Keysman are 40% more likely to be summoned.' },
   { id: 'mrx',      name: 'Mr. X',    color: '#9a4bd6', skill: null, fusion: true,
-    passive: 'Keys within 3x3 of your head are eaten. New recruits are rejected and shot at the nearest snake for 2-5 damage.' },
+    passive: 'Keys within 3x3 of your head are eaten. Rejects and shoots every new recruit at the nearest snake for 2-5 damage, except Magneto.' },
   { id: 'shogun',   name: 'Raiden Shogun', color: '#3a8dff', skill: 'shogun', fusion: true,
     passive: '+30% hero speed. Every 5 s lightning hits the closest enemy tile for 1-3 damage.' },
   { id: 'medusa',   name: 'Medusa',  color: '#2fbf71', skill: null, fusion: true,

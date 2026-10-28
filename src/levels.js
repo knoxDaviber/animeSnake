@@ -24,7 +24,7 @@ function passiveXp() {
 function levelUp() {
   S.level++;
   const newest = S.weapons[S.weapons.length - 1];
-  S.weapons.forEach(id => { S.wlv[id] = (S.wlv[id] || 0) + (id === newest ? 1 : LEVEL_OLD_SHARE); });
+  S.weapons.forEach(id => { S.wlv[id] = Math.min(WEAPON_LEVEL_CAP, (S.wlv[id] || 0) + (id === newest ? 1 : LEVEL_OLD_SHARE)); });
   const h = S.snake[0];
   S.popups.push({ x: h.x, y: h.y, text: `Level ${S.level}!`, age: 0 });
   playSfx('recruit');

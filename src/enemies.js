@@ -248,7 +248,7 @@ function pickEnemyType() {
   if (open.includes('kamikaze') && isGoliath() && Math.random() < KAMI_GOLIATH_CHANCE) return 'kamikaze';   // Goliath's counter
   const here = roomAt(S.snake[0].x, S.snake[0].y);
   if (here && here.favors && open.includes(here.favors) && Math.random() < ENEMY_FAVOR_CHANCE) return here.favors;
-  return Math.random() < ENEMY_TYPE_CHANCE ? open[Math.floor(Math.random() * open.length)] : 'normal';
+  return Math.random() < enemyTypeChance() ? open[Math.floor(Math.random() * open.length)] : 'normal';
 }
 // A new snake starts in a straight line just OUTSIDE the camera view, heading inward (a side that falls outside the
 // world, or lands in a wall, just tries again).
@@ -291,15 +291,16 @@ function startWave() {
   if (S.pacifist) addScore(PACIFIST_POINTS.wave, h.x, h.y);
   if (DOOR_WAVES.includes(S.wave)) S.pendingDoor = true;   // doors.js: pick a door
   if (S.challenge && S.wave >= CHALLENGE_WAVE) { winRun(); return; }   // Challenge won (revive.js)
-  if (S.wave === WIZARD_WAVE && !S.pacifist) { startWizard(); S.waveTimer = waveDuration(S.wave); return; }   // wizard.js
-  if (S.wave === BOSS_WAVE && !S.pacifist) { startBoss(); S.waveTimer = waveDuration(S.wave); return; }   // boss.js
+  const bk = S.pacifist ? null : bossKindAt(S.wave);   // waves.js: a boss every BOSS_EVERY waves, alternating serpent, wizard, both
+  if (bk) { startBossWave(bk); S.waveTimer = waveDuration(S.wave); return; }
+  startRush();   // waves.js: every RUSH_EVERY waves a flood of snakes comes in (on top of the wave's own snakes)
   S.toSpawn = Math.min(ENEMY_QUEUE_MAX, S.toSpawn + waveSize(S.wave) + Math.round(RET_PRESSURE_EXTRA * pressure()));
   S.spawnTimer = 0;
   S.waveTimer = waveDuration(S.wave);
 }
 function updateWaves() {
   if (S.toSpawn > 0 && S.enemies.length < enemyCap()) {   // snakes of the queue walk in one by one, up to the cap
-    if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = SPAWN_GAP; }
+    if (--S.spawnTimer <= 0 && spawnEnemy()) { S.toSpawn--; S.spawnTimer = spawnGap(); }
   }
   if (wavesPaused()) return;
   updateBossWarning();   // hud.js: the boss warning, 10 s ahead

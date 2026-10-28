@@ -32,9 +32,9 @@ function headId() { return HEAD_DEFS[S.roster[0].c].id; }
 
 // Weapon timing: S.lastSwing is the tick the head's weapon last fired; S.swingMult comes from the Quick hands buff.
 function weaponPower(id = 'base') { return 1 + (S.wlv[id] || 0) * LEVEL_STEP; } // levels.js: 1 + levels x LEVEL_STEP
-function weaponCooldown(base, id = 'base') { return Math.max(2, Math.round(base * S.swingMult * (S.tb.frenzy > 0 ? TB_FRENZY_MULT : 1) / (1 + (weaponPower(id) - 1) * LEVEL_SPEED_SHARE))); }
+function weaponCooldown(base, id = 'base') { return Math.max(WEAPON_MIN_COOLDOWN, Math.round(base * S.swingMult * (S.tb.frenzy > 0 ? TB_FRENZY_MULT : 1) / (1 + (weaponPower(id) - 1) * LEVEL_SPEED_SHARE))); }
 function weaponReady(base) { return S.tick - S.lastSwing >= weaponCooldown(base); }
-function weaponDamage(base, id = 'base') { return Math.max(1, Math.round((base + S.damageBonus) * S.dmgMult * weaponPower(id))); } // Kingsman bonus, Glass cannon, level
+function weaponDamage(base, id = 'base') { return Math.min(WEAPON_DAMAGE_CAP, Math.max(1, Math.round((base + S.damageBonus) * S.dmgMult * weaponPower(id)))); } // Kingsman bonus, Glass cannon, level
 
 // Called once per tick, after the player has moved.
 function updateHead() { HEAD_DEFS[S.roster[0].c].update(); }

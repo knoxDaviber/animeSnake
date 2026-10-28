@@ -158,20 +158,19 @@ function ageBanners() { // once per world tick (step in main.js)
   S.banners.forEach(b => b.age++);
   S.banners = S.banners.filter(b => b.age < b.life);
 }
-// Which boss the NEXT wave to start brings: 'serpent', 'wizard' or null. (Pacifist has no bosses; Challenge ends at wave 20.)
+// Which boss the NEXT wave brings: 'serpent', 'wizard', 'both' or null. (Pacifist has no bosses; Challenge ends at CHALLENGE_WAVE.)
 function bossWaveNext() {
   if (S.pacifist) return null;
   const n = S.wave + 1;
-  if (n === BOSS_WAVE) return 'serpent';
-  if (n === WIZARD_WAVE && !(S.challenge && n >= CHALLENGE_WAVE)) return 'wizard';
-  return null;
+  if (S.challenge && n >= CHALLENGE_WAVE) return null;
+  return bossKindAt(n);   // waves.js
 }
-// Called every world tick from updateWaves (enemies.js) while the wave timer runs: shows the warning once, BOSS_WARN_TICKS before the boss wave.
+// Called every world tick from updateWaves (enemies.js) while the wave timer runs: shows the warning once per boss wave, BOSS_WARN_TICKS ahead.
 function updateBossWarning() {
-  const k = bossWaveNext();
-  if (!k || S.announced[k] || S.waveTimer > BOSS_WARN_TICKS) return;
-  S.announced[k] = true;
-  showBanner(k === 'serpent' ? 'Something huge is coming...' : 'The air goes still...', '', k === 'serpent' ? '#ff8a8a' : '#c78bff');
+  const k = bossWaveNext(), key = k ? k + (S.wave + 1) : '';
+  if (!k || S.announced[key] || S.waveTimer > BOSS_WARN_TICKS) return;
+  S.announced[key] = true;
+  showBanner(k === 'serpent' ? 'Something huge is coming...' : k === 'wizard' ? 'The air goes still...' : 'Two horrors are coming...', '', k === 'wizard' ? '#c78bff' : '#ff8a8a');
   playSfx('waveStart');
 }
 function drawBanners() { // window pixels: fades in fast, holds, fades out. A small banner is one quiet line.

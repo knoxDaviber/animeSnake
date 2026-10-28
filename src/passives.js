@@ -7,7 +7,7 @@ function countFollower(id) {
   return n;
 }
 // Mr.X rejects (shoots) new recruits, except in Pacifist where nothing may be hurt.
-function mrxRejects() { return countFollower('mrx') > 0 && !S.pacifist; }
+function mrxRejects(c) { return countFollower('mrx') > 0 && !S.pacifist && !(c !== undefined && FOLLOWERS[c].id === 'magneto'); }   // c = the recruit's follower index: Magneto is let in
 
 // Kill bonus: only the Bounty hunter buff now (Raiden gives hero speed instead).
 function killBonus() { return S.bounty; }

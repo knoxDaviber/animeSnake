@@ -39,7 +39,7 @@ function wizardPickSpot(minDist) {
   return good.length ? good[Math.floor(Math.random() * good.length)] : best;
 }
 function makeWizard(x, y) {
-  return { segs: [{ x, y }], prev: [{ x, y }], dir: { x: 0, y: 1 }, hp: WIZARD_HP, maxHp: WIZARD_HP, stun: 0, type: 'wizard', wizard: true, fire: 0,
+  return { segs: [{ x, y }], prev: [{ x, y }], dir: { x: 0, y: 1 }, hp: wizardHp(), maxHp: wizardHp(), tier: bossTier(), tierCd: bossCd(), stun: 0, type: 'wizard', wizard: true, fire: 0,
            speed: 1, last: performance.now(), alpha: 1, field: WIZARD_FIELD_HITS, exposed: 0, round: 0, tp: WIZARD_TP_TICKS,
            laserCd: WIZARD_FIRST_LASER, charge: 0, aim: 0, hitAt: 0, flashUntil: 0, blink: 0 };
 }
@@ -99,7 +99,7 @@ function wizardDefeated(e) {
 
 // ---- Lasers ----
 function wizardAngles(e, base) { // one beam, or a fan of up to WIZARD_LASER_MAX after each reform
-  const n = Math.min(WIZARD_LASER_MAX, 1 + e.round), out = [];
+  const extra = Math.floor(((e.tier || 1) - 1) / 2), n = Math.min(WIZARD_LASER_MAX + extra, 1 + e.round + extra), out = [];
   for (let k = 0; k < n; k++) out.push(base + (k - (n - 1) / 2) * WIZARD_FAN);
   return out;
 }
@@ -119,7 +119,7 @@ function makeLaser(o, ang) {
 function wizardFire(e) {
   const o = e.segs[0];
   wizardAngles(e, e.aim).forEach(a => S.lasers.push(makeLaser(o, a)));
-  e.laserCd = WIZARD_LASER_EVERY - WIZARD_CHARGE_TICKS;
+  e.laserCd = Math.max(8, Math.round(WIZARD_LASER_EVERY * (e.tierCd || 1)) - WIZARD_CHARGE_TICKS);
   playSfx('lightning'); playSfx('explosion');
   if (e.tpDue && e.field > 0) wizardTeleport(e);      // a scheduled teleport happens right after the shot (the beam stays where it was fired)
 }
@@ -234,7 +234,7 @@ function drawLasers() {
 function drawWizardBar() {
   const e = S.wizard;
   if (!e || S.picking || !S.alive || !S.view || !S.enemies.includes(e)) return;
-  const W = S.view.cssW, w = Math.min(320, W - 40), x = Math.round((W - w) / 2), y = 60;
+  const W = S.view.cssW, w = Math.min(320, W - 40), x = Math.round((W - w) / 2), y = S.boss && S.enemies.includes(S.boss) ? 96 : 60;
   ctx.save();
   ctx.globalAlpha = TEXT_ALPHA + 0.25;
   ctx.fillStyle = 'rgba(20,16,31,.8)'; ctx.fillRect(x - 2, y - 2, w + 4, 12);

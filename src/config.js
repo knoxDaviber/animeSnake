@@ -41,25 +41,26 @@ const ENEMY_SPAWN_MIN_DIST = 6;    // enemies spawn at least this many tiles fro
 const START_DELAY = 24;            // ticks before the first wave
 const WAVE_SHOW_MS = 10000;        // the "Next wave" timer on screen appears only when this much time is left
 const WAVE_CLEAR_SKIP = 16;        // field fully cleared: the wave timer jumps ahead to this many ticks left (0 = off)
-const ENEMY_CAP = 6;               // most enemy snakes alive at once
-const ENEMY_QUEUE_MAX = 8;         // most snakes waiting to spawn (when the cap is full)
+const ENEMY_CAP = 16;               // most enemy snakes alive at once
+const ENEMY_QUEUE_MAX = 24;         // most snakes waiting to spawn (when the cap is full)
 const ENEMY_BASE_SPEED = 0.5;      // enemy speed, same scale as HERO_BASE_SPEED
 const ENEMY_WAVE_SPEED = 0.02;     // extra enemy speed (fraction) per wave after the first
-const ENEMY_WAVE_SPEED_MAX = 0.4;  // cap on that wave bonus
+const ENEMY_WAVE_SPEED_MAX = 0.6;  // cap on that wave bonus
 const ENEMY_EAT_SPEED = 0.1;       // extra speed (fraction) for each key or recruit an enemy eats
-const ENEMY_SPEED_MAX = 1.8;       // enemy speed multiplier never goes above this
+const ENEMY_SPEED_MAX = 2.1;       // enemy speed multiplier never goes above this
 const ENEMY_MAX_LEN = 10;          // an eating enemy stops growing at this length
 const ENEMY_KEY_HUNT_DIST = 4;     // a chasing enemy goes for a key this close (0 = never)
 const SPAWN_GAP = 10;              // ticks between enemies inside one wave
-function hitsToKill(w) { return w <= 5 ? 1 : w <= 9 ? 2 : w <= 13 ? 3 : w <= 17 ? 4 : 5; } // from DESIGN.md
+function hitsToKill(w) { return w <= 5 ? 1 : w <= 9 ? 2 : w <= 13 ? 3 : w <= 17 ? 4 : 5 + Math.floor((w - 18) / 4); } // keeps going: +1 hit every 4 waves after 17
 // Timed waves: a new wave starts this many ticks after the last one. ~10 s at wave 1, ~30 s at wave 10, ~60 s from wave 20.
 function waveDuration(w) {
+  if (w > 20) return Math.max(WAVE_MIN_TICKS, Math.round(480 - WAVE_SHRINK * (w - 20)));
   const n = Math.min(Math.max(w, 1), 20);
   return Math.round(n <= 10 ? 80 + 160 * (n - 1) / 9 : 240 + 240 * (n - 10) / 10);
 }
 function enemyWaveSpeed(w) { return 1 + Math.min(ENEMY_WAVE_SPEED_MAX, ENEMY_WAVE_SPEED * (w - 1)); }
-function waveSize(w) { return Math.min(1 + Math.floor(w / 3), 5); }
-function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), 4); }
+function waveSize(w) { return Math.min(1 + Math.floor(w / 2), WAVE_SIZE_MAX); }   // wave 10: 6, wave 20: 11, wave 30: 16
+function enemyLength(w) { return 3 + Math.min(Math.floor((w - 1) / 3), ENEMY_LEN_BONUS_MAX); }
 
 // Rooms and terrain (rooms.js, world.js)
 const PORTAL_WALL_REACH = 8;  // Magician / gift: a wall up to this many tiles thick can be stepped through
@@ -491,3 +492,31 @@ const KAMI_GOLIATH_CHANCE = 0.5;      // with Goliath, this share of special sna
 // Boss banners (hud.js)
 const BANNER_TICKS = 24;      // 3 s on screen
 const BOSS_WARN_TICKS = 80;   // the warning appears this many ticks (10 s) before the boss wave starts
+// ---- Harder waves, rushes, boss tiers (waves.js) ----
+const ENEMY_CAP_WAVES = 3;        // the alive cap grows by 1 every this many waves (up to ENEMY_CAP)
+const WAVE_SIZE_MAX = 24;         // most snakes in one wave (waveSize)
+const ENEMY_LEN_BONUS_MAX = 8;    // enemyLength stops adding segments after this many
+const ENEMY_TYPE_CHANCE_STEP = 0.01, ENEMY_TYPE_CHANCE_MAX = 0.8;   // special snakes get likelier every wave, up to this
+const SPAWN_GAP_MIN = 3;          // ticks between spawns shrink by 1 every 4 waves, down to this
+const WAVE_MIN_TICKS = 300;       // after wave 20 waves get shorter, never below this many ticks (300 = 37 s)
+const WAVE_SHRINK = 6;            // ticks shorter per wave after wave 20
+const RUSH_EVERY = 5;             // every this many waves (when it is not a boss wave) a rush floods in. 0 = no rushes
+const RUSH_BASE = 5, RUSH_PER_WAVE = 0.6, RUSH_MAX = 30;   // snakes in a rush = base + wave x per wave, up to max
+const RUSH_WARN_TICKS = 16;       // the warning shows this long (2 s) before the first snake of a rush
+const RUSH_PER_TICK = 3;          // snakes that enter per world tick during a rush
+const RUSH_COINS = 2;             // coins for clearing a rush (+1 per 10 waves)
+const BOSS_EVERY = 10;            // a boss every this many waves, alternating serpent, wizard, both (the finale is wave 30)
+const BOSS_TIER_HP = 0.4;         // each boss tier has this much more HP: x(1 + this x (tier - 1))
+const BOSS_TIER_SPEED = 0.06;     // ...moves this much faster
+const BOSS_TIER_CD = 0.08, BOSS_TIER_CD_MIN = 0.5;   // ...and attacks this much more often (cooldown x (1 - this x (tier - 1)), never below the min)
+const FINALE_COINS = 60, FINALE_SCORE = 5000;        // victory reward when both bosses fall at wave 30
+
+// ---- Weapon caps (change these freely) ----
+const WEAPON_LEVEL_CAP = 40;      // no weapon goes above this level (levelling and chests both stop here)
+const WEAPON_DAMAGE_CAP = 60;     // most damage one hit can do
+const WEAPON_MIN_COOLDOWN = 2;    // fastest a weapon can fire, in world ticks (2 = 4 shots a second)
+const WEAPON_SLOTS = 4;           // most chest weapons you can hold (more chests then level your weapons up instead)
+
+// ---- Misc ----
+const SCORE_PER_COIN = 100;       // when a run ends, every this many points of score become 1 coin
+const RAIDEN_TELEGRAPH_TICKS = 4; // Raiden shows a thin blue line this long (0.5 s) before a mine goes off

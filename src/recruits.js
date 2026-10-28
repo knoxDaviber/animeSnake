@@ -62,7 +62,7 @@ function updateRecruits() {
     r.ready = r.ready || (r.left === 0 && !S.snake.some(s => s.x === r.x && s.y === r.y));
   }
   touched.forEach(r => {
-    if (mrxRejects()) return shootRecruit(r, h.x, h.y);
+        if (mrxRejects(r.c)) return shootRecruit(r, h.x, h.y);
     S.recruits = S.recruits.filter(q => q !== r);
     S.growQueue.push(r.c); onRecruited(r.c);                              // joins on the next move (playerMove)
     S.popups.push({ x: h.x, y: h.y, text: FOLLOWERS[r.c].name + '!', age: 0 });
