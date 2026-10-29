@@ -40,7 +40,7 @@ addEventListener('keydown', e => {
   }
   if (S.picking) {                       // pick screens: 1/2/3 choose, arrows move, Enter/Space confirm
     if (e.repeat) return;
-    if (S.shopping) return;   // the shop has its own keys (bottom of this file)
+        if (S.shopping || S.helping) return;   // the shop and the help page have their own keys
     if (k === 'i' && S.headPicking) { S.heroDetail = !S.heroDetail; playSfx('tick'); return; }
     if (k === 'r' && !S.headPicking) return mulligan();
     const n = Number(k), count = S.headPicking ? HEAD_DEFS.length : S.pickChoices.length;
@@ -77,7 +77,7 @@ function pickAtPoint(clientX, clientY) {
 function chooseCard(i) { return S.headPicking ? chooseHead(i) : S.doorPicking ? chooseDoor(i) : S.branchPicking ? chooseBranch(i) : S.rewardPicking ? chooseReward(i) : startRun(i); }
 // Tap on the hero select screen: the speaker icon mutes, anything else is a card.
 function tapPick(clientX, clientY) {
-  if (S.shopping) return;   // the shop handles its own taps (bottom of this file)
+    if (S.shopping || S.helping) return;   // the shop and the help page handle their own taps
   if (S.headPicking) {
     const p = canvasPoint(clientX, clientY), b = muteButtonRect();
     if (p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h) return toggleMute();
@@ -86,6 +86,8 @@ function tapPick(clientX, clientY) {
     if (tapAdButtons(p)) return;
     const sb = shopButtonRect();
     if (p.x >= sb.x && p.x <= sb.x + sb.w && p.y >= sb.y && p.y <= sb.y + sb.h) return openShop();
+    const hb = helpButtonRect();
+    if (p.x >= hb.x && p.x <= hb.x + hb.w && p.y >= hb.y && p.y <= hb.y + hb.h) return openHelp();
   }
   if (!S.headPicking) {                      // buff screen: the mulligan button
     const p = canvasPoint(clientX, clientY), m = mulliganRect();
@@ -120,6 +122,7 @@ addEventListener('touchstart', e => {
   if (inNameBox(e)) return;
   touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
   S.lastTouchAt = performance.now();   // phones fire a fake mouse click after a tap: mousedown ignores it
+  S.touchUi = S.alive && !S.picking ? { ax: touchX, ay: touchY, x: touchX, y: touchY } : null;   // the faint thumb ring (drawTouchStick in hud.js)
   tapArmed = false;
   if (S.ad) return;
   if (S.crashed) return newRun();
@@ -133,12 +136,18 @@ addEventListener('touchstart', e => {
 addEventListener('touchmove', e => {
   if (inNameBox(e)) return;
   if (S.paused) return;
-  const dx = e.touches[0].clientX - touchX, dy = e.touches[0].clientY - touchY;
-  if (Math.abs(dx) < 24 && Math.abs(dy) < 24) return;
+  const x = e.touches[0].clientX, y = e.touches[0].clientY, dx = x - touchX, dy = y - touchY, d = Math.hypot(dx, dy);
+  if (S.touchUi) { S.touchUi.x = x; S.touchUi.y = y; }
+  if (d < TOUCH_DEAD) return;
   tapArmed = false;                    // it is a swipe now
-  if (Math.abs(dx) > Math.abs(dy)) setDir(dx > 0 ? 1 : -1, 0); else setDir(0, dy > 0 ? 1 : -1);
-  touchX = e.touches[0].clientX; touchY = e.touches[0].clientY;
+  const ref = S.dirQueue.length ? S.dirQueue[S.dirQueue.length - 1] : S.dir, wasH = ref.x !== 0;
+  const goH = Math.abs(dx) > Math.abs(dy) * (wasH ? 1 / TOUCH_AXIS_BIAS : TOUCH_AXIS_BIAS);   // keeps the current axis unless the thumb clearly changes it
+  if (goH) setDir(dx > 0 ? 1 : -1, 0); else setDir(0, dy > 0 ? 1 : -1);
+  if (d > TOUCH_TRAIL) { touchX = x - dx / d * TOUCH_TRAIL; touchY = y - dy / d * TOUCH_TRAIL; }   // the anchor trails the thumb
+  if (S.touchUi) { S.touchUi.ax = touchX; S.touchUi.ay = touchY; }
 });
+addEventListener('touchend', () => { S.touchUi = null; }, { passive: true });
+addEventListener('touchcancel', () => { S.touchUi = null; }, { passive: true });
 addEventListener('touchend', e => {
   if (inNameBox(e) || !tapArmed) return;
   tapArmed = false;

@@ -34,10 +34,11 @@ function loadProgress() {
     S.startPick = typeof d.startPick === 'string' ? d.startPick : null;
     S.volume = d.volume === undefined || !isFinite(Number(d.volume)) ? 1 : Math.max(0, Math.min(1, Number(d.volume)));
     S.hintMerge = !!d.hintMerge;
+    S.safeMines = !!d.safeMines;
   } catch (err) { console.warn('Could not load saved progress:', err); }
 }
 function saveProgress() {
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted, bestWave: S.bestWave, ret: S.ret, adStep: S.adStep, adLastAt: S.adLastAt, adsOff: S.adsOff, buffLv: S.buffLv, startPick: S.startPick, volume: S.volume, hintMerge: S.hintMerge })); }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify({ best: S.best, bestCombo: S.bestCombo, coins: S.coins, unlocked: S.unlocked, muted: S.muted, bestWave: S.bestWave, ret: S.ret, adStep: S.adStep, adLastAt: S.adLastAt, adsOff: S.adsOff, buffLv: S.buffLv, startPick: S.startPick, volume: S.volume, hintMerge: S.hintMerge, safeMines: S.safeMines })); }
   catch (err) { console.warn('Could not save progress:', err); }
 }
 addEventListener('pagehide', saveProgress);

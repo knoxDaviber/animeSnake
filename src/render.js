@@ -211,6 +211,7 @@ function drawHeadPick() { // title screen = hero select: one card per hero. A lo
   drawSpeaker();
   drawDetailButton();
   drawShopButton();
+  drawHelpButton();      // help.js
   drawAdButtons();
   HEAD_DEFS.forEach((h, i) => {
     const c = headCardRect(i), sel = i === S.pickIndex, cx = c.x + c.w / 2;
@@ -443,8 +444,15 @@ function drawOverlay() {
     ctx.fillText(start ? 'Ready?' : 'Paused', cv.width / 2, cv.height / 2 - 30);
     ctx.font = '20px system-ui';
     if (start) {
-      ctx.fillText('WASD, arrows or swipe to move, ', cv.width / 2, cv.height / 2 + 20);
-      if (S.ret.runs < 5) { ctx.fillStyle = '#c9bde6'; ctx.font = '16px system-ui'; ctx.fillText('Eat a key, then touch the character that walks in', cv.width / 2, cv.height / 2 + 52); }
+      ctx.fillText('WASD, arrows or swipe to move', cv.width / 2, cv.height / 2 + 20);
+      if (S.ret.runs < NEWBIE_RUNS) {                  // the first few runs: the one thing that is not obvious
+        ctx.fillStyle = '#ffd36b'; ctx.font = 'bold 18px system-ui';
+        ctx.fillText('1. Eat a key', cv.width / 2, cv.height / 2 + 62);
+        ctx.fillText('2. A friend walks in. Touch them to join your chain', cv.width / 2, cv.height / 2 + 90);
+        ctx.fillStyle = '#c9bde6'; ctx.font = '15px system-ui';
+        ctx.fillText('Walls, spikes and enemy snakes cost you a friend', cv.width / 2, cv.height / 2 + 124);
+        ctx.fillText('Three of the same friend merge into something better', cv.width / 2, cv.height / 2 + 148);
+      }
       return;
     }
     ctx.fillText('Tap or press P to resume', cv.width / 2, cv.height / 2 + 20);
@@ -540,6 +548,7 @@ function drawFitted(text, cx, y, maxW, maxH, px) { // wrapped, centred text that
 function drawPick() { // 'Tap a card, press 1 / 2 / 3, or use the arrows and Enter'
   if (!S.picking) return;
   if (S.shopping) return drawShop();
+  if (S.helping) return drawHelp();      // help.js
   if (S.headPicking) return drawHeadPick();
   const now = performance.now();
   ctx.save();
@@ -744,7 +753,7 @@ function draw() {
       drawKeyArrow();       // hud.js: arrow halfway to the window edge (world pixels)
       ctx.restore();
       ctx.setTransform(S.view.dpr, 0, 0, S.view.dpr, 0, 0);   // window pixels from here on
-      drawHud(); drawBuffList(); drawComboBar(); drawStallHint(); drawBossBar(); drawWizardBar(); drawWizardPointer(); drawBanners();
+      drawHud(); drawBuffList(); drawComboBar(); drawStallHint(); drawBossBar(); drawWizardBar(); drawWizardPointer(); drawBanners(); drawNewbieHint(); drawTouchStick();
     } finally { ctx = ui; }
   }
   ctx.clearRect(0, 0, cv.width, cv.height);            // screen layers go on the UI square

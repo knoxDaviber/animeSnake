@@ -556,3 +556,11 @@ const BOSS_MINION_TYPES = ['normal', 'fast', 'armored', 'runner', 'spitter', 'ka
 const BOSS_MINION_VARIETY_START = 2;      // types in the mix at boss tier 1 (the first two above)...
 const BOSS_MINION_VARIETY_PER_TIER = 2;   // ...and this many more each tier
 const WIZARD_MINIONS = false;     // true: snakes also keep coming while only the wizard is up
+// ---- Help page, new-player hints, touch steering, Safe mines ----
+const HELP_PRICE = 5;             // coins to open the help page on the title screen (every time)
+const NEWBIE_RUNS = 100;            // the extra "eat a key, touch the friend" hints show for this many runs
+const TOUCH_DEAD = 12;            // px the thumb must move before the snake turns (it was 24)
+const TOUCH_TRAIL = 36;           // px: the steering anchor trails the thumb at this distance, so turning back is quick
+const TOUCH_AXIS_BIAS = 1.25;     // to switch between left/right and up/down the thumb must move this much more along the new axis
+const TOUCH_STICK_DRAW = true;    // draw a faint ring and dot under the thumb
+const SAFE_MINES_PRICE = 150;     // coins for the shop perk "Safe mines" (your own mines and bombs stop hurting you)

@@ -25,6 +25,7 @@ function shopRows() {
   rows.push({ head: 'STARTING FOLLOWERS' }, { kind: 'rand' });
   if (isUnlocked('perk', 'startRandom', SHOP_RANDOM_PRICE))
     FOLLOWERS.forEach(f => { if (!f.fusion) rows.push({ kind: 'pick', id: f.id }); });
+  rows.push({ head: 'PERKS' }, { kind: 'safe' });
   return rows;
 }
 function shopLayout() { // each row with its y inside the scrolling list
@@ -68,6 +69,11 @@ function shopTap(clientX, clientY) {
 // ---- What a row shows ----
 // { name, desc, price (null = nothing to buy), status (text when price is null), owned, selected }
 function shopInfo(r) {
+  if (r.kind === 'safe') {
+    const owned = isUnlocked('perk', 'safeMines', SAFE_MINES_PRICE);
+    return { name: 'Safe mines', desc: owned ? 'Your own mines and bombs do not hurt you while this is ON. Tap to switch it.' : 'Your own mines and bombs stop hurting you. They still hurt everything else.',
+             price: owned ? null : SAFE_MINES_PRICE, status: S.safeMines ? 'ON' : 'OFF', owned, selected: owned && !!S.safeMines };
+  }
   if (r.kind === 'buff') {
     const def = SHOP_LOCKED[r.id], L = buffLevel(r.id), b = BUFFS.find(x => x.id === r.id), maxed = L >= def.max;
     let desc = b.desc;
@@ -103,6 +109,16 @@ function shopBuy(i) {
   if (row.kind === 'rand') {
     const r = tryUnlock('perk', 'startRandom', SHOP_RANDOM_PRICE);
     return r.owned ? note(false, 'Already owned') : note(r.ok, r.ok ? 'Unlocked!' : short(r.need));
+  }
+  if (row.kind === 'safe') {
+    if (isUnlocked('perk', 'safeMines', SAFE_MINES_PRICE)) {            // owned: tap = switch on / off
+      S.safeMines = !S.safeMines; saveProgress(); playSfx('tick');
+      S.shopNote = { i, ok: true, text: S.safeMines ? 'Safe mines ON' : 'Safe mines OFF', until: performance.now() + CARD_NOTE_MS };
+      return;
+    }
+    const r = tryUnlock('perk', 'safeMines', SAFE_MINES_PRICE);
+    if (r.ok) S.safeMines = true;                                       // a fresh purchase is switched on right away
+    return note(r.ok, r.ok ? 'Unlocked!' : short(r.need));
   }
   if (isUnlocked('follower', row.id, SHOP_PICK_PRICE)) {   // owned: tap = select / deselect
     S.startPick = S.startPick === row.id ? null : row.id; saveProgress();

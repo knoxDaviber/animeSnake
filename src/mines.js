@@ -3,6 +3,8 @@
 // Blast = the mine's tile plus the four tiles around it. Enemy heads lose MINE_DAMAGE hit points, enemy body
 // segments are cut off (like the sword), and the player's head loses a character if it is inside the blast.
 function mineMax() { return MINE_MAX + S.mineMaxBonus + S.mines.filter(m => m.fixed).length; }   // pedestal bombs (bombs.js) are free
+// Shop perk "Safe mines": once bought and switched on, blasts never hurt the hero (they still hurt enemies).
+function safeMinesOn() { return !!S.safeMines && isUnlocked('perk', 'safeMines', SAFE_MINES_PRICE); }
 function mineAt(x, y) { return S.mines.find(m => m.x === x && m.y === y) || null; }
 
 // Blast = the mine's tile plus an arm in each of the 4 directions. Arm length is 1 + MINER_BLAST_BONUS per Miner;
@@ -33,7 +35,7 @@ function detonateMine(m) {
     if (hit.i === 0) damageEnemyHead(hit.e, MINE_DAMAGE, true); else cutEnemy(hit.e, hit.i);
   }
   const h = S.snake[0];
-  if (S.alive && S.invuln === 0 && tiles.some(t => t.x === h.x && t.y === h.y)) {
+    if (S.alive && S.invuln === 0 && !safeMinesOn() && tiles.some(t => t.x === h.x && t.y === h.y)) {
     takeHit();
     if (isGoliath()) for (let i = 1; i < GOLIATH_BLAST_RINGS && S.alive; i++) takeHit();   // Goliath is very weak to explosions
   }

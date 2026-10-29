@@ -189,3 +189,25 @@ function drawBanners() { // window pixels: fades in fast, holds, fades out. A sm
   });
   ctx.restore();
 }
+// Window pixels: for the first NEWBIE_RUNS runs, a plain hint while you are alone: eat a key, then touch the friend who walked in.
+function drawNewbieHint() {
+  if (S.ret.runs >= NEWBIE_RUNS || !S.alive || S.picking || S.paused || S.holdStart || !S.view || S.snake.length > 1) return;
+  if (S.runStart && performance.now() - S.runStart > 90000) return;      // not forever
+  const text = S.recruits.length ? 'Touch the friend to add them to your chain' : S.keys.length ? 'Eat a key to call a friend' : '';
+  if (!text) return;
+  const W = S.view.cssW, H = S.view.cssH;
+  ctx.save();
+  ctx.font = 'bold 20px system-ui'; ctx.textAlign = 'center'; ctx.lineWidth = 4; ctx.strokeStyle = '#14101f'; ctx.lineJoin = 'round'; ctx.globalAlpha = 0.9;
+  ctx.strokeText(text, W / 2, H - 70); ctx.fillStyle = '#ffd36b'; ctx.fillText(text, W / 2, H - 70);
+  ctx.restore();
+}
+// Window pixels: a faint ring where the thumb steers from and a dot under the finger (touch only).
+function drawTouchStick() {
+  const u = S.touchUi;
+  if (!TOUCH_STICK_DRAW || !u || !S.alive || S.picking || S.paused || !S.view) return;
+  ctx.save();
+  ctx.globalAlpha = 0.28; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(u.ax, u.ay, TOUCH_TRAIL, 0, 6.3); ctx.stroke();
+  ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(u.x, u.y, 10, 0, 6.3); ctx.fill();
+  ctx.restore();
+}
