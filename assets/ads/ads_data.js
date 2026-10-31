@@ -11,7 +11,7 @@ const AD_DATA = {
   ],
   reviews: ['"{quote}" - {reviewer}', '"{quote}" - {reviewer}, probably'],
   fine: ['{disclaimer}', 'Results may vary. {disclaimer}', '{disclaimer} {disclaimer}'],
-  images: ['ad1.jpg'],   // files in this folder (png, jpg, gif), e.g. ['sample.png']. Empty = text-only ads
+  images: ['ad1.jpg', 'fish.png', 'stonks.png', 'dog.png', 'toaster.png'],   // files in this folder (png, jpg, gif), e.g. ['sample.png']. Empty = text-only ads
   parts: {
     adj: ['Mega', 'Totally Real', 'Gently Used', 'Artisanal', 'Quantum', 'Haunted', 'Premium', 'Budget', 'Turbo', 'Organic', 'Sentient', 'Legally Distinct'],
     thing: ['Mattress', 'Antivirus', 'Soup', 'Sock Club', 'Hamster Wheel', 'Wi-Fi', 'Umbrella', 'Toaster', 'Pillow', 'Insurance', 'Dog Food', 'Cloud Storage'],

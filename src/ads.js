@@ -92,6 +92,42 @@ function generateAd() { // { name, line, review, fine, image }
   vars.name = fillAd(pickOf(D.names), vars);
   const make = list => list && list.length ? fillAd(pickOf(list), vars) : '';
   return { name: vars.name, line: make(D.lines), review: make(D.reviews), fine: make(D.fine),
-           image: D.images && D.images.length ? loadAdImage(pickOf(D.images)) : null };
+           image: D.images && D.images.length ? loadAdImage(pickOf(D.images)) : null, fx: rollAdFx() };
 }
 if (typeof AD_DATA !== 'undefined' && AD_DATA.images) AD_DATA.images.forEach(loadAdImage);
+
+
+// ---- Image effects (settings: AD_FX in config.js) ----
+function rollAdFx() { // a random pick of the effects that are switched on, each with its own random phase
+  if (!AD_FX_ON) return [];
+  const names = Object.keys(AD_FX).filter(k => AD_FX[k].on), out = [];
+  while (out.length < AD_FX_PER_AD && names.length)
+    out.push({ k: names.splice(Math.floor(Math.random() * names.length), 1)[0], ph: Math.random() * 6.283 });
+  return out;
+}
+// Draws the ad picture centred on (cx, cy), fitted into 240 x 130, with its effects. p = ad progress 0..1.
+function drawAdImage(ad, cx, cy, p) {
+  const im = ad.image;
+  if (!im || !im.complete || !im.naturalWidth) return;
+  const t = performance.now() / 1000, s = Math.min(240 / im.naturalWidth, 130 / im.naturalHeight);
+  const w = im.naturalWidth * s, h = im.naturalHeight * s;
+  let rot = 0, sx = 1, sy = 1, ox = 0, oy = 0, hue = 0;
+  for (const f of ad.fx || []) {
+    const c = AD_FX[f.k], ph = f.ph;
+    if (f.k === 'wobble') rot += Math.sin(t * c.speed + ph) * c.deg * Math.PI / 180;
+    else if (f.k === 'pulse') { const k = 1 + Math.sin(t * c.speed + ph) * c.amount; sx *= k; sy *= k; }
+    else if (f.k === 'spin') rot += t * c.speed + ph;
+    else if (f.k === 'bounce') oy -= Math.abs(Math.sin(t * c.speed + ph)) * c.px;
+    else if (f.k === 'shake') { ox += (Math.random() - 0.5) * c.px * 2; oy += (Math.random() - 0.5) * c.px * 2; }
+    else if (f.k === 'flip') sx *= Math.cos(t * c.speed + ph);
+    else if (f.k === 'hue') hue += t * c.speed + ph * 57;
+    else if (f.k === 'mirror') sx *= ph > 3.14 ? -1 : 1;
+    else if (f.k === 'tilt') rot += (ph / 6.283 - 0.5) * 2 * c.deg * Math.PI / 180;
+    else if (f.k === 'zoom') { const k = 0.8 + c.amount * p; sx *= k; sy *= k; }
+  }
+  ctx.save();
+  ctx.translate(cx + ox, cy + oy); ctx.rotate(rot); ctx.scale(sx, sy);
+  if (hue && 'filter' in ctx) ctx.filter = `hue-rotate(${Math.round(hue) % 360}deg)`;
+  ctx.drawImage(im, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}

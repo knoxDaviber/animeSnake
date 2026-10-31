@@ -95,3 +95,15 @@ function headbutt(e, noRecoil) {
     if (moved) S.popups.push({ x: e.segs[0].x, y: e.segs[0].y, text: 'Shoved!', age: 0 });
   }
 }
+
+
+// ---- Devour (shop perk, toggle): touch a snake SHORTER than your chain and eat it for a random follower ----
+function devourOn() { return !!S.devour && isUnlocked('perk', 'devour', DEVOUR_PRICE); }
+function canDevour(e) { return devourOn() && !S.pacifist && !isGoliath() && !e.boss && !e.wizard && S.snake.length > e.segs.length; }
+function devourEnemy(e) {
+  const at = e.segs[0];
+  S.popups.push({ x: at.x, y: at.y, text: 'Devoured!', age: 0 });
+  killEnemy(e);                                   // normal kill rewards (combo, XP, drops)
+  S.growQueue.push(randomFollower());             // joins on the next move
+  playSfx('recruit');
+}

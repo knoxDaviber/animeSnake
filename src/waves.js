@@ -38,11 +38,12 @@ function startBossWave(kind) {
 // Once per world tick. When both bosses of the finale are down: the victory. The run goes on afterwards.
 function updateFinale() {
   if (!S.finale || !S.alive || wavesPaused()) return;
-  S.finale = false; S.finaleWon = true;
+  S.finale = false; S.finaleWon = true; S.credits = true;   // unlocks the Credits page in the help
   const h = S.snake[0], c = coinReward(FINALE_COINS);
   S.coins += c;
   addScore(FINALE_SCORE, h.x, h.y);
   showBanner('VICTORY!', '', '#ffd36b');
+  showBanner('The Help page has a new entry...', '', '#c9bde6', true);
   S.popups.push({ x: h.x, y: h.y - 1, text: `Victory! +${c} coins`, age: 0 });
   playSfx('win');
   saveProgress();

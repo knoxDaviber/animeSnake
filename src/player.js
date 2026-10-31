@@ -117,6 +117,7 @@ function playerMove() {
     if (en.e.boss || en.e.wizard) { damageEnemyHead(en.e, BOSS_MEDUSA_DAMAGE); en = enemyAt(nx, ny); }   // the boss is hurt, not killed outright
     else { killEnemy(en.e); en = null; }
   } // Medusa: touching a head kills it at once
+  if (en && canDevour(en.e)) { devourEnemy(en.e); en = null; }   // Devour perk (snakes.js): any touch eats a shorter snake
   if (en && en.e.wizard && !isGoliath() && !wizardAt(en.e, h.x, h.y)) { S.waitDir = true; playSfx('stall'); return; }   // wizard.js: the field is a harmless wall (if you are already inside it you can walk out)
   const wallHit = !inBounds(nx, ny) || isWall(nx, ny) || gateBlocks(nx, ny, S.dir.x, S.dir.y);
   const blocked = wallHit || self || en || isHazardAt(nx, ny);
@@ -161,7 +162,7 @@ function playerMove() {
     S.roster.push(newSlot(S.growQueue.shift(), last.fx, last.fy));
   } else S.tailLeft = S.snake.pop();
   if (key) eatKey(key);
-  if (S.tailLeft && tileAt(S.tailLeft.x, S.tailLeft.y) === 'C') S.map[S.tailLeft.y][S.tailLeft.x] = 'H';   // crumbling floor: gone once the tail has left it
+  if (S.tailLeft && tileAt(S.tailLeft.x, S.tailLeft.y) === 'C') crumbleTile(S.tailLeft.x, S.tailLeft.y);   // crumbling floor: gone once the tail has left it
   if (tileAt(nx, ny) === 'Z') bumperTurn(nx, ny);                                                          // bumper: the heading turns
   faceSegments();
   collectPickup(nx, ny);

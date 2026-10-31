@@ -616,11 +616,7 @@ function drawAd() { // the fake ad, on top of everything. Hold the button to fas
   ctx.fillStyle = '#1b1530';
   for (let i = 0; i < 12; i++) ctx.fillRect(((i * 70 + now / (fast ? 0.8 : 3)) % 840) - 100, 0, 30, cv.height); // stripes whizz faster while held
   ctx.textAlign = 'center';
-  const im = ad.image;
-  if (im && im.complete && im.naturalWidth) {            // png, jpg or gif (a gif shows its first frame for now)
-    const s = Math.min(240 / im.naturalWidth, 130 / im.naturalHeight);
-    ctx.drawImage(im, cx - im.naturalWidth * s / 2, 90, im.naturalWidth * s, im.naturalHeight * s);
-  }
+  drawAdImage(ad, cx, 155, p);                           // ads.js: the picture with its random effects (AD_FX in config.js)
   ctx.fillStyle = '#ffd36b'; fitText(ad.name, cx, 250 + Math.sin(now / 150) * 4, 600, 44, true);
   ctx.fillStyle = '#f3e9ff'; fitText(ad.line, cx, 295, 600, 20, false);
   if (p > 0.33 && ad.review) { ctx.fillStyle = '#c9bde6'; fitText(ad.review, cx, 340, 600, 17, false); }

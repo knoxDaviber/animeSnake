@@ -223,7 +223,8 @@ The shared top 10 is on once the Supabase key is set (`LEADERBOARD` in `src/conf
 
 ## Last session
 
-Batches delivered (all untested by the assistant): the pause-style "Ready?" screen with start-on-first-input; ready doors you break by walking into them (no pick screen); weapon chests (max 4) replacing the weapon pick; weapon HUD with cooldowns; the 5x5 world with 7 shapes; the Swordsman counter slash; the audio upgrade; harder waves, rushes, boss tiers, the wave 30 finale; Raiden telegraph and the on-screen mine rule; Mr.X accepting only Magneto; weapon caps; score to coins; the Razor weapon; runner snakes, big snakes, length scaling and headbutts; the Relic buff; boss minions and the armoured enraged serpent; and these refreshed docs.
-
-Next: the dev play-tests; then (suggested) status effects and the four remaining chosen weapons. From now on every new idea starts with the "Files I need" list described at the top.
-
+Batch (untested by the assistant):
+- Help page: opens on a Contents list (help.js rewritten). Credits page (HELP_CREDITS in help_data.js) is added as the last page after the wave 30 victory (S.credits, saved). Its ARG line is a placeholder.
+- Crumbling floor heals CRUMBLE_RECOVER_TICKS after it crumbles (crumbleTile / updateCrumbles in world.js, S.crumbles).
+- Chapel (ice) room: plain-floor cross joins all four doors, so it is always solvable.
+- Devour shop perk (DEVOUR_PRICE, S.devour, toggle): touching a snake shorter than your chain eats it for a random follower (snakes.js canDevour / devourEnemy). Not Goliath, Pacifist, bosses.

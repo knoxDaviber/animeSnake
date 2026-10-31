@@ -118,6 +118,7 @@ function stepEnemy(e) {
   } else pick = opts[Math.floor(Math.random() * opts.length)];
   if (pick.headOn) {
     if (countFollower('medusa') > 0) { killEnemy(e); return; } // Medusa: an enemy head that touches you dies at once
+    if (canDevour(e)) { devourEnemy(e); return; }   // Devour perk (snakes.js)
     if (goliathFront(-pick.d.x, -pick.d.y)) { if (damageEnemyHead(e, 1)) e.stun = 4; return; }  // Goliath faces it: harmless to him
     if (S.invuln > 0) return;                   // player is immune: the enemy just waits
     takeHit('enemyHead', { x: head.x, y: head.y }, ringsFor(e));   // head-on: both snakes take damage, short stun. A big snake costs you 2 followers

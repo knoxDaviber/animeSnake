@@ -311,7 +311,7 @@ const AD_HOLD_DELAY_MS = 300;       // a hold only counts this long after the ad
 const AD_FAKE_SECONDS = 60;         // how long the ad claims to be (it "fast-forwards", and cannot be skipped)
 const AD_PAYOUTS = [100, 50, 50, 25];   // hero-select ad button: each ad pays the next number
 const AD_RESET_MS = 60 * 60 * 1000; // an hour after the last coin ad, payouts start again at 10
-const AD_FREE_PRICE = 99999;         // coins for the "No ads" toggle on the hero select screen
+const AD_FREE_PRICE = 1000;         // coins for the "No ads" toggle on the hero select screen
 const ADS = [
   { name: 'ProteinBark', line: 'Dogs hate it. Dogs are wrong.' },
   { name: 'Wi-Fi for Fish', line: 'Finally, a reason for the aquarium.' },
@@ -564,3 +564,23 @@ const TOUCH_TRAIL = 36;           // px: the steering anchor trails the thumb at
 const TOUCH_AXIS_BIAS = 1.25;     // to switch between left/right and up/down the thumb must move this much more along the new axis
 const TOUCH_STICK_DRAW = true;    // draw a faint ring and dot under the thumb
 const SAFE_MINES_PRICE = 150;     // coins for the shop perk "Safe mines" (your own mines and bombs stop hurting you)
+
+// ---- Crumbling floor, Devour ----
+const CRUMBLE_RECOVER_TICKS = 48;  // a crumbled tile (now a hazard) turns back into crumbling floor after this many ticks (48 = 6 s)
+const DEVOUR_PRICE = 250;          // coins for the shop perk "Devour"
+
+// ---- Ad image effects (ads.js drawAdImage). Each ad picks AD_FX_PER_AD random effects from the ones that are "on". ----
+const AD_FX_ON = true;       // false = images are drawn plain, as before
+const AD_FX_PER_AD = 2;      // how many effects one ad gets
+const AD_FX = {
+  wobble: { on: true, deg: 12,  speed: 3 },     // rocks left and right
+  pulse:  { on: true, amount: 0.15, speed: 4 }, // grows and shrinks
+  spin:   { on: true, speed: 1.5 },             // turns, radians per second
+  bounce: { on: true, px: 14,  speed: 5 },      // hops up and down
+  shake:  { on: true, px: 4 },                  // jitters
+  flip:   { on: true, speed: 2 },               // squashes sideways like a turning coin
+  hue:    { on: true, speed: 120 },             // colours cycle, degrees per second (not in every Safari)
+  mirror: { on: true },                         // randomly flipped left to right for the whole ad
+  tilt:   { on: true, deg: 15 },                // randomly tilted for the whole ad
+  zoom:   { on: true, amount: 0.5 },            // slowly zooms in while the ad plays
+};

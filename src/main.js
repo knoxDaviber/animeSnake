@@ -46,7 +46,8 @@ function step() {
     updateWaves();
     updateBoss();
     updateWizard();     // wizard.js: the wave 20 wizard and his lasers
-    updatePedestals();  // bombs.js: bomb pedestals regrow their bomb
+    updatePedestals();
+    updateCrumbles();   // world.js: crumbled floor heals  // bombs.js: bomb pedestals regrow their bomb
     updateDoors();      // ambush and lockdown triggers (doors.js)
     updateRush();       // waves.js: enemy rushes
     updateFinale();     // waves.js: the wave 30 victory  

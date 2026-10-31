@@ -71,7 +71,7 @@ function newRun() {
     giftPerWave: 1, bombChance: BOMB_CHANCE, shopping: false, giveAskUntil: 0,
     challenge: false, pacifist: false, won: false, winCoins: 0, stuckTicks: 0, pentaPaid: false, ad: null,
     openRooms: [S.layout.start], rz: {}, slotBonus: 0, minionTimer: 0, minionSpawn: false, rush: null, bossTier: 1, finale: false, finaleWon: false, tethers: [], scoreCoins: 0, doors: [], roomTwist: {}, extraTypes: [], lockdown: null, pendingDoor: false, doorPicking: false, doorChoices: [],
-    banners: [], announced: {}, wizard: null, wizardWait: false, lasers: [], pedestals: [], boss: null, bossWait: false, pendingReward: false, rewardPicking: false, keys: [], kicks: [], kickCount: 0, tb: newTempBuffs(), pickups: [], keyShields: 0, agents: [], spiritBuffs: {}, growQueue: [], recruits: [], map: null, rooms: [], decor: [], keySpots: [], spits: [], keyBonus: 0, mines: [], blasts: [], zaps: [],
+    banners: [], announced: {}, wizard: null, wizardWait: false, lasers: [], pedestals: [], crumbles: [], boss: null, bossWait: false, pendingReward: false, rewardPicking: false, keys: [], kicks: [], kickCount: 0, tb: newTempBuffs(), pickups: [], keyShields: 0, agents: [], spiritBuffs: {}, growQueue: [], recruits: [], map: null, rooms: [], decor: [], keySpots: [], spits: [], keyBonus: 0, mines: [], blasts: [], zaps: [],
     score: 0, alive: true, paused: false, crashed: null,
     reviving: false, reviveEnd: 0, inputAfter: 0, revives: 0, over: false, restartAfter: 0,
     tick: 0, alpha: 1, last: performance.now(), heroLast: performance.now(), heroAlpha: 1,

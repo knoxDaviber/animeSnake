@@ -96,3 +96,15 @@ function ageDrops() {
   S.drops.forEach(d => d.age++);
   S.drops = S.drops.filter(d => d.age < DROP_TICKS);
 }
+
+
+// ---- Crumbling floor: a 'C' tile the tail has left turns into a hazard, then heals CRUMBLE_RECOVER_TICKS later ----
+function crumbleTile(x, y) {
+  S.map[y][x] = 'H';
+  S.crumbles.push({ x, y, ttl: CRUMBLE_RECOVER_TICKS });
+}
+function updateCrumbles() { // once per world tick (step in main.js)
+  if (!S.crumbles.length) return;
+  for (const c of S.crumbles) if (--c.ttl <= 0 && tileAt(c.x, c.y) === 'H') S.map[c.y][c.x] = 'C';   // (a hazard that was filled by a push block stays floor)
+  S.crumbles = S.crumbles.filter(c => c.ttl > 0);
+}

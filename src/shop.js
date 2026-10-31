@@ -25,7 +25,7 @@ function shopRows() {
   rows.push({ head: 'STARTING FOLLOWERS' }, { kind: 'rand' });
   if (isUnlocked('perk', 'startRandom', SHOP_RANDOM_PRICE))
     FOLLOWERS.forEach(f => { if (!f.fusion) rows.push({ kind: 'pick', id: f.id }); });
-  rows.push({ head: 'PERKS' }, { kind: 'safe' });
+  rows.push({ head: 'PERKS' }, { kind: 'safe' }, { kind: 'devour' });
   return rows;
 }
 function shopLayout() { // each row with its y inside the scrolling list
@@ -69,6 +69,11 @@ function shopTap(clientX, clientY) {
 // ---- What a row shows ----
 // { name, desc, price (null = nothing to buy), status (text when price is null), owned, selected }
 function shopInfo(r) {
+  if (r.kind === 'devour') {
+    const owned = isUnlocked('perk', 'devour', DEVOUR_PRICE);
+    return { name: 'Devour', desc: owned ? 'Touch a snake shorter than your chain to eat it: a random follower joins. Tap to switch it.' : 'Touch a snake shorter than your chain to eat it and gain a random follower.',
+             price: owned ? null : DEVOUR_PRICE, status: S.devour ? 'ON' : 'OFF', owned, selected: owned && !!S.devour };
+  }
   if (r.kind === 'safe') {
     const owned = isUnlocked('perk', 'safeMines', SAFE_MINES_PRICE);
     return { name: 'Safe mines', desc: owned ? 'Your own mines and bombs do not hurt you while this is ON. Tap to switch it.' : 'Your own mines and bombs stop hurting you. They still hurt everything else.',
@@ -109,6 +114,16 @@ function shopBuy(i) {
   if (row.kind === 'rand') {
     const r = tryUnlock('perk', 'startRandom', SHOP_RANDOM_PRICE);
     return r.owned ? note(false, 'Already owned') : note(r.ok, r.ok ? 'Unlocked!' : short(r.need));
+  }
+  if (row.kind === 'devour') {
+    if (isUnlocked('perk', 'devour', DEVOUR_PRICE)) {                   // owned: tap = switch on / off
+      S.devour = !S.devour; saveProgress(); playSfx('tick');
+      S.shopNote = { i, ok: true, text: S.devour ? 'Devour ON' : 'Devour OFF', until: performance.now() + CARD_NOTE_MS };
+      return;
+    }
+    const r = tryUnlock('perk', 'devour', DEVOUR_PRICE);
+    if (r.ok) S.devour = true;                                          // a fresh purchase is switched on right away
+    return note(r.ok, r.ok ? 'Unlocked!' : short(r.need));
   }
   if (row.kind === 'safe') {
     if (isUnlocked('perk', 'safeMines', SAFE_MINES_PRICE)) {            // owned: tap = switch on / off

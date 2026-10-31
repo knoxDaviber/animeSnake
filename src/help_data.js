@@ -154,3 +154,13 @@ const HELP_PAGES = [
     "those are in the shop. they all count on the leaderboard. in their own way.",
   ] },
 ];
+
+
+// Shown as the LAST page of the help, only after the wave 30 victory (S.credits, set in updateFinale in waves.js).
+const HELP_CREDITS = { title: "Credits", credits: true, lines: [
+  "if you are reading this, you beat wave thirty. we are a little emotional.",
+  "this game was made by Xiao xiao and Dun dun. i love my big brother. i forced him to say that.",
+  "it is our first game together. we did not know what we were doing. we still kind of do not.",
+  "the snakes are not real. the people are not real. the story is not real. the ads are real.",
+  "thank you for playing. thank you for the revives you sat through. we are sorry about the ads. (we are not that sorry.)",
+] };
