@@ -109,6 +109,7 @@ function stepEnemy(e) {
   const sliding = under === 'I' ? opts.find(o => o.d.x === e.dir.x && o.d.y === e.dir.y) : null;           // ice: straight on
   let pick;
   if (pushed) pick = pushed;
+  else if (holeTarget(e)) pick = holePick(e, opts);   // newweapons.js: sucked into a black hole
   else if (isFleeing(e)) pick = runnerPick(e, opts, head, ph) || opts[0];   // snakes.js: a small runner runs away from you
   else if (e.type === 'kamikaze' || (e.type === 'runner' && isBigSnake(e)) || Math.random() < enemyChase()) {
     const tgt = e.type === 'kamikaze' ? kamikazeTarget(e, head, ph) : chaseTarget(head, ph);   // bombs.js          // the player's head, or a nearby recruit or key

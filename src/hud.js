@@ -116,6 +116,7 @@ function activeBuffs() { // [{ text, color, prog }]. prog = 0..1, the thin bar u
     add(`${TEMP_BUFFS[id].name} ${Math.ceil(S.tb[id] * TICK_MS / 1000)}s`, TEMP_BUFFS[id].color, S.tb[id] / TEMP_BUFFS[id].ticks);
   if (headId() === 'goliath') add(`Shields ${S.keyShields}/${GOLIATH_SHIELD_MAX}`, '#8dff6b');
   if (S.pity) add('Pity boost', '#9a8cc4');
+  if (S.hookShields > 0) add(`Hook shields ${S.hookShields}`, '#ffd36b');
   if (S.gift) add(`Portals ${S.giftCharges}/${S.giftPerWave}`, '#c78bff');
   if (headId() === 'magician') add(`Charges ${S.shockCharges}/${SHOCK_MAX_CHARGES}`, '#c78bff',
     S.shockCharges < SHOCK_MAX_CHARGES ? Math.min(1, (S.shockTimer + S.alpha) / weaponCooldown(SHOCK_COOLDOWN)) : undefined);

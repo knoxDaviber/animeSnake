@@ -128,7 +128,7 @@ function updateLasers() {
   if (!S.lasers.length) return;
   for (const l of S.lasers) {
     l.age++;
-    if (S.alive && S.invuln <= 0 && S.snake.some(s => l.set.has(s.y * COLS + s.x))) takeHit();
+    if (l.age <= WIZARD_LASER_HARM_TICKS && S.alive && S.invuln <= 0 && S.snake.some(s => l.set.has(s.y * COLS + s.x))) takeHit();
     for (const e of [...S.enemies]) {
       if (e.boss || e.wizard || l.hit.has(e)) continue;
       const i = e.segs.findIndex(s => l.set.has(s.y * COLS + s.x));
@@ -222,6 +222,7 @@ function drawLasers() {
   }
   S.lasers.forEach(l => {                              // the beam: bright at first, thinner and blinking as it runs out
     if (l.age > l.life - 6 && S.tick % 2 === 0) return;
+    ctx.globalAlpha = l.age > WIZARD_LASER_HARM_TICKS ? 0.3 : 1;   // after the harmful part it is only a faded ghost
     const t = l.age / l.life, w = (l.age < 2 ? 26 : 18) * (1 - 0.5 * t) + Math.sin(now / 30) * 2;
     const ox = l.ox * CELL + CELL / 2, oy = l.oy * CELL + CELL / 2, ex = ox + Math.cos(l.ang) * L, ey = oy + Math.sin(l.ang) * L;
     ctx.strokeStyle = 'rgba(190,90,255,.55)'; ctx.lineWidth = w * 1.6; ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ex, ey); ctx.stroke();

@@ -223,8 +223,4 @@ The shared top 10 is on once the Supabase key is set (`LEADERBOARD` in `src/conf
 
 ## Last session
 
-Batch (untested by the assistant):
-- Help page: opens on a Contents list (help.js rewritten). Credits page (HELP_CREDITS in help_data.js) is added as the last page after the wave 30 victory (S.credits, saved). Its ARG line is a placeholder.
-- Crumbling floor heals CRUMBLE_RECOVER_TICKS after it crumbles (crumbleTile / updateCrumbles in world.js, S.crumbles).
-- Chapel (ice) room: plain-floor cross joins all four doors, so it is always solvable.
-- Devour shop perk (DEVOUR_PRICE, S.devour, toggle): touching a snake shorter than your chain eats it for a random follower (snakes.js canDevour / devourEnemy). Not Goliath, Pacifist, bosses.
+Early-game batch (untested): free random start weapon and 1 random start follower; hero speed 0.65; WEAPON_SLOTS 4; wizard beams only harm for 2 s (WIZARD_LASER_HARM_TICKS); “No U-turns!” warning popup plus a Ready-screen line; revives free for the first 10 runs, then 5 a day (dailyFreeLeft, saved in storage.js); new newweapons.js with Hook (ready glow, 3 bonus shields, no real pull yet) and Black hole (vortex, pull, blast, explosive pellets; holeTarget hook in stepEnemy). Open: stat shop, movement feel, more OP weapons.

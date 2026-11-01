@@ -62,7 +62,7 @@ function updateBullets() {
         b.dead = true; break;
       }
       b.x = nx; b.y = ny;
-      if (strikeEnemyAt(nx, ny, b.dmg)) b.dead = true;
+      if (strikeEnemyAt(nx, ny, b.dmg)) { b.dead = true; if (b.boom) pelletBoom(nx, ny, b.dmg); }
     }
   }
   S.bullets = S.bullets.filter(b => !b.dead);

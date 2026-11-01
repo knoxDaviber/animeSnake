@@ -12,6 +12,11 @@
 // A revive adds REVIVE_SCORE_BONUS of your score on top of it and brings back just your head, with a few seconds
 // of immunity. The snake waits for you to pick a direction.
 
+function dailyFreeLeft() { // 5 free ad-less revives per calendar day (device time)
+  const today = new Date().toDateString();
+  if (S.dailyDay !== today) { S.dailyDay = today; S.dailyUsed = 0; }
+  return Math.max(0, DAILY_FREE_REVIVES - (S.dailyUsed || 0));
+}
 function reviveCost() {
   if (S.freeRevive || ADS_ENABLED) return 0;
   return REVIVE_COST_BASE + REVIVE_COST_STEP * S.revives;
@@ -30,7 +35,8 @@ function beginRevive() { // called once, on the tick you die
 function revive() {
   if (S.alive || !S.reviving || S.ad || performance.now() < S.inputAfter) return;
   if (S.coins < reviveCost()) return;
-  if (S.freeRevive || !adsActive()) return doRevive();  // coin mode, Second wind, or ads switched off
+  if (S.freeRevive || !adsActive() || S.ret.runs < NO_AD_RUNS) return doRevive();   // Second wind, ads off, or your first 10 runs
+  if (dailyFreeLeft() > 0) { S.dailyUsed++; saveProgress(); return doRevive(); }   // 5 free revives a day, then the ad  // coin mode, Second wind, or ads switched off
   startAd('revive');                                    // doRevive() runs when the ad ends (updateAd in ads.js)
 }
 

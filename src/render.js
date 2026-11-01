@@ -452,6 +452,7 @@ function drawOverlay() {
         ctx.fillStyle = '#c9bde6'; ctx.font = '15px system-ui';
         ctx.fillText('Walls, spikes and enemy snakes cost you a friend', cv.width / 2, cv.height / 2 + 124);
         ctx.fillText('Three of the same friend merge into something better', cv.width / 2, cv.height / 2 + 148);
+        ctx.fillText('You cannot turn straight back on your own chain', cv.width / 2, cv.height / 2 + 172);
       }
       return;
     }
@@ -475,7 +476,7 @@ function drawRevive() { // after dying: a countdown to revive (any key or tap) o
   ctx.fillStyle = '#3a2d5c'; ctx.fillRect(cx - 120, cy, 240, 8);
   ctx.fillStyle = '#ffd36b'; ctx.fillRect(cx - 120, cy, Math.round(240 * left / (REVIVE_SECONDS * 1000)), 8);
   ctx.fillStyle = live ? '#fff' : '#8a8aa3'; ctx.font = '20px system-ui';
-  const how = S.freeRevive ? 'free revive' : ADS_ENABLED ? (adsActive() ? 'watch an ad to revive' : 'revive') : `revive for ${reviveCost()} coins`;
+  const how = S.freeRevive || S.ret.runs < NO_AD_RUNS ? 'free revive' : dailyFreeLeft() > 0 ? `free revive (${dailyFreeLeft()} left today)` : ADS_ENABLED ? (adsActive() ? 'watch an ad to revive' : 'revive') : `revive for ${reviveCost()} coins`;
   ctx.fillText(`Any key or tap: ${how} (+${Math.round(S.reviveBonus * 100)}% score)`, cx, cy + 45);
   ctx.fillStyle = '#9a8cc4'; ctx.font = '16px system-ui';
   ctx.fillText(`Score ${S.score}   Best ${S.best}   Coins ${S.coins}`, cx, cy + 75);
@@ -743,6 +744,7 @@ function draw() {
       drawZaps();
       drawTethers();        // skills.js: Raiden's blue line
       drawRazor();          // levels.js: the Razor's blade rings
+      drawHook(); drawHoles();   // newweapons.js
       drawLasers();         // wizard.js: telegraph and beams
       drawPopups();
       drawLevelBar();       // hud.js: small bar under the hero (world pixels)

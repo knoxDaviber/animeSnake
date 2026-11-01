@@ -6,10 +6,17 @@
 // Batch B: steering goes through a small queue (INPUT_BUFFER), a wall/body hit can be forgiven once (GRACE_TICKS),
 // Dev mode moves one tile per key press, Glass cannon dies in one hit, Magician's gift grants portals.
 
+function noBackWarn() { // pressing the way back while you have a tail: say so
+  if (S.tick - S.noBackAt < 6) return;
+  S.noBackAt = S.tick;
+  S.popups.push({ x: S.snake[0].x, y: S.snake[0].y, text: 'No U-turns!', age: 0 });
+  playSfx('deny');
+  if (S.ret.runs < 10 && S.tick - S.noBackBannerAt > 80) { S.noBackBannerAt = S.tick; showBanner("You can't turn back on your own chain", '', '#ff8a8a', true); }
+}
 function setDir(x, y) {
   if (S.picking || !S.alive) return; // the run has not started yet, or you are dead
   const ref = S.dirQueue.length ? S.dirQueue[S.dirQueue.length - 1] : S.dir; // compare with the last queued heading
-  if (x === -ref.x && y === -ref.y && S.snake.length > 1) return; // reversing is only allowed with no follower tails && S.snake.length === 1)) return; // no instant reverse (Goliath alone may)
+  if (x === -ref.x && y === -ref.y && S.snake.length > 1) { noBackWarn(); return; } // reversing is only allowed with no follower tails && S.snake.length === 1)) return; // no instant reverse (Goliath alone may)
   S.waitDir = false;                        // any steering input ends a stall
   if (S.holdStart) { S.holdStart = false; S.runStart = performance.now(); S.last = performance.now(); S.heroLast = performance.now() - heroInterval(); }   // the first input starts the run, and the first move happens at once
   if (x === ref.x && y === ref.y) { if (S.devMode) S.devStep = true; return; } // same heading: nothing to queue (Dev mode: it is still a step)
@@ -31,7 +38,7 @@ function faceSegments() {
 function takeHit(source, from, rings) {
   S.invuln = INVULN_TICKS + S.invulnBonus;
   if (source === 'enemyHead' && shieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // blocked: no blink
-  if (bubbleAbsorbs() || goliathShieldAbsorbs() || gorgonAbsorbs() || medusaShieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
+  if (bubbleAbsorbs() || goliathShieldAbsorbs() || gorgonAbsorbs() || medusaShieldAbsorbs() || hookShieldAbsorbs()) { S.invuln = INVULN_TICKS; S.quietHit = true; return; } // a Gorgon's shield took the hit (no blink)
   S.quietHit = false;
   playSfx('hit');
   if (S.snake.length === 1 || S.glass) { S.alive = false; return; } // last character lost (Glass cannon: any hit that lands)

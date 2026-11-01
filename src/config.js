@@ -30,7 +30,7 @@ const SELF_HIT_COSTS_RING = true;  // false = running into your own body is inst
 const HAZARD_MIN_DIST = 5;         // the hazard spawns at least this many tiles from the head
 
 // Hero speed (passives.js heroSpeed). 1 = normal. Only the hero changes speed, never enemies or skill timers.
-const HERO_BASE_SPEED = 0.5;       // base hero speed, in old-speed units (halved: 1 tile per 2 world ticks)
+const HERO_BASE_SPEED = 0.7;       // base hero speed, in old-speed units (halved: 1 tile per 2 world ticks)
 const HERO_SPEED_MIN = 0.15;       // slowest allowed (Gorgons, Goliath later)
 const HERO_SPEED_MAX = 2;          // fastest allowed, in old-speed units
 const HERO_SPEED_TEST = 1;         // for testing: try 1.5 (fast) or 0.6 (slow), then set back to 1
@@ -526,7 +526,7 @@ const FINALE_COINS = 60, FINALE_SCORE = 5000;        // victory reward when both
 const WEAPON_LEVEL_CAP = 40;      // no weapon goes above this level (levelling and chests both stop here)
 const WEAPON_DAMAGE_CAP = 60;     // most damage one hit can do
 const WEAPON_MIN_COOLDOWN = 2;    // fastest a weapon can fire, in world ticks (2 = 4 shots a second)
-const WEAPON_SLOTS = 3;           // most chest weapons you can hold (more chests then level your weapons up instead)
+const WEAPON_SLOTS = 4;           // most chest weapons you can hold (more chests then level your weapons up instead)
 
 // ---- Misc ----
 const SCORE_PER_COIN = 100;       // when a run ends, every this many points of score become 1 coin
@@ -584,3 +584,13 @@ const AD_FX = {
   tilt:   { on: true, deg: 15 },                // randomly tilted for the whole ad
   zoom:   { on: true, amount: 0.5 },            // slowly zooms in while the ad plays
 };
+
+// ---- Early game, retention, Hook, Black hole (newweapons.js) ----
+const NO_AD_RUNS = 10;            // revives are instant and free for this many runs
+const DAILY_FREE_REVIVES = 5;     // after that, this many free revives per day, then ads
+const WIZARD_LASER_HARM_TICKS = 16; // a beam only hurts for this long (2 s); after that it is a harmless fading ghost
+const HOOK_COOLDOWN = 40, HOOK_DAMAGE = 6, HOOK_RANGE = 10, HOOK_IMMUNE_TICKS = 6, HOOK_BONUS_SHIELDS = 3, HOOK_FX_TICKS = 4;
+const HOLE_COOLDOWN = 56, HOLE_DAMAGE = 3, HOLE_LIFE = 20, HOLE_AHEAD = 4, HOLE_CAST_RANGE = 12;
+const HOLE_RADIUS = 3, HOLE_RADIUS_LEVELS = 4;   // pull radius in tiles, +1 every this many weapon levels
+const HOLE_BLAST_R = 2;                          // blast radius, +1 every 6 weapon levels
+const HOLE_PELLET_DAMAGE = 2, HOLE_DIAG_LEVEL = 4, HOLE_RING2_LEVEL = 12;   // pellets: 4 directions, +4 diagonals, then a second ring

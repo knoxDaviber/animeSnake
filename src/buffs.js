@@ -102,7 +102,9 @@ function startRun(i) {
   const buff = BUFFS[S.pickChoices[i]];
   if (!buff) return;
   buff.apply();
-  applyPermanentStart();   // shop: permanent starting followers (shop.js)
+  applyPermanentStart();
+  addStartFollower(randomFollower());   // shop.js: every run starts with one follower
+  grantStartWeapon();                   // newweapons.js: and one free weapon   // shop: permanent starting followers (shop.js)
   S.buff = buff.id;
   S.picking = false;
   S.holdStart = true; S.waitDir = true;   // the world waits for the first move (setDir in player.js, loop in main.js)

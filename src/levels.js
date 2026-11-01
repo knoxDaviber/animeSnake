@@ -9,6 +9,8 @@ const BRANCHES = [
   { id: 'nova',     name: 'Nova',     desc: 'A blast around you when enemies get close.', cd: NOVA_COOLDOWN,   update: updateNova },
   { id: 'thunder',  name: 'Thunder',  desc: 'Lightning strikes the nearest enemies.',   cd: THUNDER_COOLDOWN,  update: updateThunder },
   { id: 'razor',    name: 'Razor',    desc: 'Rings of blades pulse out and back in, nonstop.', cd: RAZOR_PERIOD, update: updateRazor },
+  { id: 'hook',      name: 'Hook',      desc: 'Glows when ready, then smashes the nearest snake. Comes with 3 shields.', cd: HOOK_COOLDOWN, update: id => updateHook(id) },
+  { id: 'blackhole', name: 'Black hole', desc: 'A vortex drags snakes in, then explodes into pellets.', cd: HOLE_COOLDOWN, update: id => updateHole(id) },
 ];
 
 function addXp(n) {
